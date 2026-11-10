@@ -56,15 +56,20 @@ private fun PbContent.toTextSpan(): TextSpan? = when (type) {
 private fun PbContent.toBlock(): PostContent? {
     val (width, height) = size()
     return when (type) {
-        3 -> PostContent.Image(
-            id = picId(originSrc),
-            urls = persistentListOf(bigCdnSrc, bigSrc, dynamic_, cdnSrc, cdnSrcActive, src),
-            originUrl = originSrc,
-            width = width,
-            height = height,
-            showOriginButton = showOriginalBtn == 1,
-            originSize = originSize,
-        )
+        3 -> {
+            val urls = persistentListOf(bigCdnSrc, bigSrc, dynamic_, cdnSrc, cdnSrcActive, src)
+            // Replies in a page of a thread come without their original; the largest copy stands in.
+            val origin = originSrc.ifBlank { urls.firstOrNull { it.isNotBlank() }.orEmpty() }
+            PostContent.Image(
+                id = picId(origin),
+                urls = urls,
+                originUrl = origin,
+                width = width,
+                height = height,
+                showOriginButton = showOriginalBtn == 1 && originSrc.isNotBlank(),
+                originSize = originSize,
+            )
+        }
 
         20 -> PostContent.Image(
             id = picId(src),

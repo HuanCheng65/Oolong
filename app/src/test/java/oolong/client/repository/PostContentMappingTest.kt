@@ -93,6 +93,21 @@ class PostContentMappingTest {
     }
 
     @Test
+    fun `an image without its original opens its largest copy`() {
+        val image = map(
+            PbContent(
+                type = 3,
+                bigCdnSrc = "https://tiebapic.baidu.com/forum/w%3D1080/sign=s/abc123.jpg?tbpicau=y",
+                cdnSrc = "cdn",
+                showOriginalBtn = 1,
+            ),
+        ).single() as PostContent.Image
+        assertEquals("abc123", image.id)
+        assertEquals("https://tiebapic.baidu.com/forum/w%3D1080/sign=s/abc123.jpg?tbpicau=y", image.originUrl)
+        assertEquals(false, image.showOriginButton)
+    }
+
+    @Test
     fun `a type 20 image only has its src`() {
         val image = map(PbContent(type = 20, src = "https://host/meme/xyz.jpg", bsize = "200,200"))
             .single() as PostContent.Image
