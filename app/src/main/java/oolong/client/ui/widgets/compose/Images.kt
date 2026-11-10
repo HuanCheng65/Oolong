@@ -1,6 +1,8 @@
 package oolong.client.ui.widgets.compose
 
 import android.content.Context
+import android.graphics.drawable.ColorDrawable
+import android.util.LruCache
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -25,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.painter.ColorPainter
 import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
@@ -41,6 +44,7 @@ import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.toSize
+import coil3.asImage
 import coil3.compose.AsyncImage
 import coil3.compose.AsyncImagePainter
 import coil3.memory.MemoryCache
@@ -80,6 +84,29 @@ fun rememberImagePlaceholder(): Painter {
     return remember(color) { ColorPainter(color) }
 }
 
+/**
+ * The name every size of a Tieba picture shares: the 40 hex digits of its file name, as in
+ * `…/sign=…/24c3da19…e512.jpg?tbpicau=…`. Null for addresses not named that way.
+ */
+internal fun pictureName(url: String): String? = PictureName.find(url)?.groupValues?.get(1)
+
+private val PictureName = Regex("""/([0-9a-f]{40})\.(?:jpg|jpeg|png|gif|webp)(?:[?#]|$)""", RegexOption.IGNORE_CASE)
+
+/**
+ * Where the last picture drawn under each name sits in the memory cache. Lists, a thread's first
+ * look and the thread itself ask for different sizes of the same picture, so the one already shown
+ * stands in while the next loads, rather than the placeholder.
+ */
+private object ShownPictures {
+    private val keys = LruCache<String, MemoryCache.Key>(256)
+
+    operator fun get(name: String): MemoryCache.Key? = keys.get(name)
+
+    operator fun set(name: String, key: MemoryCache.Key?) {
+        if (key != null) keys.put(name, key)
+    }
+}
+
 fun shouldLoadImage(context: Context, skipNetworkCheck: Boolean): Boolean {
     val imageLoadSettings =
         context.appPreferences.imageLoadType?.toIntOrNull() ?: ImageUtil.SETTINGS_SMART_ORIGIN
@@ -108,18 +135,25 @@ fun ContentImage(
     val context = LocalContext.current
     val darken = nightImageDim() > 0f
     val placeholder = rememberImagePlaceholder()
-    val request = remember(imageUri, load) {
+    val placeholderColor = (placeholder as ColorPainter).color
+    val name = remember(imageUri) { pictureName(imageUri) }
+    val request = remember(imageUri, load, placeholderColor) {
         ImageRequest.Builder(context)
             .data(imageUri)
+            // Another size of the same picture, drawn before, shows until this one is in
+            .placeholderMemoryCacheKey(name?.let { ShownPictures[it] })
+            .placeholder(ColorDrawable(placeholderColor.toArgb()).asImage())
             .apply { if (!load) networkCachePolicy(CachePolicy.DISABLED) }
             .build()
     }
     AsyncImage(
         model = request,
         contentDescription = contentDescription,
-        placeholder = placeholder,
         error = placeholder,
-        onSuccess = onSuccess,
+        onSuccess = { state ->
+            name?.let { ShownPictures[it] = state.result.memoryCacheKey }
+            onSuccess?.invoke(state)
+        },
         colorFilter = if (darken) DarkenFilter else null,
         contentScale = contentScale,
         modifier = modifier,
