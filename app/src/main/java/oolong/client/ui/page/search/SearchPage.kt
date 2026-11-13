@@ -42,10 +42,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.fastForEachIndexed
@@ -92,7 +95,7 @@ import oolong.client.ui.widgets.compose.picker.ListSinglePicker
 @Immutable
 data class SearchPageItem(
     val id: String,
-    val text: @Composable (selected: Boolean) -> Unit,
+    @StringRes val title: Int,
     val content: @Composable (contentPadding: PaddingValues) -> Unit,
     val supportSort: Boolean = false,
     val sortTypes: ImmutableMap<String, Int> = persistentMapOf(),
@@ -200,7 +203,7 @@ fun SearchScreen(
     val pages = persistentListOf(
         SearchPageItem(
             id = "forum",
-            text = { TabText(R.string.title_search_forum, it) },
+            title = R.string.title_search_forum,
             content = { padding ->
                 LaunchedEffect(state.keyword) { onOpenTab(SearchTab.Forums) }
                 SearchForumList(
@@ -213,7 +216,7 @@ fun SearchScreen(
         ),
         SearchPageItem(
             id = "thread",
-            text = { TabText(R.string.title_search_thread, it) },
+            title = R.string.title_search_thread,
             content = { padding ->
                 LaunchedEffect(state.keyword) { onOpenTab(SearchTab.Threads) }
                 SearchThreadResults(
@@ -235,7 +238,7 @@ fun SearchScreen(
         ),
         SearchPageItem(
             id = "user",
-            text = { TabText(R.string.title_search_user, it) },
+            title = R.string.title_search_user,
             content = { padding ->
                 LaunchedEffect(state.keyword) { onOpenTab(SearchTab.Users) }
                 SearchUserList(
@@ -412,7 +415,7 @@ private fun ColumnScope.SearchTabRow(
         contentColor = ExtendedTheme.colors.topBarContent,
         modifier = Modifier
             .align(Alignment.CenterHorizontally)
-            .width(76.dp * pages.size),
+            .width(searchTabWidth(pages.map { it.title }) * pages.size),
     ) {
         pages.fastForEachIndexed { index, item ->
             val tabTextStyle =
@@ -430,7 +433,7 @@ private fun ColumnScope.SearchTabRow(
                     },
                     text = {
                         ProvideTextStyle(value = tabTextStyle) {
-                            item.text(pagerState.currentPage == index)
+                            TabText(item.title, pagerState.currentPage == index)
                         }
                     },
                     items = {
@@ -443,7 +446,7 @@ private fun ColumnScope.SearchTabRow(
                 Tab(
                     text = {
                         ProvideTextStyle(value = tabTextStyle) {
-                            item.text(pagerState.currentPage == index)
+                            TabText(item.title, pagerState.currentPage == index)
                         }
                     },
                     selected = pagerState.currentPage == index,
@@ -516,6 +519,27 @@ fun PreviewSearchBox() {
         }
     }
 }
+
+/**
+ * The width every tab of a row of search tabs takes: [SearchTabWidth], or more where the longest of
+ * [titles], bold and with the arrow of a tab that sorts, would not fit in it, as in some languages.
+ */
+@Composable
+internal fun searchTabWidth(titles: List<Int>): Dp {
+    val measurer = rememberTextMeasurer()
+    val style = MaterialTheme.typography.button.copy(fontSize = 13.sp, letterSpacing = 0.sp, fontWeight = FontWeight.Bold)
+    val labels = titles.map { stringResource(id = it) }
+    val widest = remember(labels, style, measurer) {
+        labels.maxOfOrNull { measurer.measure(it, style, maxLines = 1, softWrap = false).size.width } ?: 0
+    }
+    return maxOf(SearchTabWidth, with(LocalDensity.current) { widest.toDp() } + SearchTabRoom)
+}
+
+/** The width of a search tab whose title fits it. */
+private val SearchTabWidth = 76.dp
+
+/** A tab's padding at both ends and a sorting tab's arrow, around its title. */
+private val SearchTabRoom = 40.dp
 
 /** A Material tab's height with text only, which the row's other tabs take. */
 private val TabHeight = 48.dp

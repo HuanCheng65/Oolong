@@ -49,6 +49,7 @@ import oolong.client.ui.page.main.SearchAtTopKey
 import oolong.client.ui.page.main.mainSearchPadding
 import oolong.client.ui.page.main.rememberOpenSearchState
 import oolong.client.ui.page.search.SearchHistoryList
+import oolong.client.ui.page.search.searchTabWidth
 import oolong.client.ui.widgets.compose.Container
 import oolong.client.ui.widgets.compose.EndPull
 import oolong.client.ui.widgets.compose.ErrorScreen
@@ -261,7 +262,7 @@ private fun ColumnScope.ForumSearchTabRow(
         contentColor = ExtendedTheme.colors.topBarContent,
         modifier = Modifier
             .align(Alignment.CenterHorizontally)
-            .width(TabWidth * tabs.size),
+            .width(searchTabWidth(tabs.map { it.second }) * tabs.size),
     ) {
         tabs.forEach { (onlyThreads, text) ->
             val chosen = onlyThreads == state.onlyThreads
@@ -279,6 +280,5 @@ private fun ColumnScope.ForumSearchTabRow(
     }
 }
 
-/** The main page's search tabs' width and height, which these take too. */
-private val TabWidth = 76.dp
+/** The main page's search tabs' height, which these take too. */
 private val TabHeight = 48.dp
