@@ -406,9 +406,10 @@ private fun TitleRow(
                     nav?.place(0, nav.centredY())
                     ending?.place(width - endWidth, ending.centredY())
                     acts.place(width - endWidth - gap - acts.width, acts.centredY())
-                    // Centred on the whole row, whatever buttons sit at either end
+                    // Centred on the whole row, whatever buttons sit at either end. Under them, as a
+                    // classic tab row takes the row's whole width and would take their taps
                     if (centerTitle) {
-                        text.place(((width - text.width) / 2f).roundToInt(), text.centredY())
+                        text.place(((width - text.width) / 2f).roundToInt(), text.centredY(), zIndex = -1f)
                     } else {
                         text.place(titleStart, text.centredY(), zIndex = -1f)
                     }
