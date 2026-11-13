@@ -30,4 +30,9 @@
     <string name="message_dialog_usage_stats">Only the version, model and similar details, without account or browsing data.</string>
     <string name="button_send_usage_stats">Send</string>
     <string name="button_dont_send_usage_stats">Don\'t send</string>
+    <string name="diagnostics_responses">Raw list data</string>
+    <string name="diagnostics_export_responses">Export recently loaded lists</string>
+    <string name="diagnostics_responses_exported">Exported</string>
+    <string name="diagnostics_responses_none">No lists loaded yet</string>
+    <string name="diagnostics_responses_export_failed">Couldn\'t export %1$s</string>
 </resources>

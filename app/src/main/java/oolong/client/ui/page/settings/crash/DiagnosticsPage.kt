@@ -1,7 +1,11 @@
 package oolong.client.ui.page.settings.crash
 
+import android.content.Context
+import android.net.Uri
 import android.os.Build
 import android.text.format.DateFormat
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -13,11 +17,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,14 +37,18 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import oolong.client.BuildConfig
 import oolong.client.R
 import oolong.client.components.UsageStats
 import oolong.client.dataStore
+import oolong.client.repository.RecentResponses
 import oolong.client.repository.UpdateChannel
 import oolong.client.repository.UpdateRepository
+import oolong.client.toastShort
 import oolong.client.ui.common.prefs.PrefsScreen
+import oolong.client.ui.common.prefs.widgets.TextPref
 import oolong.client.ui.common.theme.compose.Corners
 import oolong.client.ui.common.theme.compose.ExtendedTheme
 import oolong.client.ui.common.theme.compose.Spacing
@@ -56,8 +66,10 @@ import java.util.Date
 
 /**
  * What this device is, as usage statistics and crash logs describe it, what each of them sends, and
- * the last heartbeat as it went out. The device part can be copied for reporting a problem.
+ * the last heartbeat as it went out. The device part can be copied for reporting a problem, and the
+ * lists' last pages as the server sent them exported for looking into what a list showed.
  */
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun DiagnosticsPage(
     navigator: Navigator = LocalNavigator.current,
@@ -70,6 +82,11 @@ fun DiagnosticsPage(
     val device = remember(channel) { channel?.let { UsageStats.device(context, it) } }
     val last by produceState<Pair<Long, String>?>(initialValue = null) {
         value = withContext(Dispatchers.IO) { UsageStats.lastSent(context) }
+    }
+    val scope = rememberCoroutineScope()
+    val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        scope.launch { exportResponses(context, uri) }
     }
     GlassScaffold(
         largeTitle = true,
@@ -153,6 +170,14 @@ fun DiagnosticsPage(
                     }
                 }
             }
+            prefsGroup(resources.getString(R.string.diagnostics_responses)) {
+                prefsItem {
+                    TextPref(
+                        title = stringResource(id = R.string.diagnostics_export_responses),
+                        onClick = { exporter.launch("oolong-lists-${System.currentTimeMillis() / 1000}.zip") },
+                    )
+                }
+            }
             prefsGroup(resources.getString(R.string.diagnostics_crash_logs)) {
                 prefsItem {
                     Text(
@@ -165,6 +190,18 @@ fun DiagnosticsPage(
             }
         }
     }
+}
+
+/** Writes the lists' last pages as the server sent them to [uri], and says how that went. */
+private suspend fun exportResponses(context: Context, uri: Uri) {
+    val result = withContext(Dispatchers.IO) {
+        runCatching {
+            context.contentResolver.openOutputStream(uri)!!.use { RecentResponses.export(context, it) }
+        }
+    }
+    result
+        .onSuccess { context.toastShort(if (it) R.string.diagnostics_responses_exported else R.string.diagnostics_responses_none) }
+        .onFailure { context.toastShort(R.string.diagnostics_responses_export_failed, it.message.orEmpty()) }
 }
 
 @Composable

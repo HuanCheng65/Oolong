@@ -30,4 +30,9 @@
     <string name="message_dialog_usage_stats">只有版本、机型等信息，不含账号和浏览内容。</string>
     <string name="button_send_usage_stats">发送</string>
     <string name="button_dont_send_usage_stats">不发送</string>
+    <string name="diagnostics_responses">列表原始数据</string>
+    <string name="diagnostics_export_responses">导出最近加载的列表</string>
+    <string name="diagnostics_responses_exported">已导出</string>
+    <string name="diagnostics_responses_none">还没有加载过列表</string>
+    <string name="diagnostics_responses_export_failed">无法导出 %1$s</string>
 </resources>
