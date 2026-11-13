@@ -175,6 +175,7 @@ internal fun PhotoViewerOverlay(viewer: PhotoViewer, opening: PhotoOpening, orig
         // The pager reads its pages, their keys and their pictures from this one state, so that
         // they agree while more pictures arrive
         val pagedPictures by rememberUpdatedState(pictures)
+        val pageKeys = remember(pictures) { pageKeys(pictures) }
         // Made again once the pictures arrive, to start at the one opened
         val pagerState = remember(pictures.isNotEmpty()) { PagerState(currentPage = state.currentIndex) { pagedPictures.size } }
         val current = pictures.getOrNull(pagerState.currentPage)
@@ -312,7 +313,7 @@ internal fun PhotoViewerOverlay(viewer: PhotoViewer, opening: PhotoOpening, orig
                     state = pagerState,
                     userScrollEnabled = !text.active,
                     pageSpacing = 16.dp,
-                    key = { page -> pagedPictures.getOrNull(page)?.let { "${it.picId}_${it.postId}" } ?: page },
+                    key = { page -> pageKeys.getOrNull(page) ?: page },
                     modifier = Modifier.fillMaxSize(),
                 ) { page ->
                     val picture = pagedPictures.getOrNull(page) ?: return@HorizontalPager
@@ -663,3 +664,13 @@ internal fun Modifier.offsetTo(rect: Rect): Modifier = this
         val placeable = measurable.measure(Constraints.fixed(width, height))
         layout(width, height) { placeable.place(IntOffset(rect.left.roundToInt(), rect.top.roundToInt())) }
     }
+
+/** A key per page; a picture shown twice in one post is told apart by how often it came before. */
+internal fun pageKeys(pictures: List<ThreadPicture>): List<String> {
+    val seen = HashMap<String, Int>()
+    return pictures.map {
+        val key = "${it.picId}_${it.postId}"
+        val count = seen.merge(key, 1, Int::plus)!!
+        if (count == 1) key else "${key}_$count"
+    }
+}

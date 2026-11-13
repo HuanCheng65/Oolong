@@ -53,6 +53,20 @@ class PhotoViewViewModelTest {
     }
 
     @Test
+    fun `given pictures the loaded ones already have are not shown twice`() = runTest {
+        coEvery { repository.pictures(source, "c", 3, false) } returns
+            PicturePage(total = 20, pictures = listOf(picture("b", 12), picture("c", 13), picture("d", 14)))
+        val viewModel = PhotoViewViewModel(repository)
+
+        viewModel.start(PhotoViewData(data = source, picItems = listOf(item("a"), item("b"), item("c")), index = 2))
+        runCurrent()
+
+        val state = viewModel.state.value
+        assertEquals(listOf("a" to 11, "b" to 12, "c" to 13, "d" to 14), state.pictures.map { it.picId to it.overallIndex })
+        assertEquals(2, state.currentIndex)
+    }
+
+    @Test
     fun `loading earlier pictures keeps the current one on screen`() = runTest {
         coEvery { repository.pictures(source, "c", 3, false) } returns PicturePage(20, listOf(picture("c", 3)))
         coEvery { repository.pictures(source, "a", 1, true) } returns PicturePage(20, emptyList())

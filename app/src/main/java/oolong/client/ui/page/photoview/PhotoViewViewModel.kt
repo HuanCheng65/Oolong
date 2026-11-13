@@ -68,7 +68,8 @@ class PhotoViewViewModel @Inject constructor(
                 .onSuccess { page ->
                     val first = page.pictures.firstOrNull()?.overallIndex ?: source.picIndex
                     // The pictures before the one opened are the ones given, numbered back from the first loaded
-                    val before = data.picItems.take(source.picIndex - 1).let { items ->
+                    val loaded = page.pictures.mapTo(HashSet()) { it.picId }
+                    val before = data.picItems.take(source.picIndex - 1).filterNot { it.picId in loaded }.let { items ->
                         items.mapIndexed { index, item -> item.toPicture(first - (items.size - index)) }
                     }
                     val pictures = before + page.pictures
