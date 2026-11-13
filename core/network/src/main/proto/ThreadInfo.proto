@@ -39,7 +39,7 @@ message ThreadInfo {
   repeated Abstract _abstract = 21;
   repeated Media media = 22;
   // 81 for a reply a feed passes off as a thread, which origin_thread_info then names; 80 for a
-  // promoted thread, such as a game to book
+  // promoted thread, such as a game to book; 79 for goods offered as a reply, with no author
   int32 thread_type = 26;
   int64 forumId = 27;
   string forumName = 28;

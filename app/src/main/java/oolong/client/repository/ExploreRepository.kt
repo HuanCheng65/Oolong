@@ -211,12 +211,12 @@ class ExploreRepository @Inject constructor(
 
     /**
      * Drops live streams, videos if hidden, and adverts: those from outside any forum, which carry
-     * no forum, and promoted threads, which the server marks with their own thread type.
+     * no forum, and promoted threads and goods, which the server marks with thread types of their own.
      */
     private fun filter(threads: List<ThreadInfo>): List<ThreadInfo> {
         val hideVideos = videoFilter.hidesVideos()
         return threads.filter {
-            it.ala_info == null && it.forumInfo != null && it.thread_type != PromotedThreadType && !(hideVideos && it.videoInfo != null)
+            it.ala_info == null && it.forumInfo != null && it.thread_type !in PromotedThreadTypes && !(hideVideos && it.videoInfo != null)
         }
     }
 }
@@ -227,7 +227,8 @@ class KeptFeed<K, T>(val items: List<T>, val next: K?, val hidden: Set<Long>)
 private const val RecommendedFeed = "recommended"
 private const val FollowedFeed = "followed"
 
-private const val PromotedThreadType = 80
+/** Promoted threads, such as a game to book (80), and goods offered as a reply in a thread (79). */
+private val PromotedThreadTypes = setOf(79, 80)
 private const val LeadThreadCard = "common_thread"
 private const val RelatedForumsCard = "relate_forum"
 private val ThreadCards = setOf(LeadThreadCard, "relate_thread")
