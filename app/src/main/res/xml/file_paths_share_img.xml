@@ -4,5 +4,9 @@
         <cache-path
             name="shareCache"
             path=".shareTemp" />
+        <!-- The downloaded update, for the system's installer -->
+        <cache-path
+            name="update"
+            path="update/" />
     </paths>
 </resource>

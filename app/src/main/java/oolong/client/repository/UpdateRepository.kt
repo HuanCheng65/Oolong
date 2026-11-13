@@ -7,6 +7,7 @@ import android.content.pm.PackageInfo
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.os.Build
+import androidx.core.content.FileProvider
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
@@ -343,6 +344,22 @@ class UpdateRepository @Inject constructor(
                 session.commit(PendingIntent.getBroadcast(context, id, intent, flags).intentSender)
             }
         }
+    }
+
+    /**
+     * Hands the downloaded package to the system's installer, for when the install session can't
+     * ask the user itself. True when the installer opened; the app no longer hears how it went.
+     */
+    fun installWithSystem(): Boolean {
+        val file = (_download.value as? UpdateDownload.Ready)?.file?.takeIf(File::exists) ?: return false
+        val uri = FileProvider.getUriForFile(context, context.packageName + ".share.FileProvider", file)
+        val intent = Intent(Intent.ACTION_VIEW)
+            .setDataAndType(uri, "application/vnd.android.package-archive")
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        if (!context.tryStart(intent)) return false
+        // The notice after the update still comes, from the package being replaced
+        _installing.value = false
+        return true
     }
 
     /** The install session ended without replacing the app: it failed or was turned down. */

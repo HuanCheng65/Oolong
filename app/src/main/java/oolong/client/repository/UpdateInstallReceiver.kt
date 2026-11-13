@@ -1,5 +1,6 @@
 package oolong.client.repository
 
+import android.content.ActivityNotFoundException
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -23,7 +24,12 @@ class UpdateInstallReceiver : BroadcastReceiver() {
                     @Suppress("DEPRECATION")
                     intent.getParcelableExtra(Intent.EXTRA_INTENT)
                 }
-                confirm?.let { context.startActivity(it.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)) }
+                if (confirm == null || !context.tryStart(confirm.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))) {
+                    // Some systems have nothing to show the confirmation with; their installer takes the package instead
+                    val session = intent.getIntExtra(PackageInstaller.EXTRA_SESSION_ID, -1)
+                    if (session != -1) runCatching { context.packageManager.packageInstaller.abandonSession(session) }
+                    if (!context.updateRepository.installWithSystem()) failed(context)
+                }
             }
 
             PackageInstaller.STATUS_SUCCESS -> Unit
@@ -33,9 +39,25 @@ class UpdateInstallReceiver : BroadcastReceiver() {
 
             else -> {
                 Log.w("UpdateInstall", "status $status: ${intent.getStringExtra(PackageInstaller.EXTRA_STATUS_MESSAGE)}")
-                context.updateRepository.installEnded()
-                Toast.makeText(context, R.string.update_install_failed, Toast.LENGTH_SHORT).show()
+                failed(context)
             }
         }
     }
+
+    private fun failed(context: Context) {
+        context.updateRepository.installEnded()
+        Toast.makeText(context, R.string.update_install_failed, Toast.LENGTH_SHORT).show()
+    }
+}
+
+/** Starts [intent], or says it could not. */
+internal fun Context.tryStart(intent: Intent): Boolean = try {
+    startActivity(intent)
+    true
+} catch (e: ActivityNotFoundException) {
+    Log.w("UpdateInstall", "nothing to start ${intent.action}", e)
+    false
+} catch (e: SecurityException) {
+    Log.w("UpdateInstall", "not allowed to start ${intent.action}", e)
+    false
 }
