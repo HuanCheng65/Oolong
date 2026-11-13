@@ -29,13 +29,12 @@ fun blockMenuLabels() = BlockMenuLabels(
 )
 
 /**
- * Blocking [thread]'s author, its forum unless [forumOffered] already, or keywords picked from
- * its title and what lists show of it, as one context menu item in a group of its own that opens
- * the choices in place.
+ * Blocking [thread]'s author, its forum, or keywords picked from its title and what lists show of
+ * it, as one context menu item in a group of its own that opens the choices in place.
  */
-fun blockMenuItems(labels: BlockMenuLabels, shortcuts: BlockShortcuts, thread: ThreadSummary, forumOffered: Boolean = false): List<ContextMenuItem> =
+fun blockMenuItems(labels: BlockMenuLabels, shortcuts: BlockShortcuts, thread: ThreadSummary): List<ContextMenuItem> =
     blockMenuItems(
-        labels, shortcuts, thread.reply?.author ?: thread.author, thread.forum.name.takeUnless { forumOffered },
+        labels, shortcuts, thread.reply?.author ?: thread.author, thread.forum.name,
         listOfNotNull(thread.title, thread.abstract, thread.reply?.text).joinToString("\n"),
     )
 

@@ -63,7 +63,7 @@ fun FeedMenu(
             val dislikes = dislikeMenuItems(context, navigator, options, onDislike)
             val items = dislikes + shareMenuItems(shareLabels, context, thread.threadId, thread.title).mapIndexed { i, item ->
                 if (i == 0) item.copy(startsGroup = dislikes.isNotEmpty()) else item
-            } + shortcuts?.let { blockMenuItems(blockLabels, it, thread, forumOffered = options.offersBlockingForum()) }.orEmpty()
+            } + shortcuts?.let { blockMenuItems(blockLabels, it, thread) }.orEmpty()
             menuId = menus.show(items, anchor = bounds, icon = Symbols.MoreVert)
         },
         modifier = Modifier
@@ -81,7 +81,8 @@ fun FeedMenu(
 
 /**
  * The server's options for not wanting a thread, each done in one tap: those that lead somewhere,
- * such as reporting it, open it instead.
+ * such as reporting it, open it instead. Keeping out its forum is left to the block menu, whose
+ * rule holds signed out too and shows with the other rules.
  */
 fun dislikeMenuItems(
     context: Context,
@@ -90,12 +91,11 @@ fun dislikeMenuItems(
     onDislike: (clickTime: Long, reasons: ImmutableList<DislikeOption>) -> Unit,
 ): List<ContextMenuItem> {
     val clickTime = System.currentTimeMillis()
-    return options.map { option ->
+    return options.filter { it.id != BlockForumOption }.map { option ->
         val schema = option.schema
         ContextMenuItem(
             icon = when {
                 schema != null -> Symbols.Flag
-                option.id == BlockForumOption -> Symbols.Block
                 else -> Symbols.VisibilityOff
             },
             label = option.text.trim(),
@@ -129,9 +129,6 @@ fun shareMenuItems(labels: ShareMenuLabels, context: Context, threadId: Long, ti
         ContextMenuItem(Symbols.Link, labels.copyLink) { TiebaUtil.copyText(context, url) },
     )
 }
-
-/** Whether the server offers keeping the thread's forum out of the recommendations. */
-fun List<DislikeOption>.offersBlockingForum() = any { it.id == BlockForumOption }
 
 /** The option that keeps the thread's forum out of the recommendations. */
 private const val BlockForumOption = 7

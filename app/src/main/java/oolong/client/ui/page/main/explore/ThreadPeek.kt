@@ -30,7 +30,6 @@ import oolong.client.ui.common.navigation.PageOrigin
 import oolong.client.ui.common.theme.compose.Symbols
 import oolong.client.ui.page.LocalNavigator
 import oolong.client.ui.page.main.explore.personalized.dislikeMenuItems
-import oolong.client.ui.page.main.explore.personalized.offersBlockingForum
 import oolong.client.ui.page.main.explore.personalized.shareMenuItems
 import oolong.client.ui.page.main.explore.personalized.shareMenuLabels
 import oolong.client.ui.page.settings.block.LocalBlockShortcuts
@@ -104,7 +103,7 @@ fun rememberThreadPeeker(): ThreadPeeker? {
                 dislikeMenuItems(context, navigator, options, onDislike).forEachIndexed { i, item ->
                     add(if (i == 0) item.copy(startsGroup = true) else item)
                 }
-                if (shortcuts != null) addAll(blockMenuItems(blockLabels, shortcuts, thread, forumOffered = options.offersBlockingForum()))
+                if (shortcuts != null) addAll(blockMenuItems(blockLabels, shortcuts, thread))
             }
             menus.show(
                 items = items,
