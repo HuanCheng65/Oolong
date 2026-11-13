@@ -85,6 +85,11 @@ abstract class RepositoryModule {
             FileFeedSnapshots(File(context.cacheDir, "feeds"), uid = { accounts.current.value?.uid })
 
         @Provides
+        @Singleton
+        fun provideRecentResponses(@ApplicationContext context: Context): RecentResponses =
+            FileRecentResponses(RecentResponses.dir(context))
+
+        @Provides
         fun providePosterName(accounts: AccountRepository): PosterName = PosterName { accounts.current.value?.nameShow }
 
         /** The app's cache, emptied when the account changes, since what it holds is as that account sees it. */

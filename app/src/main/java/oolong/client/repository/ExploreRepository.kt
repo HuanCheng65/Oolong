@@ -46,6 +46,7 @@ class ExploreRepository @Inject constructor(
     private val emoticons: EmoticonRegistry,
     private val snapshots: FeedSnapshots,
     private val autoRefresh: FeedAutoRefresh,
+    private val recent: RecentResponses = RecentResponses.None,
 ) {
     /**
      * A page of recommended threads, without adverts, live streams and, if the user hides them, videos.
@@ -61,7 +62,9 @@ class ExploreRepository @Inject constructor(
             newList -> FeedSnapshots.Place.Replace
             else -> FeedSnapshots.Place.Front
         }
-        snapshots.write(RecommendedFeed, response.encode(), place, next = "${page + 1}")
+        val bytes = response.encode()
+        snapshots.write(RecommendedFeed, bytes, place, next = "${page + 1}")
+        recent.keep(RecentResponses.Recommended, bytes)
         response.recommendedThreads()
     }
 

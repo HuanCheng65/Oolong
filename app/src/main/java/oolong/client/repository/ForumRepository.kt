@@ -65,6 +65,7 @@ class ForumRepository @Inject constructor(
     private val videoFilter: VideoThreadFilter,
     @IoDispatcher private val io: CoroutineDispatcher,
     private val emoticons: EmoticonRegistry,
+    private val recent: RecentResponses = RecentResponses.None,
 ) {
     suspend fun forumRuleDetail(forumId: Long): ForumRuleDetail = withContext(io) {
         remote.forumRuleDetail(forumId).toForumRuleDetail(emoticons)
@@ -107,6 +108,7 @@ class ForumRepository @Inject constructor(
                     good = tab == ForumTab.Good,
                     goodClassId = goodClassId,
                 )
+                recent.keep(RecentResponses.ForumPage, data.encode())
                 val pageHasMore = data.page?.has_more == 1
                 val next = when {
                     data.thread_id_list.isNotEmpty() -> ForumCursor.FrsThreads(cursor.page, data.thread_id_list, pageHasMore)
@@ -124,6 +126,7 @@ class ForumRepository @Inject constructor(
                 val batch = cursor.ids.take(THREAD_BATCH)
                 val rest = cursor.ids.drop(THREAD_BATCH)
                 val data = remote.threadList(forumId, forumName, cursor.page, sortType, batch)
+                recent.keep(RecentResponses.ForumThreads, data.encode())
                 val next = when {
                     data.thread_list.isEmpty() -> null
                     rest.isNotEmpty() -> cursor.copy(ids = rest)
@@ -136,6 +139,7 @@ class ForumRepository @Inject constructor(
             is ForumCursor.Custom -> {
                 val custom = tab as ForumTab.Custom
                 val data = remote.generalTabList(forumId, custom.id, custom.name, custom.type, cursor.page, cursor.lastThreadId)
+                recent.keep(RecentResponses.ForumTab, data.encode())
                 val threads = data.general_list
                 val next = if (data.has_more == 1 && threads.isNotEmpty()) {
                     ForumCursor.Custom(cursor.page + 1, threads.last().id)
