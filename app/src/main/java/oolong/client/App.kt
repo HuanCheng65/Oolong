@@ -66,6 +66,7 @@ class App : Application(), SingletonImageLoader.Factory {
         INSTANCE = this
         super.onCreate()
         CrashLogs.install(this)
+        Incognito.follow(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             setWebViewPath(this)
         }

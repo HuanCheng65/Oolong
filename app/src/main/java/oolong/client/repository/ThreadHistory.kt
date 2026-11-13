@@ -26,7 +26,7 @@ class DatabaseThreadHistory @Inject constructor(
     @ApplicationScope private val scope: CoroutineScope,
 ) : ThreadHistory {
     override fun save(thread: ThreadDetail, seeLz: Boolean, readUpTo: Post?, firstPost: Post?) {
-        if (Incognito.on.value) return
+        if (!Incognito.recording) return
         val entry = HistoryEntity(
             owner = owner.uid.value,
             type = HistoryEntity.TYPE_THREAD,

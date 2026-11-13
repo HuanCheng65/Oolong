@@ -272,6 +272,10 @@
     <string name="search_aliases_appearance">夜间模式,深色模式,暗色,浅色,跟随系统</string>
     <string name="search_aliases_storage">清除缓存,缓存,清理空间,占用</string>
     <string name="search_aliases_font_size">字号,文字大小,大字</string>
+    <string name="search_aliases_keep_history">无痕,永久无痕,历史记录,搜索历史</string>
+    <string name="settings_keep_history">保存浏览记录</string>
+    <string name="history_off">已关闭保存浏览记录</string>
+    <string name="button_turn_on">开启</string>
     <string name="search_aliases_wallpaper">壁纸模糊,壁纸暗度,文字颜色,背景图</string>
     <string name="settings_search_hint">搜索设置</string>
     <string name="title_appearance_mode">浅色与深色模式</string>

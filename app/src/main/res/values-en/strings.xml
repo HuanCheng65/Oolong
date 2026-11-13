@@ -278,6 +278,10 @@
     <string name="search_aliases_appearance">night mode,dark mode,light,system</string>
     <string name="search_aliases_storage">clear cache,cache,free up space</string>
     <string name="search_aliases_font_size">text size,large text</string>
+    <string name="search_aliases_keep_history">incognito,private,history,searches</string>
+    <string name="settings_keep_history">Save history</string>
+    <string name="history_off">History is off</string>
+    <string name="button_turn_on">Turn on</string>
     <string name="search_aliases_wallpaper">wallpaper blur,wallpaper dim,text colour,background image</string>
     <string name="settings_search_hint">Search settings</string>
     <string name="title_appearance_mode">Light and dark mode</string>

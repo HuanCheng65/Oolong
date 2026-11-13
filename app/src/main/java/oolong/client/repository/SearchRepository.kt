@@ -48,9 +48,9 @@ class SearchRepository @Inject constructor(
 
     suspend fun suggestions(keyword: String): List<String> = withContext(io) { remote.suggestions(keyword) }
 
-    /** Remembers [keyword], or moves it to the top if it was searched for before; browsing incognito, nothing. */
+    /** Remembers [keyword], or moves it to the top if it was searched for before; browsing incognito or with history off, nothing. */
     suspend fun remember(keyword: String, forumName: String? = null) = withContext(io) {
-        if (Incognito.on.value) return@withContext
+        if (!Incognito.recording) return@withContext
         val now = System.currentTimeMillis()
         val uid = owner.uid.value
         if (forumName == null) historyDao.add(uid, keyword, now) else historyDao.addInForum(uid, keyword, forumName, now)

@@ -20,14 +20,17 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -56,7 +59,8 @@ import oolong.client.ui.widgets.compose.longPressMenu
 /**
  * One tab of the history, under the days its visits were on, with a field above that narrows it;
  * long pressing a visit offers to delete it or start choosing. While choosing ([selected] isn't
- * null), tapping a visit chooses it.
+ * null), tapping a visit chooses it. With [historyOff], a row under the field says no new visits
+ * are kept, with a way to keep them again.
  */
 @Composable
 fun <T : HistoryEntry> HistoryListContent(
@@ -70,6 +74,8 @@ fun <T : HistoryEntry> HistoryListContent(
     selected: Set<Long>? = null,
     onSelect: (T) -> Unit = {},
     onStartSelecting: (T) -> Unit = {},
+    historyOff: Boolean = false,
+    onTurnOnHistory: () -> Unit = {},
     contentPadding: PaddingValues = PaddingValues(0.dp),
 ) {
     val lazyListState = rememberLazyListState()
@@ -82,6 +88,7 @@ fun <T : HistoryEntry> HistoryListContent(
         ) {
             if (selected == null) {
                 item(key = "search", contentType = "search") { HistorySearchField(query, searchHint, onQueryChange) }
+                if (historyOff) item(key = "off", contentType = "off") { HistoryOffRow(onTurnOn = onTurnOnHistory) }
             }
             if (list.isEmpty && query.isNotBlank()) {
                 item(key = "nothing", contentType = "nothing") {
@@ -177,6 +184,34 @@ private fun HistorySearchField(query: String, @StringRes hint: Int, onQueryChang
             .padding(horizontal = 16.dp, vertical = 4.dp)
             .height(40.dp),
     )
+}
+
+/** Says that history is turned off in the settings, with a button that turns it on. */
+@Composable
+private fun HistoryOffRow(onTurnOn: () -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 16.dp, end = 4.dp, top = 8.dp),
+    ) {
+        Icon(
+            imageVector = ImageVector.vectorResource(id = R.drawable.ic_me_incognito_on),
+            contentDescription = null,
+            tint = ExtendedTheme.colors.textSecondary,
+            modifier = Modifier.size(20.dp),
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text(
+            text = stringResource(id = R.string.history_off),
+            style = TextStyles.caption,
+            color = ExtendedTheme.colors.textSecondary,
+            modifier = Modifier.weight(1f),
+        )
+        TextButton(onClick = onTurnOn) {
+            Text(text = stringResource(id = R.string.button_turn_on), color = ExtendedTheme.colors.text, fontWeight = FontWeight.Bold)
+        }
+    }
 }
 
 @Composable

@@ -66,6 +66,7 @@ import oolong.client.ui.navigation.AboutKey
 import oolong.client.ui.navigation.AppThemeKey
 import oolong.client.ui.navigation.HistoryKey
 import oolong.client.ui.navigation.LoginKey
+import oolong.client.ui.navigation.PrivacySettingsKey
 import oolong.client.ui.navigation.SettingsKey
 import oolong.client.ui.navigation.ThreadStoreKey
 import oolong.client.ui.navigation.UserFollowsKey
@@ -367,17 +368,28 @@ fun UserScreen(
     val navigator = LocalNavigator.current
     val dark = ExtendedTheme.colors.isNightMode
     val incognito by Incognito.on.collectAsState()
+    val keepsHistory by Incognito.keepsHistory.collectAsState()
     var explained by rememberPreferenceAsMutableState(IncognitoExplainedKey, false)
     // Said each time it is turned on; the first time, with what it does and doesn't cover
     var incognitoHint by remember { mutableStateOf(false) }
     var explaining by remember { mutableStateOf(false) }
+    // With history turned off in the settings the mask shows on, and tapped says why
+    var historyOffHint by remember { mutableStateOf(false) }
     LaunchedEffect(incognitoHint) {
         if (incognitoHint) {
             delay(if (explaining) IncognitoExplainMillis else IncognitoHintMillis)
             incognitoHint = false
         }
     }
+    LaunchedEffect(historyOffHint) {
+        if (historyOffHint) {
+            delay(IncognitoHintMillis)
+            historyOffHint = false
+        }
+    }
     LaunchedEffect(incognito) { if (!incognito) incognitoHint = false }
+    LaunchedEffect(keepsHistory) { if (keepsHistory) historyOffHint = false }
+    val masked = incognito || !keepsHistory
     val chromeBottom = LocalChromePadding.current.calculateBottomPadding()
 
     GlassScaffold(
@@ -397,6 +409,16 @@ fun UserScreen(
                     icon = painterResource(id = R.drawable.ic_me_incognito_on),
                     detail = if (explaining) stringResource(id = R.string.incognito_explain) else null,
                 )
+                GlassToast(
+                    visible = historyOffHint,
+                    text = stringResource(id = R.string.history_off),
+                    action = stringResource(id = R.string.title_settings),
+                    onAction = {
+                        historyOffHint = false
+                        navigator.navigate(PrivacySettingsKey)
+                    },
+                    icon = painterResource(id = R.drawable.ic_me_incognito_on),
+                )
             }
         },
         topBar = {
@@ -404,10 +426,18 @@ fun UserScreen(
                 title = {},
                 actions = {
                     ActionItem(
-                        icon = ImageVector.vectorResource(id = if (incognito) R.drawable.ic_me_incognito_on else R.drawable.ic_me_incognito),
-                        contentDescription = stringResource(id = if (incognito) R.string.incognito_off else R.string.incognito_on),
+                        icon = ImageVector.vectorResource(id = if (masked) R.drawable.ic_me_incognito_on else R.drawable.ic_me_incognito),
+                        contentDescription = stringResource(
+                            id = when {
+                                !keepsHistory -> R.string.history_off
+                                incognito -> R.string.incognito_off
+                                else -> R.string.incognito_on
+                            }
+                        ),
                         onClick = {
-                            if (incognito) {
+                            if (!keepsHistory) {
+                                historyOffHint = true
+                            } else if (incognito) {
                                 Incognito.set(false)
                             } else {
                                 Incognito.set(true)

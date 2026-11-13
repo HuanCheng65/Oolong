@@ -26,7 +26,7 @@ class DatabaseForumHistory @Inject constructor(
     @ApplicationScope private val scope: CoroutineScope,
 ) : ForumHistory {
     override fun save(forum: ForumDetail) {
-        if (Incognito.on.value) return
+        if (!Incognito.recording) return
         val entry = HistoryEntity(
             owner = owner.uid.value,
             type = HistoryEntity.TYPE_FORUM,
