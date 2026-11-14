@@ -169,6 +169,34 @@ h3 { font-size: 13px; color: var(--ink-2); margin: 0 0 10px; font-weight: 500; l
 .cohort th:first-child, .cohort td:first-child { text-align: left; color: var(--ink-2); white-space: nowrap; }
 .cohort td { text-align: center; border-radius: 6px; padding: 6px 4px; }
 .footnote { color: var(--ink-3); font-size: 12px; margin: 0; }
+
+/* Feedback */
+.kind.issue { color: var(--crash); background: var(--crash-bg); }
+.kind.idea { color: var(--native); background: var(--native-bg); }
+.kind.question { color: var(--anr); background: var(--anr-bg); }
+.kind.other { color: var(--ink-2); background: var(--chip); }
+.flag.planned { color: var(--accent); border: 1px solid var(--accent); }
+.flag.muted { color: var(--ink-3); border: 1px solid var(--rule); }
+.byline { display: flex; gap: 4px 12px; flex-wrap: wrap; color: var(--ink-2); font-size: 12px; font-variant-numeric: tabular-nums; }
+.byline a { color: var(--accent); text-decoration: none; }
+.byline a:hover { text-decoration: underline; }
+.stat .v.none { color: var(--ink-3); font-weight: 400; }
+.prose { margin: 0; overflow-wrap: anywhere; }
+.prose + h3 { margin-top: 14px; }
+.steps { margin: 0; padding-left: 20px; display: grid; gap: 4px; }
+.compare { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin-top: 14px; }
+@media (max-width: 560px) { .compare { grid-template-columns: minmax(0, 1fr); } }
+.compare .l { color: var(--ink-2); font-size: 12px; }
+.compare p { margin: 2px 0 0; overflow-wrap: anywhere; }
+.missing { display: flex; gap: 6px; flex-wrap: wrap; }
+.missing span { font-size: 12px; padding: 2px 9px; border-radius: 999px; background: var(--chip); color: var(--ink-2); }
+.chat { display: grid; gap: 2px; }
+.msg { padding: 7px 10px; border-radius: 10px; }
+.msg.marked { background: var(--tint); box-shadow: inset 3px 0 0 var(--accent); }
+.msg .who { display: flex; gap: 8px; font-size: 12px; color: var(--ink-2); font-weight: 500; }
+.msg .who time { color: var(--ink-3); font-weight: 400; font-variant-numeric: tabular-nums; }
+.msg .tx { white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg .aside { color: var(--ink-3); font-size: 12px; }
 @media (prefers-reduced-motion: no-preference) { .row, .btn { transition: background .15s; } }
 </style>
 </head>
@@ -178,11 +206,13 @@ h3 { font-size: 13px; color: var(--ink-2); margin: 0 0 10px; font-weight: 500; l
     <div class="tabs" role="tablist" aria-label="控制台">
       <button type="button" role="tab" id="tab-overview" aria-selected="true" data-tab="overview">概览</button>
       <button type="button" role="tab" id="tab-crash" aria-selected="false" data-tab="crash">崩溃</button>
+      <button type="button" role="tab" id="tab-feedback" aria-selected="false" data-tab="feedback">反馈</button>
     </div>
     <span class="sample" id="who"></span>
     <span class="spacer"></span>
     <div class="seg crash-only" role="group" aria-label="状态" id="status"></div>
     <div class="seg overview-only" role="group" aria-label="渠道" id="channel"></div>
+    <div class="seg feedback-only" role="group" aria-label="状态" id="fstatus"></div>
   </div>
 
   <div id="overview" class="overview-only ov">
@@ -219,10 +249,25 @@ h3 { font-size: 13px; color: var(--ink-2); margin: 0 0 10px; font-weight: 500; l
     <div class="detail" id="detail"></div>
   </div>
   </div>
+
+  <div id="feedbackview" class="feedback-only" hidden>
+  <section class="summary" aria-label="反馈">
+    <div class="figures" id="ffigures"></div>
+    <div class="trend">
+      <svg id="ftrend" viewBox="0 0 280 64" preserveAspectRatio="none" role="img" aria-label="近 14 天每天记下的反馈"></svg>
+      <div class="cap"><span id="ftrend-from"></span><span>近 14 天每天记下的反馈</span><span>今天</span></div>
+    </div>
+  </section>
+
+  <div class="panes" id="fpanes" data-view="list">
+    <div class="list" id="flist"></div>
+    <div class="detail" id="fdetail"></div>
+  </div>
+  </div>
 </div>
 
 <script>
-// The console's script: reads /console/api/* and draws the overview and the crash problems.
+// The console's script: reads /console/api/* and draws the overview, the crash problems and the feedback.
 const DAYS = 14;
 const API = "/console/api";
 const KIND = { crash: "崩溃", anr: "无响应", native: "原生" };
@@ -230,11 +275,18 @@ const STATUS = [["open", "未解决"], ["fixed", "已修复"], ["ignored", "已�
 const CHANNELS = [["", "全部"], ["stable", "正式版"], ["beta", "测试版"]];
 const FORMS = { phone: "手机", tablet: "平板", foldable: "折叠屏" };
 const ANDROID = { 24: "7.0", 25: "7.1", 26: "8.0", 27: "8.1", 28: "9", 29: "10", 30: "11", 31: "12", 32: "12L", 33: "13", 34: "14", 35: "15", 36: "16", 37: "17" };
+const FSTATUS = [["open", "未处理"], ["planned", "已计划"], ["fixed", "已修复"], ["declined", "不处理"], ["duplicate", "重复"], ["all", "全部"]];
+// Shown in the status filter even with nothing in them
+const FSTATUS_ALWAYS = new Set(["open", "fixed", "all"]);
+const FKIND = { 问题: "issue", 建议: "idea", 疑问: "question", 其他: "other" };
 const COLORS = ["var(--accent)", "var(--anr)", "var(--native)", "var(--ok)", "var(--crash)", "var(--ink-3)"];
 
 let tab = "overview", channel = "", status = "open", current = null, sample = 0, fixing = false;
 let groups = [];
 const details = new Map();
+// Feedback: the chosen status filter and item, the status being set through the form, the list, and the conversations read
+let fstatus = "open", fcurrent = null, fpending = null, feedback = null, ferror = "";
+const fdetails = new Map();
 
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const num = (n) => (n === null || n === undefined ? "&lt;5" : n.toLocaleString("zh-CN"));
@@ -458,10 +510,139 @@ async function setStatus(body) {
     await loadGroups();
 }
 
+/* Feedback */
+
+async function loadFeedback() {
+    try {
+        feedback = await get("/feedback");
+        ferror = "";
+    } catch (e) {
+        feedback = [];
+        ferror = e.message === "503" ? "控制台还没有接上反馈数据库，见 tools/crash-reports/README.md" : "无法读取反馈，刷新页面重试";
+    }
+    renderFeedback();
+}
+
+const fvisible = () => feedback.filter((f) => fstatus === "all" || f.status === fstatus);
+const fstatusLabel = (k) => FSTATUS.find(([s]) => s === k)?.[1] ?? k;
+const ftitle = (f) => f.summary?.title || (f.error ? "整理失败" : "正在整理");
+const fkind = (f) => f.summary ? `<span class="kind ${FKIND[f.summary.kind]}">${esc(f.summary.kind)}</span>` : "";
+function fflag(f) {
+    if (f.status === "fixed") return '<span class="flag fixed">已修复</span>';
+    if (f.status === "planned") return '<span class="flag planned">已计划</span>';
+    if (f.status === "declined" || f.status === "duplicate") return `<span class="flag muted">${fstatusLabel(f.status)}</span>`;
+    return "";
+}
+// The local day of a time, as YYYY-MM-DD
+const localDay = (time) => { const d = new Date(time); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
+
+function renderFeedback() {
+    if (!feedback) return;
+    const count = (k) => (k === "all" ? feedback.length : feedback.filter((f) => f.status === k).length);
+    document.getElementById("fstatus").innerHTML = FSTATUS.filter(([k]) => FSTATUS_ALWAYS.has(k) || k === fstatus || count(k))
+        .map(([k, label]) => `<button type="button" id="fs-${k}" aria-pressed="${fstatus === k}" data-fs="${k}">${label}<span class="n">${count(k)}</span></button>`)
+        .join("");
+    const days = Array.from({ length: DAYS }, (_, i) => localDay(Date.now() - (DAYS - 1 - i) * 86400000));
+    const totals = days.map((d) => feedback.filter((f) => localDay(f.marked) === d).length);
+    document.getElementById("ffigures").innerHTML = `
+      <div class="fig new"><div class="v">${count("open")}</div><div class="l">未处理</div></div>
+      <div class="fig"><div class="v">${totals.reduce((a, b) => a + b, 0)}</div><div class="l">近 14 天新反馈</div></div>
+      <div class="fig"><div class="v">${count("fixed")}</div><div class="l">已修复</div></div>`;
+    const max = Math.max(1, ...totals), bw = 280 / DAYS;
+    document.getElementById("ftrend").innerHTML = totals.map((v, i) => {
+        const h = Math.max(v ? 3 : 1, (v / max) * 58);
+        return `<rect x="${i * bw + 2}" y="${64 - h}" width="${bw - 4}" height="${h}" rx="2" fill="var(--accent)" opacity="${i === DAYS - 1 ? 1 : 0.45}"></rect>`;
+    }).join("");
+    document.getElementById("ftrend-from").textContent = md(days[0]);
+
+    const list = fvisible();
+    if (!list.some((f) => f.id === fcurrent)) { fcurrent = list[0]?.id ?? null; fpending = null; }
+    document.getElementById("flist").innerHTML = ferror
+        ? `<div class="empty">${ferror}</div>`
+        : list.length
+        ? list.map((f) => `<button type="button" class="row" id="f-${f.id}" data-fid="${f.id}" aria-current="${f.id === fcurrent}">
+                <span class="t">${fkind(f)}${esc(ftitle(f))}${fflag(f)}</span>
+                <span class="meta">${f.summary?.reporter ? `<span>${esc(f.summary.reporter)}</span>` : ""}${f.summary?.version ? `<span>${esc(f.summary.version)}</span>` : ""}<span>${ago(f.marked)}</span></span>
+              </button>`).join("")
+        : `<div class="empty">没有${fstatus === "all" ? "" : fstatusLabel(fstatus)}的反馈</div>`;
+    renderFeedbackDetail();
+}
+
+function fstatusNote(f) {
+    const note = f.note ? `：${esc(f.note)}` : "";
+    if (f.status === "fixed") return `<div class="fixed-note">已${f.fixedBy ? `在 <code>${esc(f.fixedBy)}</code> ` : ""}修复${note}。</div>`;
+    if (f.status === "planned") return `<div class="fixed-note">已放入计划${note}。</div>`;
+    if (f.status === "declined") return `<div class="fixed-note">不处理${note}。</div>`;
+    if (f.status === "duplicate") return `<div class="fixed-note">与其他反馈重复${note}。</div>`;
+    return f.note ? `<div class="fixed-note">备注：${esc(f.note)}</div>` : "";
+}
+
+function fform(f) {
+    if (!fpending) return "";
+    const commit = fpending === "fixed"
+        ? `<input id="ff-commit" placeholder="修复提交，如 4241ef7e" aria-label="修复提交" value="${esc(f.fixedBy ?? "")}">`
+        : "";
+    return `<form class="fixform" id="ffixform" style="${fpending === "fixed" ? "" : "grid-template-columns:minmax(0,1fr) auto"}">${commit}<input id="ff-note" placeholder="说明（可不填）" aria-label="说明" value="${esc(f.note ?? "")}"><button class="btn primary" type="submit">确定</button></form>`;
+}
+
+async function renderFeedbackDetail() {
+    const el = document.getElementById("fdetail");
+    const f = feedback?.find((x) => x.id === fcurrent);
+    if (!f) { el.innerHTML = ""; return; }
+    if (!fdetails.has(f.id)) {
+        el.innerHTML = `<section class="card"><div class="hint">正在读取…</div></section>`;
+        try { fdetails.set(f.id, await get(`/feedback/${f.id}`)); } catch { el.innerHTML = `<section class="card"><div class="hint">无法读取这条反馈</div></section>`; return; }
+        if (fcurrent !== f.id) return;
+    }
+    const d = fdetails.get(f.id);
+    const s = f.summary;
+    const open = f.status === "open" || f.status === "planned";
+    const set = (k, label, primary = false) => (f.status === k ? "" : `<button type="button" class="btn${primary ? " primary" : ""}" data-fset="${k}" aria-pressed="${fpending === k}">${label}</button>`);
+    const actions = open
+        ? set("fixed", "标记为已修复", true) + set("planned", "放入计划") + set("declined", "不处理") + set("duplicate", "标为重复") + (f.status === "planned" ? `<button type="button" class="btn" id="f-reopen">改回未处理</button>` : "")
+        : `<button type="button" class="btn" id="f-reopen">改回未处理</button>`;
+    const field = (v, l) => `<div class="stat"><div class="v small${v ? "" : " none"}">${v ? esc(v) : "未提到"}</div><div class="l">${l}</div></div>`;
+    el.innerHTML = `
+      <section class="card head">
+        <button type="button" class="back" id="fback">‹ 全部反馈</button>
+        <div class="line">${fkind(f)}${fflag(f)}</div>
+        <h2>${esc(ftitle(f))}</h2>
+        <div class="byline">${s?.reporter ? `<span>${esc(s.reporter)}</span>` : ""}<span>记于 ${when(f.marked)}</span>${s?.link ? `<a href="${esc(s.link)}" target="_blank" rel="noopener noreferrer">在群里打开</a>` : ""}</div>
+        ${fstatusNote(f)}
+        <div class="actions">${actions}</div>
+        ${fform(f)}
+      </section>
+      ${s ? `<section class="card stats">${field(s.version, "版本")}${field(s.device, "机型")}${field(s.system, "系统")}${field(s.page, "页面")}</section>
+      <section class="card">
+        <h3>描述</h3>
+        <p class="prose">${esc(s.description || "未提到")}</p>
+        ${s.steps.length ? `<h3>复现步骤</h3><ol class="steps">${s.steps.map((x) => `<li>${esc(x)}</li>`).join("")}</ol>` : ""}
+        ${s.expected || s.actual ? `<div class="compare"><div><div class="l">期望</div><p>${esc(s.expected || "未提到")}</p></div><div><div class="l">实际</div><p>${esc(s.actual || "未提到")}</p></div></div>` : ""}
+        ${s.missing.length ? `<h3 style="margin-top:14px">还缺</h3><div class="missing">${s.missing.map((x) => `<span>${esc(x)}</span>`).join("")}</div>` : ""}
+      </section>`
+        : `<section class="card"><div class="hint">${f.error ? `整理失败，下一轮会再试：${esc(f.error)}` : "正在整理，十分钟内会有结果"}</div></section>`}
+      <section class="card">
+        <div class="cardhead"><h3>群聊记录</h3><span class="hint">记下时前后的消息</span></div>
+        ${d.messages.length ? `<div class="chat">${d.messages.map((m) => `<div class="msg${m.marked ? " marked" : ""}">
+          <div class="who"><span>${esc(m.name ?? "匿名")}</span><time>${when(m.date)}</time></div>
+          ${m.replyTo ? `<div class="aside">回复 ${esc(d.messages.find((x) => x.id === m.replyTo)?.name ?? "更早的消息")}</div>` : ""}
+          ${m.text ? `<div class="tx">${esc(m.text)}</div>` : ""}${m.photo ? `<div class="aside">［图片］</div>` : ""}
+        </div>`).join("")}</div>` : `<div class="hint">没有保存上下文</div>`}
+      </section>`;
+}
+
+async function setFeedbackStatus(body) {
+    const response = await fetch(`${API}/feedback/${fcurrent}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    if (!response.ok) { alert(`无法保存（${response.status}）`); return; }
+    fpending = null;
+    await loadFeedback();
+}
+
 function renderTab() {
     document.querySelectorAll("[data-tab]").forEach((b) => b.setAttribute("aria-selected", String(b.dataset.tab === tab)));
     document.querySelectorAll(".overview-only").forEach((el) => { el.hidden = tab !== "overview"; });
     document.querySelectorAll(".crash-only").forEach((el) => { el.hidden = tab !== "crash"; });
+    document.querySelectorAll(".feedback-only").forEach((el) => { el.hidden = tab !== "feedback"; });
 }
 
 document.addEventListener("click", async (e) => {
@@ -471,12 +652,20 @@ document.addEventListener("click", async (e) => {
     if (c) { channel = c.dataset.ch; loadOverview(); return; }
     const st = e.target.closest("[data-s]");
     if (st) { status = st.dataset.s; renderGroups(); return; }
+    const fs = e.target.closest("[data-fs]");
+    if (fs) { fstatus = fs.dataset.fs; renderFeedback(); return; }
+    const frow = e.target.closest("[data-fid]");
+    if (frow) { fcurrent = Number(frow.dataset.fid); fpending = null; document.getElementById("fpanes").dataset.view = "detail"; renderFeedback(); return; }
+    const fset = e.target.closest("[data-fset]");
+    if (fset) { fpending = fpending === fset.dataset.fset ? null : fset.dataset.fset; await renderFeedbackDetail(); document.getElementById(fpending === "fixed" ? "ff-commit" : "ff-note")?.focus(); return; }
     const row = e.target.closest(".row");
     if (row) { current = Number(row.dataset.id); sample = 0; fixing = false; document.getElementById("panes").dataset.view = "detail"; renderGroups(); return; }
     const smp = e.target.closest("[data-i]");
     if (smp) { sample = Number(smp.dataset.i); renderDetail(); return; }
     switch (e.target.id) {
         case "back": document.getElementById("panes").dataset.view = "list"; break;
+        case "fback": document.getElementById("fpanes").dataset.view = "list"; break;
+        case "f-reopen": await setFeedbackStatus({ status: "open" }); break;
         case "fix": fixing = !fixing; await renderDetail(); document.getElementById("fix-commit")?.focus(); break;
         case "ignore": await setStatus({ status: "ignored" }); break;
         case "reopen": await setStatus({ status: "open" }); break;
@@ -489,6 +678,12 @@ document.addEventListener("click", async (e) => {
     }
 });
 document.addEventListener("submit", async (e) => {
+    if (e.target.id === "ffixform") {
+        e.preventDefault();
+        const commit = document.getElementById("ff-commit");
+        await setFeedbackStatus({ status: fpending, note: document.getElementById("ff-note").value, ...(commit ? { fixedBy: commit.value } : {}) });
+        return;
+    }
     if (e.target.id !== "fixform") return;
     e.preventDefault();
     await setStatus({ status: "fixed", fixedBy: document.getElementById("fix-commit").value, note: document.getElementById("fix-note").value });
@@ -497,6 +692,7 @@ document.addEventListener("submit", async (e) => {
 renderTab();
 loadOverview();
 loadGroups();
+loadFeedback();
 </script>
 </body>
 </html>

@@ -1,10 +1,12 @@
 /**
  * The console: one page and the JSON it reads, behind Cloudflare Access (see access.js). Usage
- * statistics come from stats.js with small counts masked; crash problems from the crash tables.
+ * statistics come from stats.js with small counts masked; crash problems from the crash tables;
+ * feedback from the group from the feedback bot's database (feedback.js), bound as FEEDBACK.
  */
 
 import { accessEmail } from "./access.js";
 import page from "./console.html";
+import { feedbackDetail, feedbackList, updateFeedback } from "./feedback.js";
 import { overview } from "./stats.js";
 
 const DAY = 86_400_000;
@@ -30,6 +32,23 @@ export async function handleConsole(request, env, url) {
         return detail ? json(detail) : new Response("not found", { status: 404 });
     }
     if (match && request.method === "POST") return update(env.DB, Number(match[1]), await request.json().catch(() => null));
+    if (path === "/console/api/feedback" || path.startsWith("/console/api/feedback/")) return handleFeedback(request, env.FEEDBACK, path);
+    return new Response("not found", { status: 404 });
+}
+
+/** The feedback list, one item, or a change to an item's status; 503 until FEEDBACK is bound. */
+async function handleFeedback(request, db, path) {
+    if (!db) return new Response("feedback database not bound", { status: 503 });
+    if (path === "/console/api/feedback" && request.method === "GET") return json(await feedbackList(db));
+    const match = /^\/console\/api\/feedback\/(\d+)$/.exec(path);
+    if (match && request.method === "GET") {
+        const detail = await feedbackDetail(db, Number(match[1]));
+        return detail ? json(detail) : new Response("not found", { status: 404 });
+    }
+    if (match && request.method === "POST") {
+        const result = await updateFeedback(db, Number(match[1]), await request.json().catch(() => null));
+        return result.ok ? json(result) : new Response(result.error === 400 ? "bad status" : "not found", { status: result.error });
+    }
     return new Response("not found", { status: 404 });
 }
 
