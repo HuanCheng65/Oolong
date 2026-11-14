@@ -42,3 +42,20 @@ npx wrangler d1 execute oolong-feedback --remote --command "UPDATE feedback SET 
 
 `status` is `open`, `planned` (taken into other work), `fixed`, `declined` or `duplicate`. Taking the
 👀 back removes an item only while it is `open`.
+
+When the model finds that new feedback reports the same thing as an earlier item that is open,
+planned or fixed in the last 60 days, it puts that item's id in `duplicate_of` and leaves the status
+alone. How often an item has come up again:
+
+```sh
+npx wrangler d1 execute oolong-feedback --remote --command "SELECT duplicate_of, count(*) FROM feedback WHERE duplicate_of IS NOT NULL GROUP BY duplicate_of"
+```
+
+A database made before this column needs it added once:
+
+```sh
+npx wrangler d1 execute oolong-feedback --remote --command "ALTER TABLE feedback ADD COLUMN duplicate_of INTEGER"
+```
+
+The write-up's `guessed` lists the fields the model inferred rather than read. A version nobody gave
+is filled with the newest release on GitHub when the message was sent, and listed there too.

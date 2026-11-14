@@ -23,8 +23,11 @@ CREATE TABLE IF NOT EXISTS feedback (
     context TEXT NOT NULL,
     -- The model's write-up as JSON; null until it succeeds, with the last failure beside it
     summary TEXT,
-    summary_error TEXT
+    summary_error TEXT,
+    -- Earlier feedback the model found this one reports again; the status is still the owner's to set
+    duplicate_of INTEGER
 );
 
 -- Added after the table was created:
 -- ALTER TABLE feedback ADD COLUMN fixed_by TEXT;
+-- ALTER TABLE feedback ADD COLUMN duplicate_of INTEGER;
