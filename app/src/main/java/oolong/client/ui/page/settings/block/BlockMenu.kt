@@ -30,19 +30,34 @@ fun blockMenuLabels() = BlockMenuLabels(
 
 /**
  * Blocking [thread]'s author, its forum, or keywords picked from its title and what lists show of
- * it, as one context menu item in a group of its own that opens the choices in place.
+ * it, as one context menu item in a group of its own that opens the choices in place. Blocking the
+ * forum also does [onBlockForum], as telling the server.
  */
-fun blockMenuItems(labels: BlockMenuLabels, shortcuts: BlockShortcuts, thread: ThreadSummary): List<ContextMenuItem> =
+fun blockMenuItems(
+    labels: BlockMenuLabels,
+    shortcuts: BlockShortcuts,
+    thread: ThreadSummary,
+    onBlockForum: (() -> Unit)? = null,
+): List<ContextMenuItem> =
     blockMenuItems(
         labels, shortcuts, thread.reply?.author ?: thread.author, thread.forum.name,
         listOfNotNull(thread.title, thread.abstract, thread.reply?.text).joinToString("\n"),
+        onBlockForum,
     )
 
 /**
  * Blocking [author], the [forum] if given, or keywords picked from [text], as one context menu
- * item in a group of its own that opens the choices in place.
+ * item in a group of its own that opens the choices in place. Blocking the forum also does
+ * [onBlockForum].
  */
-fun blockMenuItems(labels: BlockMenuLabels, shortcuts: BlockShortcuts, author: User?, forum: String?, text: String): List<ContextMenuItem> {
+fun blockMenuItems(
+    labels: BlockMenuLabels,
+    shortcuts: BlockShortcuts,
+    author: User?,
+    forum: String?,
+    text: String,
+    onBlockForum: (() -> Unit)? = null,
+): List<ContextMenuItem> {
     val choices = buildList {
         if (author != null && (author.id != 0L || author.name.isNotBlank())) {
             add(ContextMenuItem(Symbols.PersonOff, labels.user.format(author.displayName)) {
@@ -52,6 +67,7 @@ fun blockMenuItems(labels: BlockMenuLabels, shortcuts: BlockShortcuts, author: U
         if (!forum.isNullOrBlank()) {
             add(ContextMenuItem(Symbols.Forum, labels.forum.format(forum.removeSuffix("吧"))) {
                 shortcuts.blockForum(forum)
+                onBlockForum?.invoke()
             })
         }
         add(ContextMenuItem(Symbols.TextFields, labels.keywords) {

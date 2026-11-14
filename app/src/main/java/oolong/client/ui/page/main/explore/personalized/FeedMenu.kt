@@ -63,7 +63,7 @@ fun FeedMenu(
             val dislikes = dislikeMenuItems(context, navigator, options, onDislike)
             val items = dislikes + shareMenuItems(shareLabels, context, thread.threadId, thread.title).mapIndexed { i, item ->
                 if (i == 0) item.copy(startsGroup = dislikes.isNotEmpty()) else item
-            } + shortcuts?.let { blockMenuItems(blockLabels, it, thread) }.orEmpty()
+            } + shortcuts?.let { blockMenuItems(blockLabels, it, thread, options.blockingForum(onDislike)) }.orEmpty()
             menuId = menus.show(items, anchor = bounds, icon = Symbols.MoreVert)
         },
         modifier = Modifier
@@ -81,8 +81,8 @@ fun FeedMenu(
 
 /**
  * The server's options for not wanting a thread, each done in one tap: those that lead somewhere,
- * such as reporting it, open it instead. Keeping out its forum is left to the block menu, whose
- * rule holds signed out too and shows with the other rules.
+ * such as reporting it, open it instead. Keeping out its forum is left to the block menu, which
+ * adds a rule of the app's own and sends this option along ([blockingForum]).
  */
 fun dislikeMenuItems(
     context: Context,
@@ -128,6 +128,18 @@ fun shareMenuItems(labels: ShareMenuLabels, context: Context, threadId: Long, ti
         },
         ContextMenuItem(Symbols.Link, labels.copyLink) { TiebaUtil.copyText(context, url) },
     )
+}
+
+/**
+ * Sending the server's option for keeping the thread's forum out of the recommendations, for the
+ * block menu to do with its own rule; null when the server doesn't offer it.
+ */
+fun List<DislikeOption>.blockingForum(
+    onDislike: (clickTime: Long, reasons: ImmutableList<DislikeOption>) -> Unit,
+): (() -> Unit)? {
+    val option = firstOrNull { it.id == BlockForumOption } ?: return null
+    val clickTime = System.currentTimeMillis()
+    return { onDislike(clickTime, persistentListOf(option)) }
 }
 
 /** The option that keeps the thread's forum out of the recommendations. */
