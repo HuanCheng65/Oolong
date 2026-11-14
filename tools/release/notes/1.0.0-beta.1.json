@@ -1,0 +1,34 @@
+{
+  "zh": {
+    "新增": [
+      "关闭浏览记录\n在「设置 › 隐私」中关闭「保存浏览记录」后，看过的帖子、吧与搜索都不再保存"
+    ],
+    "改进": [
+      "屏蔽推荐中的吧\n推荐帖子的「屏蔽」菜单中可直接屏蔽所在的吧，与其他屏蔽规则一起管理，登录时推荐中也不再出现该吧",
+      "从列表打开帖子\n帖子中的图片沿用列表中已加载的图片，不再先显示占位图"
+    ],
+    "修复": [
+      "经典样式下，顶栏标签旁的搜索按钮无法点按",
+      "英文界面下，搜索页的标签文字显示不全",
+      "帖子页中楼中楼的图片打开后为黑屏",
+      "同一张图片出现两次时，打开图片闪退",
+      "部分系统上安装更新时闪退"
+    ]
+  },
+  "en": {
+    "New": [
+      "Turn off history\nTurn off Save history under Settings › Privacy, and the threads, forums and searches you visit are no longer saved"
+    ],
+    "Improved": [
+      "Hide a forum from For you\nA thread's Hide menu in For you can now hide its forum, kept with your other hiding rules; signed in, For you stops recommending it too",
+      "Opening a thread from a list\nPictures already loaded in the list stay in place instead of showing a placeholder first"
+    ],
+    "Fixed": [
+      "In the Classic style, the search button beside the tabs in the top bar couldn't be tapped",
+      "In English, the tab titles on the search page were cut off",
+      "Pictures in replies under a floor opened on a black screen",
+      "Opening a picture that appears twice crashed the app",
+      "Installing an update crashed the app on some systems"
+    ]
+  }
+}
