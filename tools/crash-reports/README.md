@@ -14,6 +14,7 @@ statistics carry no identifier and are kept only as counts.
 - `src/retention.js` says which builds' mapping files to drop.
 - `src/stats.js` counts heartbeats and gives the overview.
 - `src/console.js`, `src/console.html` and `src/access.js` are the console and its sign-in check.
+- `src/feedback.js` reads the group's feedback for the console and sets its status.
 - `scripts/shard.mjs` writes a build's mapping file; `scripts/upload.py` puts it in the bucket.
 
 Commands below run from this directory.
@@ -92,6 +93,18 @@ npx wrangler d1 execute oolong-crash --remote --command "SELECT id, title, repor
 To try it locally, put a mapping file in the local bucket, write `CONSOLE_DEV="1"` to `.dev.vars`
 (ignored by git; it lets the console in without Access), run `npx wrangler dev --local
 --test-scheduled`, post reports and call `/__scheduled?cron=*+*+*+*+*` for each run.
+
+## Feedback
+
+The console's 反馈 tab shows the feedback the bot collects from the Telegram group
+(`tools/feedback-bot`): each item's write-up, the messages saved around it and a link to it in the
+group, with its status. It reads the bot's database through the `FEEDBACK` binding in
+`wrangler.jsonc`, the same `oolong-feedback` database the bot writes, and sets only `status`,
+`fixed_by` and `note`; the bot adds items and their write-ups and never changes those. Without the
+binding the tab says so and the rest of the console works as before.
+
+Statuses are the bot's: `open`, `planned`, `fixed`, `declined` and `duplicate`. A note given with a
+status replaces the one there; reopening keeps it.
 
 ## Mapping files in CI
 

@@ -33,6 +33,8 @@ answers and five messages either side. Taking the reaction back removes it while
 
 ## Reading
 
+The console of `tools/crash-reports` shows the feedback and sets its status. From the command line:
+
 ```sh
 npx wrangler d1 execute oolong-feedback --remote --command "SELECT * FROM feedback WHERE status = 'open'"
 npx wrangler d1 execute oolong-feedback --remote --command "UPDATE feedback SET status = 'fixed', fixed_by = '<commit>', note = '…' WHERE message_id = …"

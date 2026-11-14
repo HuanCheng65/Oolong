@@ -3,7 +3,9 @@
     "main": "src/index.js",
     "compatibility_date": "2026-10-01",
     "d1_databases": [
-        { "binding": "DB", "database_name": "oolong-crash", "database_id": "4be23eaf-709d-4dbe-9060-97c5877e7d77" }
+        { "binding": "DB", "database_name": "oolong-crash", "database_id": "4be23eaf-709d-4dbe-9060-97c5877e7d77" },
+        // The feedback bot's database (tools/feedback-bot), which the console shows and sets statuses in
+        { "binding": "FEEDBACK", "database_name": "oolong-feedback", "database_id": "ad6eadc8-ed64-46f4-ba9a-83d542524649" }
     ],
     // Private: the mapping file of each build, mapping/<versionName>.bin
     "r2_buckets": [
