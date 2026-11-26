@@ -36,6 +36,7 @@ import oolong.client.navigation.MoreSettingsKey
 import oolong.client.navigation.Navigator
 import oolong.client.navigation.ProvideNavigator
 import oolong.client.navigation.StorageKey
+import oolong.client.navigation.WidgetsKey
 import oolong.client.ui.settings.components.Availability
 import oolong.client.ui.settings.components.SettingsHeader
 import oolong.client.ui.settings.components.SettingsPage
@@ -90,6 +91,9 @@ object MoreSettings : SettingsPage<MoreState>(R.string.title_settings_more, More
         group(SettingsHeader.Gap(8.dp), available = Availability.sdk(Build.VERSION_CODES.S)) {
             custom(R.string.title_tieba_links) { if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) TiebaLinksPref() }
             footer(res(R.string.tip_tieba_links))
+        }
+        group(R.string.settings_group_home_screen) {
+            link(R.string.title_widgets, to = WidgetsKey)
         }
         group(R.string.settings_group_storage) {
             custom(R.string.title_import_legacy, shown = { legacySource != LegacyImport.Source.None }) { LegacyImportPref(legacySource) }

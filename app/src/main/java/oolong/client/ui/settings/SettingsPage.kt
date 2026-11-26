@@ -42,7 +42,6 @@ import oolong.client.navigation.PostSettingsKey
 import oolong.client.navigation.PrivacySettingsKey
 import oolong.client.navigation.ProvideNavigator
 import oolong.client.navigation.SettingsKey
-import oolong.client.navigation.WidgetsKey
 import oolong.client.ui.components.LocalAccount
 import oolong.client.ui.components.SearchBox
 import oolong.client.ui.designsystem.Avatar
@@ -139,7 +138,6 @@ val SettingsHub = settingsPage(R.string.title_settings, SettingsKey) {
     }
     group(SettingsHeader.Gap(8.dp)) {
         link(R.string.title_settings_custom, to = CustomSettingsKey, icon = Symbols.Palette)
-        link(R.string.title_widgets, to = WidgetsKey, icon = Symbols.Widgets)
         link(R.string.title_settings_read_habit, to = HabitSettingsKey, icon = Symbols.AutoStories)
         link(R.string.title_settings_post, to = PostSettingsKey, icon = Symbols.EditNote)
     }
@@ -150,7 +148,7 @@ val SettingsHub = settingsPage(R.string.title_settings, SettingsKey) {
         link(R.string.title_oksign, to = OKSignSettingsKey, icon = Symbols.TaskAlt)
     }
     group(SettingsHeader.Gap(8.dp)) {
-        link(R.string.title_settings_more, to = MoreSettingsKey, icon = Symbols.MoreHoriz)
+        link(R.string.title_settings_more, to = MoreSettingsKey, icon = Symbols.Settings)
     }
     group(SettingsHeader.Gap(8.dp), available = { BuildConfig.DEBUG }) {
         custom(null) { modifier ->

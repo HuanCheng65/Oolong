@@ -410,7 +410,7 @@
     <string name="toast_feature_unavailable">Not supported yet</string>
     <string name="desc_permission_post_notifications">Used for message notifications and check-in progress</string>
     <string name="source_code">Source code</string>
-    <string name="title_settings_more">Other</string>
+    <string name="title_settings_more">General</string>
     <string name="title_settings_post">Posting</string>
     <string name="title_login">Sign in</string>
     <string name="title_link_opening">Open links with</string>
@@ -427,6 +427,7 @@
     <string name="tip_tieba_links">Open tieba.baidu.com links tapped in your browser or other apps directly in Oolong. Managed in system settings.</string>
     <string name="settings_group_links">Links</string>
     <string name="settings_group_storage">Storage</string>
+    <string name="settings_group_home_screen">Home screen</string>
     <string name="settings_group_theme">Theme</string>
     <string name="settings_group_text_and_icon">Text and icons</string>
     <string name="settings_group_effects">Effects</string>

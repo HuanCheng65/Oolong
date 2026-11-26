@@ -122,4 +122,4 @@ visibility
 visibility_off
 warning
 new_window
-widgets
+settings
