@@ -2,7 +2,6 @@ package oolong.client.ui.main.home
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -10,11 +9,9 @@ import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,14 +22,12 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -41,19 +36,16 @@ import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Alignment.Companion.Center
 import androidx.compose.ui.Alignment.Companion.CenterVertically
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -69,27 +61,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.arch.LoadStatus
-import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.rememberSettings
+import oolong.client.data.settings.settingAsState
 import oolong.client.media.ImageUtil
 import oolong.client.model.FollowedForum
-import oolong.client.model.VisitedForum
 import oolong.client.navigation.ForumKey
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.LoginKey
@@ -482,7 +466,7 @@ fun HomePage(
         viewModel.freshen()
         onPauseOrDispose {}
     }
-    val guideShown by remember { context.dataStore.data.map { it[RecentForumsGuideKey] ?: false } }.collectAsState(initial = true)
+    val guideShown by settingAsState(SettingKeys.RecentForumsGuideShown)
 
     var unfollowForum by remember { mutableStateOf<FollowedForum?>(null) }
     val confirmUnfollowDialog = rememberDialogState()
@@ -493,11 +477,9 @@ fun HomePage(
         Text(text = stringResource(id = R.string.title_dialog_unfollow_forum, unfollowForum?.name.orEmpty()))
     }
 
-    // Followed from the store, so changes made in the settings show on returning here
-    val listSingle by remember { context.dataStore.data.map { it[booleanPreferencesKey("listSingle")] ?: false } }
-        .collectAsState(initial = context.appPreferences.listSingle)
-    val showHistory by remember { context.dataStore.data.map { it[booleanPreferencesKey("homePageShowHistoryForum")] ?: true } }
-        .collectAsState(initial = context.appPreferences.homePageShowHistoryForum)
+    val settings = rememberSettings()
+    val listSingle by settingAsState(SettingKeys.ListSingle)
+    val showHistory by settingAsState(SettingKeys.HomePageShowHistoryForum)
     HomeScreen(
         state = state,
         listSingle = listSingle,
@@ -506,9 +488,9 @@ fun HomePage(
         showSearchBox = showSearchBox,
         searchField = searchField,
         onOpenExplore = onOpenExplore,
-        onToggleListSingle = { context.appPreferences.listSingle = !listSingle },
+        onToggleListSingle = { settings[SettingKeys.ListSingle] = !listSingle },
         showRecentForumsGuide = !guideShown,
-        onRecentForumsGuideShown = { MainScope().launch { context.dataStore.edit { it[RecentForumsGuideKey] = true } } },
+        onRecentForumsGuideShown = { settings[SettingKeys.RecentForumsGuideShown] = true },
         onEvent = { event ->
             when (event) {
                 HomeEvent.Refresh -> viewModel.refresh()
@@ -855,7 +837,6 @@ fun EmptyScreen(
 }
 
 private const val RecentForumsKey = "HistoryForums"
-private val RecentForumsGuideKey = booleanPreferencesKey("recentForumsGuideShown")
 private val GuidePeek = 44.dp
 private const val GuideDelay = 600L
 

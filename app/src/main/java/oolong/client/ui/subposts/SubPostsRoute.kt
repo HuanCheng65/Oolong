@@ -9,12 +9,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import oolong.client.data.post.ReplyTarget
-import oolong.client.data.settings.rememberPreferenceAsState
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 import oolong.client.model.PostContent
 import oolong.client.model.SubPost
 import oolong.client.navigation.Navigator
@@ -48,8 +48,8 @@ fun SubPostsRoute(
     val account = LocalAccount.current
     val listState = rememberLazyListState()
     val landed = remember { LandedFloor() }
-    val hideReply by rememberPreferenceAsState(booleanPreferencesKey("hideReply"), false)
-    val hideBlocked by rememberPreferenceAsState(booleanPreferencesKey("hideBlockedContent"), false)
+    val hideReply by settingAsState(SettingKeys.HideReply)
+    val hideBlocked by settingAsState(SettingKeys.HideBlockedContent)
 
     LaunchedEffect(viewModel) {
         viewModel.effect.collect { effect ->

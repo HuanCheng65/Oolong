@@ -55,6 +55,7 @@ object SettingKeys {
     /** The name of a [oolong.client.ui.thread.SubPostStyle]. */
     val SubPostStyle = Setting.string("subPostStyle", "Timeline")
 
+    /** Whether a floor's replies start folded into a capsule, whichever SubPostStyle they have. */
     val SubPostsCollapsed = Setting.boolean("subPostsCollapsed", false)
 
     val HideBlockedContent = Setting.boolean("hideBlockedContent", false)
@@ -123,13 +124,16 @@ object SettingKeys {
 
     // Settings that had no property above: each was read where it is used, by its key
 
+    /** Whether a back gesture peeks (see PagePeek); off, it goes back once let go, as the back key does. */
     val PredictiveBack = Setting.boolean("predictiveBack", true)
 
     /** How crash records are sent: one of [CrashReports.Mode]'s values. */
     val CrashReportMode = Setting.string(CrashReports.ModeKey, CrashReports.Mode.Ask.value)
 
+    /** Search kept at the top of the home page rather than beside the bottom bar. */
     val SearchAtTop = Setting.boolean("searchAtTop", false)
 
+    /** Whether the main tabs swipe, on a phone where their bar is at the bottom. */
     val MainTabSwipe = Setting.boolean("mainTabSwipe", true)
 
     /** Whether the incognito switch on the user page has been explained once. */
@@ -140,7 +144,7 @@ object SettingKeys {
     /** The name of a [oolong.client.ui.designsystem.ChromeStyle]. */
     val ChromeStyle = Setting.string("chromeStyle", "Floating")
 
-    /** Whether the user keeps a history at all; see [oolong.client.data.history.Incognito]. */
+    /** Whether visits and searches are kept, unless browsing incognito; see [oolong.client.data.history.Incognito]. */
     val KeepHistory = Setting.boolean("keepHistory", true)
 
     /** The list pane's width beside a detail pane, in dp, once dragged. */

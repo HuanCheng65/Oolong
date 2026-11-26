@@ -34,7 +34,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
@@ -60,7 +59,6 @@ import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toDrawable
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.core.view.WindowCompat
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.flowWithLifecycle
@@ -102,8 +100,9 @@ import oolong.client.data.link.ClipBoardLinkDetector
 import oolong.client.data.link.ClipBoardThreadLink
 import oolong.client.data.link.QuickPreviewUtil
 import oolong.client.data.link.toTiebaKey
+import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.rememberPreferenceAsMutableState
+import oolong.client.data.settings.settingAsState
 import oolong.client.diagnostics.CrashLogs
 import oolong.client.diagnostics.CrashReports
 import oolong.client.diagnostics.UsageStats
@@ -605,11 +604,8 @@ class MainActivity : AppCompatActivity() {
             // Drawn once under every page and captured for their chrome to blur
             val wallpaperGlass = rememberHazeState()
             if (translucent) {
-                val backgroundPath by rememberPreferenceAsMutableState(
-                    key = stringPreferencesKey("translucent_theme_background_path"),
-                    defaultValue = ""
-                )
-                val backgroundFile by remember { derivedStateOf { File(backgroundPath) } }
+                val backgroundPath = settingAsState(SettingKeys.TranslucentThemeBackgroundPath).value.orEmpty()
+                val backgroundFile = remember(backgroundPath) { File(backgroundPath) }
                 // A wallpaper from before dark text stopped fading it to white is drawn again
                 val context = LocalContext.current
                 LaunchedEffect(Unit) { context.redrawOutdatedWallpaper() }

@@ -16,7 +16,6 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.runtime.withFrameNanos
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.navigationevent.NavigationEvent
 import androidx.navigationevent.NavigationEventHandler
 import androidx.navigationevent.NavigationEventInfo
@@ -25,7 +24,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import oolong.client.BuildConfig
-import oolong.client.data.settings.rememberPreferenceAsState
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 import oolong.core.designsystem.theme.Motion
 import kotlin.math.PI
 import kotlin.math.abs
@@ -112,9 +112,6 @@ class PagePeek {
     }
 }
 
-/** Whether a back gesture peeks ([PagePeek]); off, it goes back once let go, as the back key does. */
-val PredictiveBackKey = booleanPreferencesKey("predictiveBack")
-
 /** The [PagePeek] of the pages around, for their frames to draw. */
 val LocalPagePeek = staticCompositionLocalOf<PagePeek?> { null }
 
@@ -134,7 +131,7 @@ fun <T : Any> PageBackHandler(
 ) {
     val scope = rememberCoroutineScope()
     val handler = remember(peek) { PeekBackHandler(peek, scope) }
-    val peeks by rememberPreferenceAsState(PredictiveBackKey, true)
+    val peeks by settingAsState(SettingKeys.PredictiveBack)
     val currentOnBack by rememberUpdatedState(onBack)
     SideEffect {
         handler.peeks = peeks

@@ -4,10 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.interaction.collectIsDraggedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -25,17 +22,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
-import oolong.client.data.settings.rememberPreferenceAsState
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
 import oolong.client.navigation.ProvideNavigator
@@ -122,9 +118,9 @@ fun MainPage(
         snapshotFlow { tabs.selected }.drop(1).collect { if (search.open) currentCloseSearch() }
     }
     val searchShown by remember { derivedStateOf { search.progress.value > 0f } }
-    val searchKeptAtTop by rememberPreferenceAsState(SearchAtTopKey, false)
+    val searchKeptAtTop by settingAsState(SettingKeys.SearchAtTop)
     // Beside the rail, whose tabs run down the side, the pages don't swipe
-    val swipeTabs by rememberPreferenceAsState(MainTabSwipeKey, true)
+    val swipeTabs by settingAsState(SettingKeys.MainTabSwipe)
     // Beside the rail there is no bar to put it by: it stands at the top of the list
     val searchAtTop = searchKeptAtTop || !showBottomNavigation
 
@@ -273,6 +269,3 @@ fun MainPage(
 
 /** The tabs that, on a phone with search kept at the top, have a search button in their bar. */
 private val TopSearchButtonTabs = setOf(MainTabs.EXPLORE, MainTabs.NOTIFICATIONS)
-
-/** Whether the main tabs swipe, on a phone where their bar is at the bottom. */
-val MainTabSwipeKey = booleanPreferencesKey("mainTabSwipe")

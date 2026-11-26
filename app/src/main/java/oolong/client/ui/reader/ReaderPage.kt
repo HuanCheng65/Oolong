@@ -9,14 +9,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.first
-import oolong.client.data.settings.rememberPreferenceAsMutableState
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsMutableState
 import oolong.client.media.ImageUtil
 import oolong.client.model.LoadPicPageData
 import oolong.client.model.PhotoViewData
@@ -52,11 +50,11 @@ fun ReaderPage(
         listState.scrollToItem(item)
         scrollTo = null
     }
-    var fontSize by rememberPreferenceAsMutableState(intPreferencesKey("reader_font_size"), ReaderStyle.DEFAULT_FONT_SIZE)
-    var spacing by rememberPreferenceAsMutableState(intPreferencesKey("reader_spacing"), 1)
-    var serif by rememberPreferenceAsMutableState(booleanPreferencesKey("reader_serif"), false)
-    var weight by rememberPreferenceAsMutableState(intPreferencesKey("reader_weight"), 0)
-    var paper by rememberPreferenceAsMutableState(stringPreferencesKey("reader_paper"), ReaderPaper.White.name)
+    var fontSize by settingAsMutableState(SettingKeys.ReaderFontSize)
+    var spacing by settingAsMutableState(SettingKeys.ReaderSpacing)
+    var serif by settingAsMutableState(SettingKeys.ReaderSerif)
+    var weight by settingAsMutableState(SettingKeys.ReaderWeight)
+    var paper by settingAsMutableState(SettingKeys.ReaderPaper)
     val style = ReaderStyle(
         fontSize = fontSize,
         spacing = spacing,

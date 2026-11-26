@@ -14,10 +14,8 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.BufferOverflow
@@ -26,8 +24,8 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.filter
 import oolong.client.R
 import oolong.client.data.account.AccountActions
-import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.rememberPreferenceAsState
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 import oolong.client.model.Account
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.LoginKey
@@ -87,10 +85,7 @@ fun OnTabReselected(id: String, onReselected: () -> Unit) {
 @OptIn(ExperimentalAnimationGraphicsApi::class)
 @Composable
 fun rememberMainTabItems(tabs: MainTabs): ImmutableList<NavigationItem> {
-    val hideExplore by rememberPreferenceAsState(
-        key = booleanPreferencesKey("hideExplore"),
-        defaultValue = LocalContext.current.appPreferences.hideExplore
-    )
+    val hideExplore by settingAsState(SettingKeys.HideExplore)
     val messageCount = tabs.messageCount
     val navigator = LocalNavigator.current
     val account = LocalAccount.current

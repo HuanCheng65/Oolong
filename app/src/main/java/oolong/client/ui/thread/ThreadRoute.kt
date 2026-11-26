@@ -18,7 +18,6 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Job
@@ -29,7 +28,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import oolong.client.R
 import oolong.client.data.post.ReplyTarget
-import oolong.client.data.settings.rememberPreferenceAsState
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 import oolong.client.data.thread.ThreadSort
 import oolong.client.model.Post
 import oolong.client.model.PostContent
@@ -74,8 +74,8 @@ fun ThreadRoute(
     val scaffoldState = rememberScaffoldState()
     val chrome = rememberReplyChromeState()
     val reply = rememberReplyComposer(chrome)
-    val hideReply by rememberPreferenceAsState(booleanPreferencesKey("hideReply"), false)
-    val hideBlocked by rememberPreferenceAsState(booleanPreferencesKey("hideBlockedContent"), false)
+    val hideReply by settingAsState(SettingKeys.HideReply)
+    val hideBlocked by settingAsState(SettingKeys.HideBlockedContent)
 
     val landed = remember { LandedFloor() }
     val photoFloors = remember(viewModel) {

@@ -24,7 +24,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import oolong.client.R
-import oolong.client.data.settings.rememberPreferenceAsMutableState
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsMutableState
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
 import oolong.client.ui.designsystem.BackNavigationIcon
@@ -34,7 +35,6 @@ import oolong.client.ui.designsystem.GlassTopBarTitle
 import oolong.client.ui.designsystem.theme.ExtendedColors
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.Symbols
-import oolong.client.ui.main.SearchAtTopKey
 import oolong.client.ui.settings.theme.AppearanceOption
 import oolong.client.ui.settings.theme.Bar
 
@@ -46,7 +46,7 @@ import oolong.client.ui.settings.theme.Bar
 fun SearchPlacementPage(
     navigator: Navigator = LocalNavigator.current,
 ) {
-    var atTop by rememberPreferenceAsMutableState(SearchAtTopKey, false)
+    var atTop by settingAsMutableState(SettingKeys.SearchAtTop)
     val colors = ExtendedTheme.colors
     GlassScaffold(
         backgroundColor = Color.Transparent,

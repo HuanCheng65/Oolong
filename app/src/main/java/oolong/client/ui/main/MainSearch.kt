@@ -75,7 +75,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
 import androidx.compose.ui.util.lerp
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import oolong.client.R
 import oolong.client.navigation.ForumKey
 import oolong.client.navigation.Navigator
@@ -106,7 +105,7 @@ import kotlin.math.roundToInt
  * stretches into a field above the keyboard, and the search page's history and results show over
  * the tabs. Closing shrinks the field back into the button, on the tab it was opened from.
  *
- * Where the user keeps search at the top ([SearchAtTopKey]), and beside the rail, it opens from a
+ * Where the user keeps search at the top ([oolong.client.data.settings.SettingKeys.SearchAtTop]), and beside the rail, it opens from a
  * field at the top instead ([TopSearchField]), which moves up into the top bar.
  */
 @Stable
@@ -170,9 +169,6 @@ fun rememberOpenSearchState(focus: Boolean): MainSearchState = remember {
         wantsFocus = focus
     }
 }
-
-/** Search kept at the top of the home page rather than beside the bottom bar. */
-val SearchAtTopKey = booleanPreferencesKey("searchAtTop")
 
 /** Room the field takes at the bottom, for the search content to keep clear of. */
 @Composable

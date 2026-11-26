@@ -2,20 +2,12 @@ package oolong.client.ui.components
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.rememberPreferenceAsState
-
-val HideIpLocationKey = booleanPreferencesKey("hideIpLocation")
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 
 /** [ipLocation] as floors and profiles show it: null when it is empty or the viewer hides it. */
 @Composable
 fun shownIpLocation(ipLocation: String): String? {
-    val context = LocalContext.current
-    // Starts from what is stored, so a floor coming into the list doesn't show it for a frame
-    val stored = remember(context) { context.appPreferences.hideIpLocation }
-    val hidden by rememberPreferenceAsState(HideIpLocationKey, stored)
+    val hidden by settingAsState(SettingKeys.HideIpLocation)
     return ipLocation.takeUnless { hidden || it.isEmpty() }
 }

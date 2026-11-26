@@ -38,20 +38,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.edit
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.data.history.Incognito
-import oolong.client.data.history.KeepHistoryKey
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.rememberSettings
 import oolong.client.model.HistoryEntry
 import oolong.client.navigation.ForumKey
 import oolong.client.navigation.LocalNavigator
@@ -79,9 +77,7 @@ import oolong.client.ui.thread.ThreadPageFrom
 import oolong.core.designsystem.theme.Corners
 import oolong.core.designsystem.theme.LocalReduceMotion
 import oolong.core.designsystem.theme.Motion
-import oolong.core.designsystem.theme.PressFeedback
 import oolong.core.designsystem.theme.TextStyles
-import oolong.core.designsystem.theme.pressScale
 
 @Composable
 fun HistoryPage(
@@ -90,12 +86,11 @@ fun HistoryPage(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val keepsHistory by Incognito.keepsHistory.collectAsState()
-    val context = LocalContext.current
-    val scope = rememberCoroutineScope()
+    val settings = rememberSettings()
     HistoryScreen(
         state = state,
         historyOff = !keepsHistory,
-        onTurnOnHistory = { scope.launch { context.dataStore.edit { it[KeepHistoryKey] = true } } },
+        onTurnOnHistory = { settings[SettingKeys.KeepHistory] = true },
         onBack = { navigator.navigateUp() },
         onClear = viewModel::clear,
         onLoadMore = viewModel::loadMore,

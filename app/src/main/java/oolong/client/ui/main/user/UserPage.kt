@@ -52,14 +52,14 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.delay
 import oolong.client.R
 import oolong.client.data.history.Incognito
 import oolong.client.data.identity.CuidUtils
-import oolong.client.data.settings.rememberPreferenceAsMutableState
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsMutableState
 import oolong.client.model.Account
 import oolong.client.model.HistoryEntry
 import oolong.client.navigation.AboutKey
@@ -382,7 +382,7 @@ fun UserScreen(
     val dark = ExtendedTheme.colors.isNightMode
     val incognito by Incognito.on.collectAsState()
     val keepsHistory by Incognito.keepsHistory.collectAsState()
-    var explained by rememberPreferenceAsMutableState(IncognitoExplainedKey, false)
+    var explained by settingAsMutableState(SettingKeys.IncognitoExplained)
     // Said each time it is turned on; the first time, with what it does and doesn't cover
     var incognitoHint by remember { mutableStateOf(false) }
     var explaining by remember { mutableStateOf(false) }
@@ -638,9 +638,6 @@ private fun rememberStatNumerals(): FontFamily {
 
 /** The red of the About page's new-version mark. */
 private val NewVersionDot = Color(0xFFE5484D)
-
-/** Whether browsing incognito has been explained, as it is the first time it is turned on. */
-private val IncognitoExplainedKey = booleanPreferencesKey("incognitoExplained")
 
 /** Between the incognito hint and the bottom bar under it. */
 private val IncognitoHintGap = 12.dp

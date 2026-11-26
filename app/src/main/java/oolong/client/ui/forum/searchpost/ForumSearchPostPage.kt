@@ -9,7 +9,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -18,7 +17,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -27,7 +25,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import oolong.client.R
 import oolong.client.arch.LoadStatus
-import oolong.client.data.settings.rememberPreferenceAsState
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 import oolong.client.model.ForumSearchOrder
 import oolong.client.model.QuotedPost
 import oolong.client.model.SearchAuthor
@@ -60,7 +59,6 @@ import oolong.client.ui.designsystem.choiceMenuItems
 import oolong.client.ui.designsystem.states.StateScreen
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.main.MainSearchField
-import oolong.client.ui.main.SearchAtTopKey
 import oolong.client.ui.main.mainSearchPadding
 import oolong.client.ui.main.rememberOpenSearchState
 import oolong.client.ui.search.SearchHistoryList
@@ -130,7 +128,7 @@ fun ForumSearchPostScreen(
     val isRefreshing = list.refresh == LoadStatus.Loading
     val error = (list.refresh as? LoadStatus.Error)?.error
     val focusManager = LocalFocusManager.current
-    val atTop by rememberPreferenceAsState(SearchAtTopKey, false)
+    val atTop by settingAsState(SettingKeys.SearchAtTop)
     var input by rememberSaveable { mutableStateOf(state.keyword) }
     LaunchedEffect(state.keyword) {
         if (state.keyword.isNotEmpty()) input = state.keyword
