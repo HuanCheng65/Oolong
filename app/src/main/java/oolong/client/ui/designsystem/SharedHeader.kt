@@ -197,7 +197,9 @@ fun SharedHeaderPager(
                         LocalSharedHeaderPage provides SharedHeaderPage(state, page),
                         LocalChromePadding provides listPadding,
                     ) {
-                        pageContent(page)
+                        Box(modifier = Modifier.pagerPageFocus(showing = page == pagerState.currentPage), propagateMinConstraints = true) {
+                            pageContent(page)
+                        }
                     }
                 }
                 Box(

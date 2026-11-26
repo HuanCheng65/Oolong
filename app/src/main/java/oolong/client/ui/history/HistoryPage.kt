@@ -69,6 +69,7 @@ import oolong.client.ui.designsystem.Refocus
 import oolong.client.ui.designsystem.TabText
 import oolong.client.ui.designsystem.TextButton
 import oolong.client.ui.designsystem.floatingGlass
+import oolong.client.ui.designsystem.pagerPageFocus
 import oolong.client.ui.designsystem.rememberDialogState
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.Symbols
@@ -272,38 +273,41 @@ fun HistoryScreen(
             // Choosing is in one tab at a time
             userScrollEnabled = selected == null,
         ) { page ->
-            when (HistoryTab.entries[page]) {
-                HistoryTab.Threads -> HistoryListContent(
-                    list = state.threads,
-                    query = state.query,
-                    searchHint = R.string.history_search_threads,
-                    onQueryChange = onSearch,
-                    onLoadMore = { onLoadMore(HistoryTab.Threads) },
-                    onOpen = onOpen,
-                    onDelete = onDelete,
-                    selected = selected,
-                    onSelect = onSelect,
-                    onStartSelecting = onStartSelecting,
-                    historyOff = historyOff,
-                    onTurnOnHistory = onTurnOnHistory,
-                    contentPadding = contentPaddings,
-                )
+            // Pages off screen keep a keyboard's focus out, or Tab would turn the pager to them
+            Box(modifier = Modifier.pagerPageFocus(showing = page == pagerState.currentPage), propagateMinConstraints = true) {
+                when (HistoryTab.entries[page]) {
+                    HistoryTab.Threads -> HistoryListContent(
+                        list = state.threads,
+                        query = state.query,
+                        searchHint = R.string.history_search_threads,
+                        onQueryChange = onSearch,
+                        onLoadMore = { onLoadMore(HistoryTab.Threads) },
+                        onOpen = onOpen,
+                        onDelete = onDelete,
+                        selected = selected,
+                        onSelect = onSelect,
+                        onStartSelecting = onStartSelecting,
+                        historyOff = historyOff,
+                        onTurnOnHistory = onTurnOnHistory,
+                        contentPadding = contentPaddings,
+                    )
 
-                HistoryTab.Forums -> HistoryListContent(
-                    list = state.forums,
-                    query = state.query,
-                    searchHint = R.string.history_search_forums,
-                    onQueryChange = onSearch,
-                    onLoadMore = { onLoadMore(HistoryTab.Forums) },
-                    onOpen = onOpen,
-                    onDelete = onDelete,
-                    selected = selected,
-                    onSelect = onSelect,
-                    onStartSelecting = onStartSelecting,
-                    historyOff = historyOff,
-                    onTurnOnHistory = onTurnOnHistory,
-                    contentPadding = contentPaddings,
-                )
+                    HistoryTab.Forums -> HistoryListContent(
+                        list = state.forums,
+                        query = state.query,
+                        searchHint = R.string.history_search_forums,
+                        onQueryChange = onSearch,
+                        onLoadMore = { onLoadMore(HistoryTab.Forums) },
+                        onOpen = onOpen,
+                        onDelete = onDelete,
+                        selected = selected,
+                        onSelect = onSelect,
+                        onStartSelecting = onStartSelecting,
+                        historyOff = historyOff,
+                        onTurnOnHistory = onTurnOnHistory,
+                        contentPadding = contentPaddings,
+                    )
+                }
             }
         }
     }

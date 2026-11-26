@@ -76,6 +76,7 @@ import oolong.client.ui.designsystem.Sizes
 import oolong.client.ui.designsystem.TabText
 import oolong.client.ui.designsystem.UserHeader
 import oolong.client.ui.designsystem.VerticalDivider
+import oolong.client.ui.designsystem.pagerPageFocus
 import oolong.client.ui.designsystem.states.DefaultEmptyScreen
 import oolong.client.ui.designsystem.states.DefaultLoadingScreen
 import oolong.client.ui.designsystem.states.StateScreen
@@ -188,50 +189,53 @@ fun LikesScreen(
             key = { it },
             verticalAlignment = Alignment.Top,
         ) { page ->
-            val tab = LikesTab.entries[page]
-            LaunchedEffect(tab) { onShow(tab) }
-            when (tab) {
-                LikesTab.Threads -> LikesList(
-                    list = state.threads,
-                    contentPadding = contentPaddings,
-                    onRefresh = { onRefresh(tab) },
-                    onLoadMore = { onLoadMore(tab) },
-                ) { threads ->
-                    itemsIndexed(items = threads, key = { _, thread -> thread.id }) { index, thread ->
-                        Container {
-                            Column {
-                                FeedCard(
-                                    thread = thread,
-                                    onClick = onOpenThread,
-                                    onAgree = onAgreeThread,
-                                    onClickReply = onOpenThreadReplies,
-                                    onClickUser = onOpenUser,
-                                    onClickForum = onOpenForum,
-                                )
-                                if (index < threads.lastIndex) VerticalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+            // Pages off screen keep a keyboard's focus out, or Tab would turn the pager to them
+            Box(modifier = Modifier.pagerPageFocus(showing = page == pagerState.currentPage), propagateMinConstraints = true) {
+                val tab = LikesTab.entries[page]
+                LaunchedEffect(tab) { onShow(tab) }
+                when (tab) {
+                    LikesTab.Threads -> LikesList(
+                        list = state.threads,
+                        contentPadding = contentPaddings,
+                        onRefresh = { onRefresh(tab) },
+                        onLoadMore = { onLoadMore(tab) },
+                    ) { threads ->
+                        itemsIndexed(items = threads, key = { _, thread -> thread.id }) { index, thread ->
+                            Container {
+                                Column {
+                                    FeedCard(
+                                        thread = thread,
+                                        onClick = onOpenThread,
+                                        onAgree = onAgreeThread,
+                                        onClickReply = onOpenThreadReplies,
+                                        onClickUser = onOpenUser,
+                                        onClickForum = onOpenForum,
+                                    )
+                                    if (index < threads.lastIndex) VerticalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                                }
                             }
                         }
                     }
-                }
 
-                LikesTab.Replies -> LikesList(
-                    list = state.replies,
-                    contentPadding = contentPaddings,
-                    onRefresh = { onRefresh(tab) },
-                    onLoadMore = { onLoadMore(tab) },
-                ) { replies ->
-                    itemsIndexed(items = replies, key = { _, reply -> reply.postId }) { index, reply ->
-                        Container {
-                            Column {
-                                LikedReplyItem(
-                                    reply = reply,
-                                    onOpen = { onOpenReply(reply) },
-                                    onOpenThread = { onOpenThreadOf(reply) },
-                                    onOpenUser = { onOpenUser(reply.author) },
-                                    onAgree = { onAgreeReply(reply) },
-                                )
-                                // Divided like feed cards
-                                if (index < replies.lastIndex) VerticalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                    LikesTab.Replies -> LikesList(
+                        list = state.replies,
+                        contentPadding = contentPaddings,
+                        onRefresh = { onRefresh(tab) },
+                        onLoadMore = { onLoadMore(tab) },
+                    ) { replies ->
+                        itemsIndexed(items = replies, key = { _, reply -> reply.postId }) { index, reply ->
+                            Container {
+                                Column {
+                                    LikedReplyItem(
+                                        reply = reply,
+                                        onOpen = { onOpenReply(reply) },
+                                        onOpenThread = { onOpenThreadOf(reply) },
+                                        onOpenUser = { onOpenUser(reply.author) },
+                                        onAgree = { onAgreeReply(reply) },
+                                    )
+                                    // Divided like feed cards
+                                    if (index < replies.lastIndex) VerticalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                                }
                             }
                         }
                     }
