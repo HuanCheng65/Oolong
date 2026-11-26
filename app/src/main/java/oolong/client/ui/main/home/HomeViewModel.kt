@@ -26,6 +26,7 @@ import oolong.client.arch.Actions
 import oolong.client.arch.LoadStatus
 import oolong.client.arch.MessageController
 import oolong.client.arch.query.QueryState
+import oolong.client.background.sign.SignProgress
 import oolong.client.data.forum.HomeRepository
 import oolong.client.model.FollowedForum
 import oolong.client.model.VisitedForum
@@ -41,6 +42,8 @@ data class HomeState(
     /** Whether the user asked for the followed forums again and they are on their way. */
     val refreshing: Boolean = false,
     val loggedIn: Boolean = false,
+    /** The signing going on now, or just over; null when there is none. */
+    val signing: SignProgress.Run? = null,
 ) {
     /** The followed forums the user pinned, in the order they are followed. */
     val pinned: ImmutableList<FollowedForum> get() = forums.filter { it.id in pinnedIds }.toImmutableList()
@@ -74,13 +77,23 @@ class HomeViewModel @Inject constructor(
         }
     }
 
+    /** The followed forums, with those signed by the signing going on now marked so at once. */
+    private val followedSigned = combine(followed, SignProgress.state) { followed, signing ->
+        val signed = signing?.signed.orEmpty()
+        val marked = followed?.let { (uid, query) ->
+            if (signed.isEmpty()) uid to query
+            else uid to query.copy(data = query.data?.map { if (!it.signedIn && it.id in signed) it.copy(signedIn = true) else it })
+        }
+        marked to signing
+    }
+
     val state: StateFlow<HomeState> = combine(
-        followed,
+        followedSigned,
         unfollowed,
         refreshing,
         repository.pinnedForumIds,
         repository.visitedForums,
-    ) { followed, unfollowed, refreshing, pinned, visited ->
+    ) { (followed, signing), unfollowed, refreshing, pinned, visited ->
         val (uid, query) = followed ?: (null to QueryState(status = LoadStatus.Loading))
         val forums = query.data
         HomeState(
@@ -91,6 +104,7 @@ class HomeViewModel @Inject constructor(
             load = if (forums == null) query.status.takeUnless { it == LoadStatus.Idle } ?: LoadStatus.Loading else LoadStatus.Idle,
             refreshing = refreshing,
             loggedIn = uid?.isNotEmpty() ?: true,
+            signing = signing,
         )
     }.stateIn(viewModelScope, SharingStarted.Eagerly, HomeState(load = LoadStatus.Loading))
 

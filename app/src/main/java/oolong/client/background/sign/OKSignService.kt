@@ -81,30 +81,40 @@ class OKSignService : IntentService(TAG), CoroutineScope, ProgressListener {
     override fun onHandleIntent(intent: Intent?) {
         Log.i(TAG, "onHandleWork")
         if (intent?.action == ACTION_START_SIGN) {
-            val loginInfo = accounts.current.value
-            if (loginInfo != null) {
-                runBlocking {
-                    SingleAccountSigner(
-                        this@OKSignService,
-                        loginInfo,
-                        accounts,
-                        signs,
-                        likes,
-                    )
-                        .apply {
-                            setProgressListener(this@OKSignService)
-                        }
-                        .start()
-                }
-            } else {
-                updateNotification(
-                    getString(R.string.title_oksign_fail),
-                    getString(R.string.text_login_first)
-                )
-                ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH)
+            // Begun already when started from the app; this covers any other way in
+            SignProgress.begin()
+            try {
+                sign()
+            } finally {
+                SignProgress.finish()
             }
         } else {
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        }
+    }
+
+    private fun sign() {
+        val loginInfo = accounts.current.value
+        if (loginInfo != null) {
+            runBlocking {
+                SingleAccountSigner(
+                    this@OKSignService,
+                    loginInfo,
+                    accounts,
+                    signs,
+                    likes,
+                )
+                    .apply {
+                        setProgressListener(this@OKSignService)
+                    }
+                    .start()
+            }
+        } else {
+            updateNotification(
+                getString(R.string.title_oksign_fail),
+                getString(R.string.text_login_first)
+            )
+            ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH)
         }
     }
 
@@ -217,12 +227,18 @@ class OKSignService : IntentService(TAG), CoroutineScope, ProgressListener {
     }
 
     override fun onStart(total: Int) {
+        SignProgress.total(total)
         updateProgress(getString(R.string.title_start_sign), null, 0, total)
-        if (total > 0) Toast.makeText(
+        // Where the progress shows on screen, it says the signing began
+        if (total > 0 && !SignProgress.watched) Toast.makeText(
             this,
             R.string.toast_oksign_start,
             Toast.LENGTH_SHORT
         ).show()
+    }
+
+    override fun onMSigned(forumIds: List<Long>, done: Int) {
+        SignProgress.signed(forumIds, done)
     }
 
     override fun onMSignRefused(reason: String) {
@@ -258,6 +274,7 @@ class OKSignService : IntentService(TAG), CoroutineScope, ProgressListener {
         current: Int,
         total: Int
     ) {
+        signDataBean.forumId.toLongOrNull()?.let { SignProgress.signed(listOf(it), current + 1) }
         updateProgress(
             getString(
                 R.string.title_signing_progress,
@@ -275,6 +292,7 @@ class OKSignService : IntentService(TAG), CoroutineScope, ProgressListener {
 
     override fun onFinish(success: Boolean, signedCount: Int, total: Int) {
         AutoSign.record(this, signedCount, total, success)
+        SignProgress.finish()
         // The followed forums shown now pick up their new signed state
         followed.changed()
         val launch = packageManager.getLaunchIntentForPackage(packageName)?.apply {
@@ -296,6 +314,7 @@ class OKSignService : IntentService(TAG), CoroutineScope, ProgressListener {
                 ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH)
                 updateNotification(getString(R.string.title_oksign_fail), errorMsg)
             } else {
+                SignProgress.tried(current + 1)
                 updateProgress(
                     getString(
                         R.string.title_signing_progress,

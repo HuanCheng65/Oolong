@@ -73,11 +73,18 @@ object AutoSign {
 
     /** Starts the signing service in the foreground, as one may from the app or an alarm. */
     fun start(context: Context) {
+        // One run at a time: asked again while one runs, that run is the answer
+        if (!SignProgress.begin()) return
         markAttempt(context)
-        ContextCompat.startForegroundService(
-            context,
-            Intent(context, OKSignService::class.java).setAction(OKSignService.ACTION_START_SIGN),
-        )
+        try {
+            ContextCompat.startForegroundService(
+                context,
+                Intent(context, OKSignService::class.java).setAction(OKSignService.ACTION_START_SIGN),
+            )
+        } catch (e: RuntimeException) {
+            SignProgress.abandon()
+            throw e
+        }
     }
 
     /**

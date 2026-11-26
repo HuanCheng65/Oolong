@@ -250,6 +250,7 @@
     </plurals>
     <string name="title_oksign_finish">Check-in complete</string>
     <string name="sign_done_chip">Done</string>
+    <string name="sign_progress">%1$d of %2$d</string>
     <string name="title_oksign_fail">Couldn\'t check in</string>
     <string name="text_login_first">Sign in to check in</string>
     <string name="title_history_today">Today</string>

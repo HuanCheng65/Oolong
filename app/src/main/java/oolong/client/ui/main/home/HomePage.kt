@@ -48,12 +48,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -69,6 +67,7 @@ import com.airbnb.lottie.compose.rememberLottieComposition
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import oolong.client.R
 import oolong.client.arch.LoadStatus
+import oolong.client.background.sign.SignProgress
 import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.rememberSettings
 import oolong.client.data.settings.settingAsState
@@ -82,7 +81,6 @@ import oolong.client.navigation.transition.pageOrigin
 import oolong.client.navigation.transition.rememberPageOrigin
 import oolong.client.ui.components.ErrorScreen
 import oolong.client.ui.components.TipScreen
-import oolong.client.ui.designsystem.ActionItem
 import oolong.client.ui.designsystem.Avatar
 import oolong.client.ui.designsystem.Button
 import oolong.client.ui.designsystem.Chip
@@ -440,6 +438,9 @@ sealed interface HomeEvent {
     data object Refresh : HomeEvent
     data object Search : HomeEvent
     data object OneKeySign : HomeEvent
+
+    /** The sign-in button is done showing that the signing is over. */
+    data object SignDoneShown : HomeEvent
     data class OpenForum(val name: String) : HomeEvent
     data class Pin(val forum: FollowedForum) : HomeEvent
     data class Unpin(val forum: FollowedForum) : HomeEvent
@@ -477,6 +478,12 @@ fun HomePage(
         Text(text = stringResource(id = R.string.title_dialog_unfollow_forum, unfollowForum?.name.orEmpty()))
     }
 
+    // Where the signing shows, it needn't say it began
+    LifecycleResumeEffect(Unit) {
+        SignProgress.watch()
+        onPauseOrDispose { SignProgress.unwatch() }
+    }
+
     val settings = rememberSettings()
     val listSingle by settingAsState(SettingKeys.ListSingle)
     val showHistory by settingAsState(SettingKeys.HomePageShowHistoryForum)
@@ -496,6 +503,7 @@ fun HomePage(
                 HomeEvent.Refresh -> viewModel.refresh()
                 HomeEvent.Search -> navigator.navigate(SearchKey())
                 HomeEvent.OneKeySign -> TiebaUtil.startSign(context)
+                HomeEvent.SignDoneShown -> SignProgress.clear()
                 is HomeEvent.OpenForum -> navigator.navigate(ForumKey(event.name))
                 is HomeEvent.Pin -> viewModel.pin(event.forum)
                 is HomeEvent.Unpin -> viewModel.unpin(event.forum)
@@ -555,10 +563,11 @@ fun HomeScreen(
             GlassTopBar(
                 title = { GlassTopBarTitle(text = stringResource(id = R.string.title_main)) },
                 actions = {
-                    ActionItem(
-                        icon = ImageVector.vectorResource(id = R.drawable.ic_oksign),
-                        contentDescription = stringResource(id = R.string.title_oksign)
-                    ) { onEvent(HomeEvent.OneKeySign) }
+                    SignButton(
+                        signing = state.signing,
+                        onClick = { onEvent(HomeEvent.OneKeySign) },
+                        onDoneShown = { onEvent(HomeEvent.SignDoneShown) },
+                    )
                     // Shows the layout in use, and turns into the other as it switches
                     ProvideContentColor(color = ExtendedTheme.colors.topBarContent) {
                         IconButton(onClick = onToggleListSingle) {

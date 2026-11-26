@@ -4,6 +4,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.test.core.app.ApplicationProvider
 import com.airbnb.lottie.LottieCompositionFactory
 import oolong.client.R
+import oolong.client.background.sign.SignProgress
 import oolong.client.testing.LegacyAppRule
 import oolong.client.testing.captureScreenshot
 import oolong.client.testing.captureScreenshotPaused
@@ -38,6 +39,12 @@ class HomeScreenScreenshotTest {
     @Test
     fun list() {
         captureScreenshot { HomeScreen(state = HomePreviewData.loaded, onEvent = {}, listSingle = true) }
+    }
+
+    @Test
+    fun signing() {
+        val state = HomePreviewData.loaded.copy(signing = SignProgress.Run(done = 7, total = 18))
+        captureScreenshot { HomeScreen(state = state, onEvent = {}, listSingle = true) }
     }
 
     @Test

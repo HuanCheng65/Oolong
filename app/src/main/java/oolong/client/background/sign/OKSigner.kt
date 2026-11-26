@@ -157,6 +157,10 @@ class SingleAccountSigner(
                     signData.toList()
                 }
                 mSignCount = totalCount - newSignData.size
+                if (mSignCount > 0) {
+                    val signedIds = mSignInfo.filter { it.signed == "1" }.mapNotNull { it.forumId?.toLongOrNull() }
+                    withContext(Dispatchers.Main) { mProgressListener?.onMSigned(signedIds, mSignCount) }
+                }
                 newSignData
                     .asFlow()
                     .onEach {
@@ -229,6 +233,9 @@ class SingleAccountSigner(
 }
 
 interface ProgressListener {
+    /** The forums [forumIds] were signed all at once, [done] of the run's forums with them. */
+    fun onMSigned(forumIds: List<Long>, done: Int) {}
+
     fun onStart(
         total: Int
     )
