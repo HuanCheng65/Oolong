@@ -2,6 +2,7 @@ package oolong.core.designsystem.theme
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -28,7 +29,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * How pressed things respond, in place of Material's ripple (design-system.md §8.1): a veil of the
- * content colour. Controls that stand on their own also shrink, with [pressScale].
+ * content colour. Controls that stand on their own also shrink, with [pressScale]. Under a mouse
+ * or touchpad pointer the veil shows at half strength, to say what a click would press.
  */
 object PressFeedback {
     /** The veil over the whole bounds. The app's default indication. */
@@ -70,6 +72,9 @@ private const val MaxPressedScale = 0.985f
 
 /** The veil's opacity at full press, of the content colour. */
 private const val PressedOverlayAlpha = 0.08f
+
+/** The veil's opacity under a pointer: half a press. */
+private const val HoveredOverlayAlpha = PressedOverlayAlpha / 2
 
 /** How long a tap shows its press before letting go, about 80% of the way in. */
 private const val MinPressMillis = 100L
@@ -116,13 +121,32 @@ private class PressNode(
     /** 0 at rest, 1 fully pressed; the release spring may swing a little past 0. */
     private val progress = Animatable(0f, visibilityThreshold = Motion.ProgressThreshold)
 
+    /** 0 with no pointer over it, 1 with one. */
+    private val hover = Animatable(0f, visibilityThreshold = Motion.ProgressThreshold)
+
     override fun onAttach() {
         coroutineScope.launch { followPresses(interactionSource.interactions, progress) { invalidateDraw() } }
+        coroutineScope.launch {
+            var hovers = 0
+            var moving: Job? = null
+            interactionSource.interactions.collect { interaction ->
+                val before = hovers
+                when (interaction) {
+                    is HoverInteraction.Enter -> hovers++
+                    is HoverInteraction.Exit -> hovers = (hovers - 1).coerceAtLeast(0)
+                    else -> return@collect
+                }
+                if ((before > 0) == (hovers > 0)) return@collect
+                moving?.cancel()
+                moving = launch { hover.animateTo(if (hovers > 0) 1f else 0f, if (hovers > 0) Motion.fadeIn() else Motion.fadeOut()) { invalidateDraw() } }
+            }
+        }
     }
 
     override fun ContentDrawScope.draw() {
         drawContent()
-        val alpha = (PressedOverlayAlpha * progress.value).coerceIn(0f, PressedOverlayAlpha)
+        val pressed = (PressedOverlayAlpha * progress.value).coerceIn(0f, PressedOverlayAlpha)
+        val alpha = maxOf(pressed, HoveredOverlayAlpha * hover.value)
         if (alpha <= 0f) return
         val color = currentValueOf(LocalContentColor).copy(alpha = alpha)
         if (shape == null) drawRect(color) else drawOutline(shape.createOutline(size, layoutDirection, this), color)

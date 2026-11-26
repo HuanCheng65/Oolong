@@ -3,6 +3,7 @@ package oolong.client.ui.designsystem
 import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -41,6 +42,7 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
@@ -66,6 +68,7 @@ import dev.chrisbanes.haze.glass.hazeGlass
 import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import oolong.client.data.settings.SettingKeys
@@ -489,9 +492,15 @@ private fun Modifier.floatingGlassOf(
     val lights = tier == GlassTier.Glass && !colors.isTranslucent
     val veilShare = if (!lights) 1f else if (colors.isNightMode) 0f else LitVeilShare
     val veil = colors.text
-    val pressVeil: Modifier = if (!answers || veilShare == 0f) Modifier else Modifier.drawBehind {
-        val alpha = PressVeil * veilShare * press.progress.value.coerceIn(0f, 1f)
-        if (alpha > 0f) drawOutline(shape.createOutline(size, layoutDirection, this), veil.copy(alpha = alpha))
+    // Under a mouse or touchpad pointer the glass lights faintly where a press would light it, and
+    // doesn't swell: it is only being pointed at. Light shows on dark glass, a veil on light
+    val hover = rememberGlassHover()
+    val hoverLight = if (colors.isNightMode) Color.White else veil
+    val pressVeil: Modifier = if (!answers) Modifier else Modifier.glassHover(hover).drawBehind {
+        val pressed = PressVeil * veilShare * press.progress.value.coerceIn(0f, 1f)
+        if (pressed > 0f) drawOutline(shape.createOutline(size, layoutDirection, this), veil.copy(alpha = pressed))
+        val hovered = HoverLight * hover.value * (1f - press.progress.value.coerceIn(0f, 1f))
+        if (hovered > 0f) drawOutline(shape.createOutline(size, layoutDirection, this), hoverLight.copy(alpha = hovered))
     }
     val edged: Modifier = if (bar == null) Modifier.border(0.5.dp, edge, shape) else Modifier.drawBehind {
         drawOutline(shape.createOutline(size, layoutDirection, this), edge.copy(alpha = edge.alpha * shown()), style = Stroke(0.5.dp.toPx()))
@@ -750,6 +759,30 @@ private const val PressBrighten = 0.06f
 
 /** The veil a press puts on floating glass where it does not light up. */
 private const val PressVeil = 0.08f
+
+/** The light over glass under a pointer: half a press's veil. */
+private const val HoverLight = PressVeil / 2
+
+/** Whether a pointer is over a piece of glass, eased in and out. */
+@Composable
+private fun rememberGlassHover(): Animatable<Float, AnimationVector1D> = remember { Animatable(0f, visibilityThreshold = Motion.ProgressThreshold) }
+
+/** Follows a pointer entering and leaving, without taking its events from what is under it. */
+private fun Modifier.glassHover(hover: Animatable<Float, AnimationVector1D>): Modifier = pointerInput(hover) {
+    coroutineScope {
+        awaitPointerEventScope {
+            while (true) {
+                val event = awaitPointerEvent(PointerEventPass.Initial)
+                val target = when (event.type) {
+                    PointerEventType.Enter -> 1f
+                    PointerEventType.Exit -> 0f
+                    else -> continue
+                }
+                launch { hover.animateTo(target, if (target == 1f) Motion.fadeIn() else Motion.fadeOut()) }
+            }
+        }
+    }
+}
 
 /**
  * The band behind a classic bar, across the window: the chosen material, with a hairline on its
