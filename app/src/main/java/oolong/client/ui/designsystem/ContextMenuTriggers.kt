@@ -122,6 +122,14 @@ fun Modifier.longPressMenu(
     var holding by remember { mutableStateOf(false) }
     val interaction = interactionSource ?: remember { MutableInteractionSource() }
     return onGloballyPositioned { coordinates = it }
+        // A right click opens the same menu where it lands, with no finger to follow
+        .onSecondaryClick(enabled = enabled && menus != null) { at ->
+            val list = items()
+            if (menus != null && list.isNotEmpty()) {
+                val whole = coordinates?.takeIf { fromWhole && it.isAttached }?.boundsInWindow()
+                menus.show(list, anchor = whole ?: Rect(coordinates?.localToWindow(at) ?: at, Size.Zero))
+            }
+        }
         .pointerInput(menus) {
             if (menus == null) return@pointerInput
             awaitEachGesture {

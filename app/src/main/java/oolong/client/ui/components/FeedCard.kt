@@ -43,6 +43,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -96,6 +97,7 @@ import oolong.client.ui.designsystem.UserHeader
 import oolong.client.ui.designsystem.UserHeaderPlaceholder
 import oolong.client.ui.designsystem.adaptive.LocalWindowSizeClass
 import oolong.client.ui.designsystem.adaptive.WindowWidthSizeClass
+import oolong.client.ui.designsystem.onSecondaryClick
 import oolong.client.ui.designsystem.placeholder.PlaceholderHighlight
 import oolong.client.ui.designsystem.placeholder.fade
 import oolong.client.ui.designsystem.placeholder.placeholder
@@ -199,11 +201,13 @@ fun Card(
     onLongClickLabel: String? = null,
 ) {
     val cardModifier = when {
-        onLongClick != null -> Modifier.combinedClickable(
-            onClick = { onClick?.invoke() },
-            onLongClickLabel = onLongClickLabel,
-            onLongClick = onLongClick,
-        )
+        onLongClick != null -> Modifier
+            .onSecondaryClick { onLongClick() }
+            .combinedClickable(
+                onClick = { onClick?.invoke() },
+                onLongClickLabel = onLongClickLabel,
+                onLongClick = onLongClick,
+            )
         onClick != null -> Modifier.clickable(onClick = onClick)
         else -> Modifier
     }
@@ -759,7 +763,8 @@ fun FeedCard(
             .onGloballyPositioned { coordinates = it }
             .pointerInput(menus) {
                 awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
+                    // Ahead of the card's own handling, so a right click already knows where it landed
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
                     pressAt = coordinates?.localToWindow(down.position) ?: Offset.Zero
                     while (true) {
                         val change = awaitPointerEvent().changes.firstOrNull() ?: break

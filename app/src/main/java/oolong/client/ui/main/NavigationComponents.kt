@@ -113,6 +113,7 @@ import oolong.client.ui.designsystem.isLensGlass
 import oolong.client.ui.designsystem.lensTarget
 import oolong.client.ui.designsystem.liquidLensOptics
 import oolong.client.ui.designsystem.longPressMenu
+import oolong.client.ui.designsystem.onSecondaryClick
 import oolong.client.ui.designsystem.rememberElasticPress
 import oolong.client.ui.designsystem.theme.ExtendedColors
 import oolong.client.ui.designsystem.theme.ExtendedTheme
@@ -638,6 +639,11 @@ fun FloatingNavBar(
                                     modifier = Modifier
                                         .size(width = itemWidth, height = itemHeight)
                                         .onGloballyPositioned { itemBounds[index] = it.boundsInWindow() }
+                                        .onSecondaryClick(enabled = navigationItem.menu != null && menus != null) {
+                                            val menu = navigationItem.menu
+                                            val bounds = itemBounds[index]
+                                            if (menu != null && bounds != null) menus?.show(menu(), anchor = bounds)
+                                        }
                                         .semantics(mergeDescendants = true) {
                                             role = Role.Tab
                                             this.selected = selected
@@ -761,7 +767,9 @@ private fun ClassicNavBar(
                 onLongClick = if (menu != null && menus != null) {
                     { menus.show(menu(), anchor = bounds) }
                 } else null,
-                modifier = Modifier.onGloballyPositioned { bounds = it.boundsInWindow() },
+                modifier = Modifier
+                    .onGloballyPositioned { bounds = it.boundsInWindow() }
+                    .onSecondaryClick(enabled = menu != null && menus != null) { if (menu != null) menus?.show(menu(), anchor = bounds) },
             ) { tint -> NavItemIcon(item, selected, title, tint) }
         }
         if (onSearchButtonPlaced != null) {

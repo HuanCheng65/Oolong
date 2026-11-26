@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.LayoutCoordinates
@@ -74,6 +75,7 @@ import oolong.client.ui.designsystem.RankNumber
 import oolong.client.ui.designsystem.Refocus
 import oolong.client.ui.designsystem.Reveal
 import oolong.client.ui.designsystem.SegmentedControl
+import oolong.client.ui.designsystem.onSecondaryClick
 import oolong.client.ui.designsystem.states.DefaultLoadingScreen
 import oolong.client.ui.designsystem.states.StateScreen
 import oolong.client.ui.designsystem.theme.ExtendedTheme
@@ -370,7 +372,8 @@ private fun HotThreadRow(
             .pointerInput(menus) {
                 // The finger that opened the peek can slide onto its actions and lift
                 awaitEachGesture {
-                    val down = awaitFirstDown(requireUnconsumed = false)
+                    // Ahead of the row's own handling, so a right click already knows where it landed
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
                     pressAt = coordinates?.localToWindow(down.position) ?: Offset.Zero
                     while (true) {
                         val change = awaitPointerEvent().changes.firstOrNull() ?: break
@@ -383,6 +386,11 @@ private fun HotThreadRow(
                         if (peeking) menus?.moveFinger(position)
                     }
                 }
+            }
+            .onSecondaryClick(enabled = peek != null) {
+                val layout = coordinates ?: return@onSecondaryClick
+                peeking = true
+                peek?.invoke(thread, Rect(layout.positionInWindow(), layout.size.toSize()), pressAt, origin)
             }
             .combinedClickable(
                 onClick = {

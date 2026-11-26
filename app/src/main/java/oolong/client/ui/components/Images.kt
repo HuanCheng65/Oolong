@@ -69,6 +69,7 @@ import oolong.client.media.startPictureDrag
 import oolong.client.model.PhotoViewData
 import oolong.client.ui.designsystem.LocalContextMenus
 import oolong.client.ui.designsystem.ShapedPicture
+import oolong.client.ui.designsystem.onSecondaryClick
 import oolong.client.ui.designsystem.shapedPicture
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.photoview.LocalPhotoFloors
@@ -310,6 +311,10 @@ fun NetworkImage(
                         onTap = { open() },
                     )
                 }
+            }
+            // A right click opens the menu where it lands; with no finger held, nothing drags out
+            .onSecondaryClick(enabled = enableClick && menus != null && menuItems != null && shouldLoad) { at ->
+                if (menus != null && menuItems != null) menus.show(menuItems, anchor = Rect(boxOffset + at, Size.Zero))
             }
             // The taps above, for screen readers too; the menu opens at the picture's middle
             .semantics {
