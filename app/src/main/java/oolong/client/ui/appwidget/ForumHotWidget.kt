@@ -53,7 +53,7 @@ class ForumHotWidget : GlanceAppWidget() {
 
     /** Shown with the forum the user visited last, or asking for one when there is none. */
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
-        val name = context.widgetEntryPoint.home().visitedForums.first().firstOrNull()?.name
+        val name = WidgetData.standIn()?.forumName ?: context.widgetEntryPoint.home().visitedForums.first().firstOrNull()?.name
         val loaded = name?.let { load(context, it, fresh = true) }
         provideContent { Content(name, AppWidgetManager.INVALID_APPWIDGET_ID, Shown(loaded, loading = false)) }
     }

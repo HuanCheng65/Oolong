@@ -4,6 +4,7 @@
     android:configure="oolong.client.ui.appwidget.WidgetSetupActivity"
     android:widgetFeatures="reconfigurable"
     android:initialLayout="@layout/appwidget_loading"
+    android:previewImage="@drawable/appwidget_preview_forum_hot"
     android:minWidth="110dp"
     android:minHeight="110dp"
     android:minResizeWidth="110dp"

@@ -28,6 +28,7 @@ internal object WidgetPictures {
     /** [url] cut to [width]×[height] px from its middle, its corners rounded by [radius] px; null when it can't load. */
     suspend fun load(context: Context, url: String, width: Int, height: Int, radius: Float): Bitmap? {
         if (url.isEmpty()) return null
+        WidgetData.standIn()?.let { return it.picture(url, width, height, radius) }
         val source = runCatching {
             context.loadBitmap(url) {
                 size(width, height)

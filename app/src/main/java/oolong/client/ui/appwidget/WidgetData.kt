@@ -1,12 +1,14 @@
 package oolong.client.ui.appwidget
 
 import android.content.Context
+import android.graphics.Bitmap
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
@@ -23,6 +25,8 @@ import oolong.client.model.HotTopic
 import oolong.client.model.RankReason
 import oolong.client.model.ThreadMeasure
 import java.io.File
+import kotlin.coroutines.AbstractCoroutineContextElement
+import kotlin.coroutines.CoroutineContext
 
 @EntryPoint
 @InstallIn(SingletonComponent::class)
@@ -90,7 +94,32 @@ internal object WidgetData {
     /** How many rows any widget shows at most; more are never asked for. */
     private const val MOST_ROWS = 8
 
-    suspend fun topics(context: Context, fresh: Boolean): TopicsContent? = kept(context, "topics", TopicsContent.serializer(), fresh) {
+    /**
+     * Content to draw in place of the network's, for the still previews the app carries for
+     * launchers that don't take drawn ones; set only by the debug build's WidgetPreviewExport.
+     */
+    interface StandIn {
+        val forumName: String
+
+        fun topics(): TopicsContent
+
+        fun ranking(): RankingContent
+
+        fun forum(name: String): ForumContent
+
+        fun forums(): ForumsContent
+
+        fun picture(url: String, width: Int, height: Int, radius: Float): Bitmap?
+    }
+
+    /** Draws what runs inside it from [standIn]; nothing outside, such as the widgets on screen, sees it. */
+    class StandInContext(val standIn: StandIn) : AbstractCoroutineContextElement(Key) {
+        companion object Key : CoroutineContext.Key<StandInContext>
+    }
+
+    suspend fun standIn(): StandIn? = currentCoroutineContext()[StandInContext]?.standIn
+
+    suspend fun topics(context: Context, fresh: Boolean): TopicsContent? = standIn()?.topics() ?: kept(context, "topics", TopicsContent.serializer(), fresh) {
         val topics = context.widgetEntryPoint.explore().topics().take(MOST_ROWS)
         TopicsContent(
             loadedAt = System.currentTimeMillis(),
@@ -98,7 +127,7 @@ internal object WidgetData {
         )
     }
 
-    suspend fun ranking(context: Context, fresh: Boolean): RankingContent? = kept(context, "ranking", RankingContent.serializer(), fresh) {
+    suspend fun ranking(context: Context, fresh: Boolean): RankingContent? = standIn()?.ranking() ?: kept(context, "ranking", RankingContent.serializer(), fresh) {
         val threads = context.widgetEntryPoint.explore().threadRanking(ThreadMeasure.MostRead).take(MOST_ROWS)
         RankingContent(
             loadedAt = System.currentTimeMillis(),
@@ -116,7 +145,7 @@ internal object WidgetData {
         )
     }
 
-    suspend fun forum(context: Context, name: String, fresh: Boolean): ForumContent? = kept(context, "forum_$name", ForumContent.serializer(), fresh) {
+    suspend fun forum(context: Context, name: String, fresh: Boolean): ForumContent? = standIn()?.forum(name) ?: kept(context, "forum_$name", ForumContent.serializer(), fresh) {
         val page = context.widgetEntryPoint.forums().threads(
             forumName = name,
             forumId = 0,
@@ -137,7 +166,7 @@ internal object WidgetData {
     }
 
     suspend fun forums(context: Context, source: ForumsSource, fresh: Boolean): ForumsContent? =
-        kept(context, "forums_${source.name}", ForumsContent.serializer(), fresh) {
+        standIn()?.forums() ?: kept(context, "forums_${source.name}", ForumsContent.serializer(), fresh) {
             val home = context.widgetEntryPoint.home()
             val uid = home.account.first()
             val followed = if (uid.isNotEmpty()) context.widgetEntryPoint.followedForums().query.reload(uid) else emptyList()

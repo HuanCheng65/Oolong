@@ -2,6 +2,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/appwidget_mix_description"
     android:initialLayout="@layout/appwidget_loading"
+    android:previewImage="@drawable/appwidget_preview_topics_and_forums"
     android:minWidth="250dp"
     android:minHeight="250dp"
     android:minResizeWidth="250dp"

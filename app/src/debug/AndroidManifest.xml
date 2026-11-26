@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <application>
         <activity
             android:name=".debug.automask.AutoMaskLabActivity"
             android:exported="false"
             android:label="点选打码实验" />
+
+        <!-- Draws the widgets' previews into pictures; see WidgetPreviewExport -->
+        <receiver
+            android:name=".debug.WidgetPreviewExport"
+            android:exported="true"
+            tools:ignore="ExportedReceiver" />
     </application>
 </manifest>

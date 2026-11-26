@@ -2,6 +2,7 @@
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:description="@string/appwidget_ranking_description"
     android:initialLayout="@layout/appwidget_loading"
+    android:previewImage="@drawable/appwidget_preview_thread_ranking"
     android:minWidth="250dp"
     android:minHeight="110dp"
     android:minResizeWidth="200dp"
