@@ -11,12 +11,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalContext
 import androidx.core.graphics.ColorUtils
 import androidx.core.graphics.createBitmap
-import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
-import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.palette.graphics.Palette
 import coil3.request.transformations
@@ -26,8 +23,10 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.data.settings.ThemeSettings
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.rememberSettings
 import oolong.client.media.ImageUtil
 import oolong.client.media.image.BlurTransformation
 import oolong.client.media.image.loadBitmap
@@ -125,7 +124,7 @@ data class TranslucentWallpaper(
         fun source(context: Context) = File(context.filesDir, "cropped_background.jpg")
 
         suspend fun saved(context: Context): TranslucentWallpaper {
-            val prefs = context.dataStore.data.first()
+            val prefs = Settings.of(context).all.value
             // Before the text could be chosen for the wallpaper, it was always picked by hand, and
             // dark text faded the wallpaper to white, which is no longer done
             val legacyDark = prefs[TextKey] == null && prefs[ThemeKey] == ThemeUtil.TRANSLUCENT_THEME_DARK
@@ -141,23 +140,24 @@ data class TranslucentWallpaper(
             )
         }
 
-        private val PathKey = stringPreferencesKey(ThemeUtil.KEY_TRANSLUCENT_THEME_BACKGROUND_PATH)
-        private val ThemeKey = intPreferencesKey("translucent_background_theme")
+        // Read as stored, where whether one is set at all tells an old wallpaper apart
+        private val PathKey = SettingKeys.TranslucentThemeBackgroundPath.key
+        private val ThemeKey = SettingKeys.TranslucentBackgroundTheme.key
         private val TextKey = stringPreferencesKey("translucent_wallpaper_text")
         internal val DimKey = floatPreferencesKey("translucent_wallpaper_dim")
-        private val BlurKey = intPreferencesKey("translucent_background_blur")
+        private val BlurKey = SettingKeys.TranslucentBackgroundBlur.key
 
         /**
          * Whether the drawn wallpaper is from before dark text stopped fading it to white, and is
          * to be drawn again.
          */
         suspend fun isOutdated(context: Context): Boolean {
-            val prefs = context.dataStore.data.first()
+            val prefs = Settings.of(context).all.value
             return prefs[TextKey] == null && prefs[ThemeKey] == ThemeUtil.TRANSLUCENT_THEME_DARK && prefs[PathKey] != null
         }
 
         /** Whether [path] is still the drawn wallpaper saved, not one replaced since. */
-        suspend fun isCurrent(context: Context, path: String): Boolean = context.dataStore.data.first()[PathKey] == path
+        suspend fun isCurrent(context: Context, path: String): Boolean = Settings.of(context).all.value[PathKey] == path
 
         /**
          * Saves [wallpaper] with the drawn wallpaper at [path], whose text is [darkText], all at
@@ -165,9 +165,9 @@ data class TranslucentWallpaper(
          * path it replaces.
          */
         internal suspend fun save(context: Context, wallpaper: TranslucentWallpaper, path: String, darkText: Boolean): String? {
-            var old: String? = null
-            context.dataStore.edit {
-                old = it[PathKey]
+            val settings = Settings.of(context)
+            val old = settings.all.value[PathKey]
+            settings.save(PathKey, TextKey, ThemeKey, DimKey, BlurKey, ThemeSettings.CustomColorKey) {
                 it[PathKey] = path
                 it[TextKey] = wallpaper.text.value
                 it[ThemeKey] = if (darkText) ThemeUtil.TRANSLUCENT_THEME_DARK else ThemeUtil.TRANSLUCENT_THEME_LIGHT
@@ -183,10 +183,10 @@ data class TranslucentWallpaper(
 /** How far the wallpaper is darkened, as saved. */
 @Composable
 fun rememberWallpaperDim(): Float {
-    val context = LocalContext.current
-    val dim by remember {
-        context.dataStore.data.map { it[TranslucentWallpaper.DimKey] ?: TranslucentWallpaper.DEFAULT_DIM }
-    }.collectAsState(initial = TranslucentWallpaper.DEFAULT_DIM)
+    val settings = rememberSettings()
+    val dim by remember(settings) {
+        settings.all.map { it[TranslucentWallpaper.DimKey] ?: TranslucentWallpaper.DEFAULT_DIM }
+    }.collectAsState(initial = settings.all.value[TranslucentWallpaper.DimKey] ?: TranslucentWallpaper.DEFAULT_DIM)
     return dim
 }
 

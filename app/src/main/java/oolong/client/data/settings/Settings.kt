@@ -1,6 +1,7 @@
 package oolong.client.data.settings
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
@@ -80,6 +81,18 @@ class Settings internal constructor(private val store: DataStore<Preferences>) {
     /** Changes the settings under [keys] together, for settings that go as a group. */
     fun edit(vararg keys: Preferences.Key<*>, change: (MutablePreferences) -> Unit) {
         write(keys.toList(), change)
+    }
+
+    /** Changes the settings under [keys] together as [edit] does, and waits till they are in the store. */
+    suspend fun save(vararg keys: Preferences.Key<*>, change: (MutablePreferences) -> Unit) {
+        write(keys.toList(), change).join()
+    }
+
+    /** Removes every setting, for tests that start from none. */
+    @VisibleForTesting
+    internal suspend fun clear() {
+        write(emptyList()) { it.clear() }.join()
+        values.value = store.data.first()
     }
 
     private fun write(key: Preferences.Key<*>, change: (MutablePreferences) -> Unit) = write(listOf(key), change)

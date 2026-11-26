@@ -7,27 +7,17 @@ import android.os.Looper
 import android.provider.Settings
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.map
-import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.dataStore
-
-/** The setting that reduces motion ([LocalReduceMotion]). */
-val ReduceMotionKey = booleanPreferencesKey("reduceMotion")
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 
 /** Whether motion is reduced: by the setting, or with the system's animations off. */
 @Composable
 fun rememberReduceMotion(): Boolean {
-    val context = LocalContext.current
-    val setting by remember {
-        context.dataStore.data.map { it[ReduceMotionKey] ?: false }.distinctUntilChanged()
-    }.collectAsState(initial = context.appPreferences.reduceMotion)
+    val setting by settingAsState(SettingKeys.ReduceMotion)
     return setting || rememberSystemAnimationsOff()
 }
 

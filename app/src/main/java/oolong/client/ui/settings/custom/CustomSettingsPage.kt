@@ -23,7 +23,7 @@ import oolong.client.data.settings.AppIconUtil
 import oolong.client.data.settings.LauncherIcons
 import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.ThemeSettings
-import oolong.client.data.settings.rememberPreferenceAsMutableState
+import oolong.client.data.settings.settingAsMutableState
 import oolong.client.navigation.AppThemeKey
 import oolong.client.navigation.CustomSettingsKey
 import oolong.client.navigation.FontSizeKey
@@ -32,9 +32,6 @@ import oolong.client.navigation.Navigator
 import oolong.client.navigation.ProvideNavigator
 import oolong.client.navigation.SearchPlacementKey
 import oolong.client.ui.designsystem.ChromeStyle
-import oolong.client.ui.designsystem.DefaultGlassClarity
-import oolong.client.ui.designsystem.GlassClarityKey
-import oolong.client.ui.designsystem.GlassMaterialKey
 import oolong.client.ui.designsystem.GlassTier
 import oolong.client.ui.designsystem.Sizes
 import oolong.client.ui.designsystem.Slider
@@ -97,7 +94,7 @@ val CustomSettings = settingsPage(R.string.title_settings_custom, CustomSettings
             R.string.title_glass_material,
             options = GlassTier.available.map { it to it.title },
             value = { chosenGlassTier() },
-            onSelect = { tier -> settings.edit(GlassMaterialKey) { it[GlassMaterialKey] = tier.name } },
+            onSelect = { tier -> settings[SettingKeys.GlassMaterial] = tier.name },
             available = SeveralMaterials,
         )
         custom(R.string.title_glass_clarity, available = SeveralMaterials, shown = { chosenGlassTier() != GlassTier.Solid }) { GlassClarityPref() }
@@ -205,7 +202,7 @@ private fun AppIconPref(modifier: Modifier) {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun GlassClarityPref() {
-    var clarity by rememberPreferenceAsMutableState(GlassClarityKey, DefaultGlassClarity)
+    var clarity by settingAsMutableState(SettingKeys.GlassClarity)
     Column {
         TextPref(title = stringResource(id = R.string.title_glass_clarity), minimalHeight = true, darkenOnDisable = false)
         Slider(

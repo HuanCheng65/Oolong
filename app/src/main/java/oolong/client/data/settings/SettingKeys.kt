@@ -2,6 +2,7 @@ package oolong.client.data.settings
 
 import oolong.client.data.block.DefaultLowLevel
 import oolong.client.diagnostics.CrashReports
+import oolong.client.ui.designsystem.DefaultGlassClarity
 import oolong.client.ui.designsystem.theme.ThemeUtil
 import oolong.client.ui.designsystem.theme.ThemeUtil.TRANSLUCENT_THEME_LIGHT
 
@@ -48,7 +49,7 @@ object SettingKeys {
 
     val DoNotUsePhotoPicker = Setting.boolean("doNotUsePhotoPicker", false)
 
-    /** Whether motion is reduced; read once at start, before the setting's flow arrives. */
+    /** Whether motion is reduced (see LocalReduceMotion), besides by the system turning animations off. */
     val ReduceMotion = Setting.boolean("reduceMotion", false)
 
     val ForumFabFunction = Setting.string("forumFabFunction", "hide")
@@ -171,4 +172,16 @@ object SettingKeys {
 
     /** The key of the [oolong.client.data.update.UpdateChannel] updates come from; UsageStats sends it along. */
     val UpdateChannel = Setting.string("update_channel", oolong.client.data.update.UpdateChannel.default.key)
+
+    /** The old switch that rendered all chrome as solid, still read until a material is chosen. */
+    val ReduceTransparency = Setting.boolean("reduceTransparency", false)
+
+    /** The material chosen for chrome, a GlassTier's name; empty, the best the device draws. */
+    val GlassMaterial = Setting.string("glassMaterial", "")
+
+    /**
+     * How clear glass is, from 0, frosted, to 1, clear, in the middle by default. It moves how much
+     * glass blurs and how much of the page's colour it lays over what it shows.
+     */
+    val GlassClarity = Setting.float("glassClarity", DefaultGlassClarity)
 }

@@ -34,7 +34,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -42,12 +41,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.edit
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import oolong.client.R
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.rememberSettings
 import oolong.client.model.Agree
 import oolong.client.model.ForumSummary
 import oolong.client.model.Post
@@ -134,8 +130,8 @@ object FontSizeSettings : SettingsPage<FontSizeState>(R.string.title_custom_font
 
 @Composable
 fun FontSizePage(navigator: Navigator = LocalNavigator.current) {
-    val context = LocalContext.current
-    val initial = remember { runBlocking { context.dataStore.data.first() }.textScaleChoice() }
+    val settings = rememberSettings()
+    val initial = remember(settings) { settings.all.value.textScaleChoice() }
     val draft = rememberSaveable(saver = FontSizeDraft.Saver) {
         FontSizeDraft(initial.followSystem, TextScale.stepOf(initial.scale))
     }
@@ -144,11 +140,9 @@ fun FontSizePage(navigator: Navigator = LocalNavigator.current) {
         navigator.navigateUp()
         val step = TextScale.Steps[draft.step]
         if (draft.followSystem != initial.followSystem || step != initial.scale) {
-            MainScope().launch {
-                context.dataStore.edit {
-                    it[TextScale.FollowSystemKey] = draft.followSystem
-                    it[TextScale.ScaleKey] = step
-                }
+            settings.edit(TextScale.FollowSystemKey, TextScale.ScaleKey) {
+                it[TextScale.FollowSystemKey] = draft.followSystem
+                it[TextScale.ScaleKey] = step
             }
         }
     }

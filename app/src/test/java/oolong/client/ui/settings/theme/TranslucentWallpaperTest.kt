@@ -1,13 +1,13 @@
 package oolong.client.ui.settings.theme
 
 import android.content.Context
-import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.test.core.app.ApplicationProvider
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
+import oolong.client.data.settings.Settings
 import oolong.client.data.settings.ThemeSettings
 import oolong.client.data.settings.dataStore
 import oolong.client.testing.LegacyAppRule
@@ -24,6 +24,9 @@ import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class TranslucentWallpaperTest {
+    private val textTheme = intPreferencesKey("translucent_background_theme")
+    private val dim = floatPreferencesKey("translucent_wallpaper_dim")
+
     @get:Rule
     val legacyApp = LegacyAppRule()
 
@@ -31,7 +34,7 @@ class TranslucentWallpaperTest {
 
     @Before
     fun setUp() = runTest {
-        context.dataStore.edit { it.clear() }
+        Settings.of(context).clear()
     }
 
     @Test
@@ -89,10 +92,11 @@ class TranslucentWallpaperTest {
 
     @Test
     fun `dark text saved before it was chosen no longer fades the wallpaper to white`() = runTest {
-        context.dataStore.edit {
-            it[stringPreferencesKey(ThemeUtil.KEY_TRANSLUCENT_THEME_BACKGROUND_PATH)] = "/a.jpg"
-            it[intPreferencesKey("translucent_background_theme")] = ThemeUtil.TRANSLUCENT_THEME_DARK
-            it[floatPreferencesKey("translucent_wallpaper_dim")] = 0.3f
+        val path = stringPreferencesKey(ThemeUtil.KEY_TRANSLUCENT_THEME_BACKGROUND_PATH)
+        Settings.of(context).save(path, textTheme, dim) {
+            it[path] = "/a.jpg"
+            it[textTheme] = ThemeUtil.TRANSLUCENT_THEME_DARK
+            it[dim] = 0.3f
         }
 
         assertEquals(TranslucentWallpaper(text = WallpaperText.Dark, dim = 0f), TranslucentWallpaper.saved(context))
@@ -101,9 +105,9 @@ class TranslucentWallpaperTest {
 
     @Test
     fun `light text saved before it was chosen keeps its darkening`() = runTest {
-        context.dataStore.edit {
-            it[intPreferencesKey("translucent_background_theme")] = ThemeUtil.TRANSLUCENT_THEME_LIGHT
-            it[floatPreferencesKey("translucent_wallpaper_dim")] = 0.3f
+        Settings.of(context).save(textTheme, dim) {
+            it[textTheme] = ThemeUtil.TRANSLUCENT_THEME_LIGHT
+            it[dim] = 0.3f
         }
 
         assertEquals(TranslucentWallpaper(text = WallpaperText.Light, dim = 0.3f), TranslucentWallpaper.saved(context))

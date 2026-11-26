@@ -20,16 +20,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.unit.Density
-import androidx.datastore.preferences.core.intPreferencesKey
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
 import oolong.client.data.settings.ColorStyle
+import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.ThemeSettings
-import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.rememberSettings
+import oolong.client.data.settings.settingAsState
 import oolong.client.ui.designsystem.ProvideChromeStyle
 import oolong.client.ui.designsystem.ProvideGlassChoice
 import oolong.client.ui.designsystem.theme.ThemeUtil
@@ -272,14 +269,10 @@ fun darkAccentOf(context: Context, settings: ThemeSettings): Color? =
 /** The translucent theme's text colour and the picked colours, which the colours depend on too. */
 @Composable
 fun rememberColorPicks(): Any? {
-    val context = LocalContext.current
     // Settings of their own: changing them leaves the theme name as it was
-    val picks by remember {
-        context.dataStore.data
-            .map { listOf(it[TranslucentTextKey], it[ThemeSettings.CustomColorKey]) }
-            .distinctUntilChanged()
-    }.collectAsState(initial = null)
-    return picks
+    val text by settingAsState(SettingKeys.TranslucentBackgroundTheme)
+    val customColor by settingAsState(SettingKeys.CustomPrimaryColor)
+    return remember(text, customColor) { listOf(text, customColor) }
 }
 
 /** The app's theme; [dark] set makes it dark or light whatever the settings say, as for an editor. */
@@ -305,10 +298,10 @@ private fun ThemedContent(extendedColors: ExtendedColors, content: @Composable (
     val colors = getColorPalette(extendedColors)
 
     // The system's text size, or the app's own in its place
-    val context = LocalContext.current
-    val textScale by remember {
-        context.dataStore.data.map { it.textScaleChoice() }.distinctUntilChanged()
-    }.collectAsState(initial = remember { runBlocking { context.dataStore.data.first() }.textScaleChoice() })
+    val settings = rememberSettings()
+    val textScale by remember(settings) {
+        settings.all.map { it.textScaleChoice() }.distinctUntilChanged()
+    }.collectAsState(initial = remember(settings) { settings.all.value.textScaleChoice() })
     val systemDensity = LocalDensity.current
     val scale = if (textScale.followSystem) LocalConfiguration.current.fontScale else textScale.scale
     val density = if (textScale.followSystem) systemDensity else textScaledDensity(systemDensity.density, scale)
@@ -332,8 +325,6 @@ private fun ThemedContent(extendedColors: ExtendedColors, content: @Composable (
         }
     }
 }
-
-private val TranslucentTextKey = intPreferencesKey("translucent_background_theme")
 
 object ExtendedTheme {
     val colors: ExtendedColors

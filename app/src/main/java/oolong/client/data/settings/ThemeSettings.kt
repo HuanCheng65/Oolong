@@ -172,6 +172,9 @@ data class ThemeSettings(
         internal val StyleKey = stringPreferencesKey("theme_color_style")
         internal val MonetStyleKey = stringPreferencesKey("theme_monet_style")
         private val OppositeWhileKey = booleanPreferencesKey("theme_opposite_while_dark")
+
+        /** The keys [writeTo] writes, which change together. */
+        internal val Keys = listOf(AppearanceKey, AccentKey, StyleKey, MonetStyleKey, DarkThemeKey, BackgroundKey, OppositeWhileKey)
         val CustomColorKey = stringPreferencesKey("custom_primary_color")
         private val OldWallpaperColorKey = stringPreferencesKey(ThemeUtil.KEY_TRANSLUCENT_PRIMARY_COLOR)
 

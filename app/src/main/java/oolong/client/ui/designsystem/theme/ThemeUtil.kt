@@ -3,22 +3,15 @@ package oolong.client.ui.designsystem.theme
 import android.content.Context
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import oolong.client.App
 import oolong.client.App.Companion.INSTANCE
 import oolong.client.data.settings.Appearance
 import oolong.client.data.settings.ColorStyle
 import oolong.client.data.settings.MonetStyle
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.data.settings.ThemeSettings
-import oolong.client.data.settings.dataStore
-import oolong.client.data.settings.getInt
 import java.util.Locale
 
 object ThemeUtil {
@@ -36,7 +29,7 @@ object ThemeUtil {
      * stand in until it has; saving them then would lose the saved ones.
      */
     private fun load(state: MutableState<ThemeSettings>) {
-        state.value = runBlocking { ThemeSettings.from(dataStore.data.first()) }
+        state.value = ThemeSettings.from(Settings.of(context).all.value)
         loaded = true
     }
 
@@ -80,9 +73,6 @@ object ThemeUtil {
     private val context: Context
         get() = INSTANCE
 
-    val dataStore: DataStore<Preferences>
-        get() = INSTANCE.dataStore
-
     private fun isSystemDark(): Boolean = App.isInitialized && App.isSystemNight
 
     /** Whether the app is dark now, as [settingsState] and the system say. */
@@ -112,11 +102,8 @@ object ThemeUtil {
     }
 
     private fun save() {
-        MainScope().launch(Dispatchers.IO) {
-            // Saves are not done in the order they are started: each saves the settings as they
-            // are by then, so that the last done holds the last change
-            dataStore.edit { settingsState.value.writeTo(it) }
-        }
+        // Each save writes the settings as they are by then, so that the last holds the last change
+        Settings.of(context).edit(*ThemeSettings.Keys.toTypedArray()) { settingsState.value.writeTo(it) }
     }
 
     /** Uses the colour [name], dark or light. */
@@ -182,7 +169,7 @@ object ThemeUtil {
     fun getCurrentTheme(theme: String = getRawTheme()): String {
         // The bare name leaves the text to the saved setting; the variants say it themselves
         if (!theme.equals(THEME_TRANSLUCENT, ignoreCase = true)) return theme
-        val colorTheme = dataStore.getInt("translucent_background_theme", TRANSLUCENT_THEME_LIGHT)
+        val colorTheme = Settings.of(context)[SettingKeys.TranslucentBackgroundTheme]
         return if (colorTheme == TRANSLUCENT_THEME_DARK) THEME_TRANSLUCENT_DARK else THEME_TRANSLUCENT_LIGHT
     }
 

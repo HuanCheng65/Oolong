@@ -7,7 +7,6 @@ import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.test.junit4.createComposeRule
-import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.test.core.app.ApplicationProvider
@@ -15,8 +14,8 @@ import kotlinx.coroutines.runBlocking
 import oolong.client.data.settings.Appearance
 import oolong.client.data.settings.ColorStyle
 import oolong.client.data.settings.MonetStyle
+import oolong.client.data.settings.Settings
 import oolong.client.data.settings.ThemeSettings
-import oolong.client.data.settings.dataStore
 import oolong.client.testing.LegacyAppRule
 import oolong.client.ui.designsystem.theme.ThemeUtil
 import org.junit.Rule
@@ -107,11 +106,12 @@ class PaletteSnapshotTest {
         }
         for (next in setups) {
             runBlocking {
-                context.dataStore.edit {
+                val keys = listOf("custom_primary_color", ThemeUtil.KEY_TRANSLUCENT_PRIMARY_COLOR).map(::stringPreferencesKey)
+                Settings.of(context).save(intPreferencesKey("translucent_background_theme"), *keys.toTypedArray()) {
                     it[intPreferencesKey("translucent_background_theme")] =
                         if (next.darkText) ThemeUtil.TRANSLUCENT_THEME_DARK else ThemeUtil.TRANSLUCENT_THEME_LIGHT
-                    for (key in listOf("custom_primary_color", ThemeUtil.KEY_TRANSLUCENT_PRIMARY_COLOR)) {
-                        if (next.accent != null) it[stringPreferencesKey(key)] = next.accent else it.remove(stringPreferencesKey(key))
+                    for (key in keys) {
+                        if (next.accent != null) it[key] = next.accent else it.remove(key)
                     }
                 }
             }

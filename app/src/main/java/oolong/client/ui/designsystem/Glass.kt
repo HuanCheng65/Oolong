@@ -3,7 +3,6 @@ package oolong.client.ui.designsystem
 import android.content.res.Configuration
 import android.os.Build
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -18,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -46,15 +44,10 @@ import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.util.lerp
-import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.floatPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import dev.chrisbanes.haze.ExperimentalHazeApi
 import dev.chrisbanes.haze.HazeInput
 import dev.chrisbanes.haze.HazePerformanceMode
@@ -74,11 +67,10 @@ import dev.chrisbanes.haze.hazeSource
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 import oolong.client.ui.designsystem.theme.ExtendedColors
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.ShadowAmbient
@@ -114,18 +106,6 @@ enum class GlassTier {
 /** Forces a tier, for previews and screenshot tests. */
 val LocalGlassTier = staticCompositionLocalOf<GlassTier?> { null }
 
-/** The old switch that rendered all chrome as [GlassTier.Solid], still read until a material is chosen. */
-val ReduceTransparencyKey = booleanPreferencesKey("reduceTransparency")
-
-/** The material chosen for chrome, a [GlassTier]'s name; unset, the best the device draws. */
-val GlassMaterialKey = stringPreferencesKey("glassMaterial")
-
-/**
- * How clear glass is, from 0, frosted, to 1, clear; [DefaultGlassClarity] in the middle. It moves
- * how much glass blurs and how much of the page's colour it lays over what it shows.
- */
-val GlassClarityKey = floatPreferencesKey("glassClarity")
-
 const val DefaultGlassClarity = 0.5f
 
 /** The tiers this device can draw, best first. */
@@ -136,23 +116,18 @@ val GlassTier.Companion.available: List<GlassTier>
 @Immutable
 private data class GlassChoice(val material: String, val reduceTransparency: Boolean, val clarity: Float)
 
-private fun Preferences.toGlassChoice() = GlassChoice(
-    material = this[GlassMaterialKey] ?: "",
-    reduceTransparency = this[ReduceTransparencyKey] ?: false,
-    clarity = this[GlassClarityKey] ?: DefaultGlassClarity,
-)
-
 private val LocalGlassChoice = compositionLocalOf { GlassChoice("", false, DefaultGlassClarity) }
 
 /** Provides the chosen material and clarity to [content], read once for all of it. */
 @Composable
 fun ProvideGlassChoice(content: @Composable () -> Unit) {
-    val dataStore = LocalContext.current.dataStore
-    // Read before the first frame. Chrome first drawn in the device's best material and redrawn in
+    // Read from the first frame on. Chrome first drawn in the device's best material and redrawn in
     // the chosen one swaps its effect in place as the rest of its modifiers change around it, which
     // the effect does not survive: the page froze
-    val initial = remember { runBlocking { dataStore.data.first() }.toGlassChoice() }
-    val choice by remember { dataStore.data.map { it.toGlassChoice() } }.collectAsState(initial)
+    val material by settingAsState(SettingKeys.GlassMaterial)
+    val reduceTransparency by settingAsState(SettingKeys.ReduceTransparency)
+    val clarity by settingAsState(SettingKeys.GlassClarity)
+    val choice = remember(material, reduceTransparency, clarity) { GlassChoice(material, reduceTransparency, clarity) }
     CompositionLocalProvider(LocalGlassChoice provides choice, content = content)
 }
 

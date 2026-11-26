@@ -2,17 +2,12 @@ package oolong.client.ui.designsystem
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.platform.LocalContext
-import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.runBlocking
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 
 /** How the app's bars are laid out, chosen in Settings › Appearance. */
 enum class ChromeStyle {
@@ -26,18 +21,14 @@ enum class ChromeStyle {
     Classic,
 }
 
-val ChromeStyleKey = stringPreferencesKey("chromeStyle")
-
 val LocalChromeStyle = compositionLocalOf { ChromeStyle.Floating }
 
 /** Provides the chosen [ChromeStyle] to [content]. */
 @Composable
 fun ProvideChromeStyle(content: @Composable () -> Unit) {
-    val dataStore = LocalContext.current.dataStore
-    // Read before the first frame: a page drawn in one style and redrawn in the other keeps
+    // Read from the first frame on: a page drawn in one style and redrawn in the other keeps
     // things it laid out for the first, such as a large title
-    val initial = remember { runBlocking { dataStore.data.first()[ChromeStyleKey] } ?: ChromeStyle.Floating.name }
-    val chosen by remember { dataStore.data.map { it[ChromeStyleKey] ?: ChromeStyle.Floating.name } }.collectAsState(initial)
+    val chosen by settingAsState(SettingKeys.ChromeStyle)
     val style = ChromeStyle.entries.firstOrNull { it.name == chosen } ?: ChromeStyle.Floating
     CompositionLocalProvider(LocalChromeStyle provides style, content = content)
 }
