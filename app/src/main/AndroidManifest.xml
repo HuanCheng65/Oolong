@@ -87,6 +87,22 @@
             android:name=".ui.picker.ImagePickerActivity"
             android:configChanges="screenSize|screenLayout|orientation|smallestScreenSize|keyboardHidden" />
 
+        <service
+            android:name=".assistant.TiebaAppFunctionService"
+            android:exported="true"
+            android:permission="android.permission.BIND_APP_FUNCTION_SERVICE"
+            tools:targetApi="36">
+            <property
+                android:name="android.app.appfunctions.schema"
+                android:value="app_functions_schema.xsd" />
+            <property
+                android:name="android.app.appfunctions.v2"
+                android:value="tieba_app_functions.xml" />
+            <intent-filter>
+                <action android:name="android.app.appfunctions.AppFunctionService" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".ui.appwidget.WidgetSetupActivity"
             android:exported="true"

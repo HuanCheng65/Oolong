@@ -2,6 +2,7 @@
 agp = "9.2.1"
 androidx-benchmark = "1.5.0"
 kotlin = "2.4.21"
+androidx-appfunctions = "1.0.0"
 ksp = "2.3.12"
 hilt = "2.60.1"
 androidx-hilt = "1.4.0"
@@ -81,6 +82,8 @@ androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "andr
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
 androidx-palette = { module = "androidx.palette:palette-ktx", version = "1.0.0" }
 androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version = "1.2.0" }
+androidx-appfunctions = { module = "androidx.appfunctions:appfunctions", version.ref = "androidx-appfunctions" }
+androidx-appfunctions-compiler = { module = "androidx.appfunctions:appfunctions-compiler", version.ref = "androidx-appfunctions" }
 androidx-window = { module = "androidx.window:window", version = "1.5.1" }
 google-material = { module = "com.google.android.material:material", version = "1.14.0" }
 
