@@ -14,7 +14,6 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.boundsInWindow
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableList
@@ -23,22 +22,19 @@ import oolong.client.R
 import oolong.client.model.DislikeOption
 import oolong.client.model.ThreadSummary
 import oolong.client.model.threadId
-import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
 import oolong.client.ui.designsystem.ContextMenuItem
 import oolong.client.ui.designsystem.IconButton
 import oolong.client.ui.designsystem.LocalContextMenus
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.Symbols
-import oolong.client.ui.settings.block.LocalBlockShortcuts
-import oolong.client.ui.settings.block.blockMenuItems
-import oolong.client.ui.settings.block.blockMenuLabels
+import oolong.client.ui.main.explore.rememberThreadMenu
 import oolong.client.util.TiebaUtil
 import oolong.client.util.launchUrl
 
 /**
- * The ⋯ of a recommended thread, which opens into what the server offers for not wanting it, each
- * done in one tap, then sharing it or copying its link.
+ * The ⋯ of a recommended thread, which opens the thread menu, the same as under its peek: the
+ * server's options for not wanting it among them, each done in one tap.
  */
 @Composable
 fun FeedMenu(
@@ -46,12 +42,9 @@ fun FeedMenu(
     options: ImmutableList<DislikeOption>,
     onDislike: (clickTime: Long, reasons: ImmutableList<DislikeOption>) -> Unit,
 ) {
-    val context = LocalContext.current
-    val shareLabels = shareMenuLabels()
-    val blockLabels = blockMenuLabels()
-    val navigator = LocalNavigator.current
     val menus = LocalContextMenus.current
-    val shortcuts = LocalBlockShortcuts.current
+    // The same as under the thread's peek
+    val threadMenu = rememberThreadMenu()
     var bounds by remember { mutableStateOf(Rect.Zero) }
     var menuId by remember { mutableStateOf<Long?>(null) }
     // The menu holds the icon while it shows, and gives it back where it took it
@@ -59,12 +52,8 @@ fun FeedMenu(
 
     IconButton(
         onClick = {
-            menus ?: return@IconButton
-            val dislikes = dislikeMenuItems(context, navigator, options, onDislike)
-            val items = dislikes + shareMenuItems(shareLabels, context, thread.threadId, thread.title).mapIndexed { i, item ->
-                if (i == 0) item.copy(startsGroup = dislikes.isNotEmpty()) else item
-            } + shortcuts?.let { blockMenuItems(blockLabels, it, thread, options.blockingForum(onDislike)) }.orEmpty()
-            menuId = menus.show(items, anchor = bounds, icon = Symbols.MoreVert)
+            if (menus == null || threadMenu == null) return@IconButton
+            menuId = menus.show(threadMenu.items(thread, options, onDislike), anchor = bounds, icon = Symbols.MoreVert)
         },
         modifier = Modifier
             .size(24.dp)

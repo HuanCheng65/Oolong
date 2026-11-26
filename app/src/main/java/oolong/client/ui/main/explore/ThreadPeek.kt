@@ -84,9 +84,26 @@ class ThreadPeeker internal constructor(
     ) = show(thread, from, at, origin, options, onDislike)
 }
 
-/** Peeks at threads of this feed; null where there are no context menus. */
+/**
+ * What can be done with a thread from a list, the same wherever it is asked for: under its peek
+ * and behind its card's ⋮. Common actions first, as one row of small buttons: storing, sharing,
+ * copying its link and, where windows sit side by side, opening it in another; then not wanting
+ * it; then blocking, last.
+ */
+@Stable
+class ThreadMenu internal constructor(
+    private val build: (ThreadSummary, ImmutableList<DislikeOption>, (Long, ImmutableList<DislikeOption>) -> Unit) -> List<ContextMenuItem>,
+) {
+    fun items(
+        thread: ThreadSummary,
+        options: ImmutableList<DislikeOption> = persistentListOf(),
+        onDislike: (clickTime: Long, reasons: ImmutableList<DislikeOption>) -> Unit = { _, _ -> },
+    ): List<ContextMenuItem> = build(thread, options, onDislike)
+}
+
+/** The thread menu; null where there are no context menus. */
 @Composable
-fun rememberThreadPeeker(): ThreadPeeker? {
+fun rememberThreadMenu(): ThreadMenu? {
     // Checked first: where there are no menus, as in previews and tests, there is no view model either
     val menus = LocalContextMenus.current ?: return null
     val viewModel = hiltViewModel<ThreadPeekViewModel>()
@@ -95,23 +112,41 @@ fun rememberThreadPeeker(): ThreadPeeker? {
     val collect = stringResource(id = R.string.title_collect)
     val shareLabels = shareMenuLabels()
     val newWindow = stringResource(R.string.menu_open_in_new_window)
+    val newWindowShort = stringResource(R.string.menu_open_in_new_window_short)
     val blockLabels = blockMenuLabels()
     val shortcuts = LocalBlockShortcuts.current
-    return remember(menus, context, navigator, viewModel, collect, shortcuts, shareLabels, blockLabels, newWindow) {
+    return remember(menus, context, navigator, viewModel, collect, shortcuts, shareLabels, blockLabels, newWindow, newWindowShort) {
+        ThreadMenu { thread, options, onDislike ->
+            buildList {
+                add(ContextMenuItem(Symbols.Star, collect, compact = true) { viewModel.store(thread) })
+                addAll(shareMenuItems(shareLabels, context, thread.threadId, thread.title).map { it.copy(compact = true) })
+                // Beside this window, where windows can sit side by side
+                if (NewWindow.available(context)) {
+                    add(ContextMenuItem(Symbols.NewWindow, newWindow, compact = true, shortLabel = newWindowShort) { NewWindow.openThread(context, thread.threadId) })
+                }
+                addAll(dislikeMenuItems(context, navigator, options, onDislike))
+                if (shortcuts != null) {
+                    blockMenuItems(blockLabels, shortcuts, thread, options.blockingForum(onDislike)).forEachIndexed { i, item ->
+                        add(if (i == 0) item.copy(startsGroup = true) else item)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** Peeks at threads of this feed; null where there are no context menus. */
+@Composable
+fun rememberThreadPeeker(): ThreadPeeker? {
+    val menus = LocalContextMenus.current ?: return null
+    val menu = rememberThreadMenu() ?: return null
+    val viewModel = hiltViewModel<ThreadPeekViewModel>()
+    val navigator = LocalNavigator.current
+    return remember(menus, navigator, viewModel, menu) {
         ThreadPeeker { thread, from, at, origin, options, onDislike ->
             viewModel.prefetch(thread)
-            val items = buildList {
-                add(ContextMenuItem(Symbols.Star, collect) { viewModel.store(thread) })
-                addAll(shareMenuItems(shareLabels, context, thread.threadId, thread.title))
-                // Beside this window, where windows can sit side by side
-                if (NewWindow.available(context)) add(ContextMenuItem(Symbols.NewWindow, newWindow) { NewWindow.openThread(context, thread.threadId) })
-                dislikeMenuItems(context, navigator, options, onDislike).forEachIndexed { i, item ->
-                    add(if (i == 0) item.copy(startsGroup = true) else item)
-                }
-                if (shortcuts != null) addAll(blockMenuItems(blockLabels, shortcuts, thread, options.blockingForum(onDislike)))
-            }
             menus.show(
-                items = items,
+                items = menu.items(thread, options, onDislike),
                 anchor = Rect(at, Size.Zero),
                 preview = ContextMenuPreview(
                     from = from,

@@ -1056,4 +1056,5 @@
     <string name="shortcut_page_up">向上翻页</string>
     <string name="shortcut_send_reply">发送回复</string>
     <string name="menu_open_in_new_window">在新窗口打开</string>
+    <string name="menu_open_in_new_window_short">新窗口</string>
 </resources>
