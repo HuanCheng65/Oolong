@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Base.AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Base.AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:forceDarkAllowed">false</item>
         <item name="windowActionModeOverlay">true</item>
         <item name="android:windowActionModeOverlay">true</item>

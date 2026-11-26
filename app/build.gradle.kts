@@ -340,8 +340,6 @@ dependencies {
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestRuntimeOnly(libs.androidx.test.runner)
 
-    implementation(libs.google.material)
-
     implementation(libs.okhttp)
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.wire)

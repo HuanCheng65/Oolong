@@ -6,17 +6,17 @@ import android.content.Context
 import android.os.Build
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import com.google.android.material.color.utilities.DynamicScheme
-import com.google.android.material.color.utilities.Hct
-import com.google.android.material.color.utilities.SchemeExpressive
-import com.google.android.material.color.utilities.SchemeFruitSalad
-import com.google.android.material.color.utilities.SchemeMonochrome
-import com.google.android.material.color.utilities.SchemeNeutral
-import com.google.android.material.color.utilities.SchemeRainbow
-import com.google.android.material.color.utilities.SchemeTonalSpot
-import com.google.android.material.color.utilities.SchemeVibrant
 import oolong.client.data.settings.MonetStyle
-import com.google.android.material.color.utilities.TonalPalette as MaterialTonalPalette
+import oolong.client.ui.designsystem.theme.colorutilities.DynamicScheme
+import oolong.client.ui.designsystem.theme.colorutilities.Hct
+import oolong.client.ui.designsystem.theme.colorutilities.SchemeExpressive
+import oolong.client.ui.designsystem.theme.colorutilities.SchemeFruitSalad
+import oolong.client.ui.designsystem.theme.colorutilities.SchemeMonochrome
+import oolong.client.ui.designsystem.theme.colorutilities.SchemeNeutral
+import oolong.client.ui.designsystem.theme.colorutilities.SchemeRainbow
+import oolong.client.ui.designsystem.theme.colorutilities.SchemeTonalSpot
+import oolong.client.ui.designsystem.theme.colorutilities.SchemeVibrant
+import oolong.client.ui.designsystem.theme.colorutilities.TonalPalette as MaterialTonalPalette
 
 /**
  * The palette Material's [style] makes from [seed], as the system makes its own from its colour.

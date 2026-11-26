@@ -1,28 +1,5 @@
 <resources>
 
-    <style name="Widget.Button.Flat.Dense" parent="Widget.MaterialComponents.Button.TextButton">
-        <item name="android:minWidth">0dp</item>
-        <item name="android:minHeight">0dp</item>
-        <item name="android:padding">6dp</item>
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:paddingEnd">16dp</item>
-        <item name="android:elevation">0dp</item>
-        <item name="cornerRadius">16dp</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-
-    <style name="Widget.Button" parent="Widget.MaterialComponents.Button.UnelevatedButton">
-        <item name="android:minWidth">0dp</item>
-        <item name="android:minHeight">0dp</item>
-        <item name="android:padding">6dp</item>
-        <item name="android:paddingStart">16dp</item>
-        <item name="android:paddingEnd">16dp</item>
-        <item name="android:elevation">0dp</item>
-        <item name="cornerRadius">16dp</item>
-        <item name="android:textStyle">bold</item>
-        <item name="android:gravity">center</item>
-    </style>
-
     <style name="Toolbar.Title" parent="TextAppearance.Widget.AppCompat.Toolbar.Title">
         <item name="android:textStyle">bold</item>
         <item name="android:textSize">18sp</item>
@@ -49,7 +26,7 @@
         <item name="android:textColorSecondary">@color/default_color_toolbar_item</item>
     </style>
 
-    <style name="Theme.NewAppTheme" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+    <style name="Theme.NewAppTheme" parent="Theme.AppCompat.DayNight.NoActionBar">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
@@ -66,7 +43,7 @@
         <item name="postSplashScreenTheme">@style/Theme.NewAppTheme</item>
     </style>
 
-    <style name="Base.AppTheme" parent="Theme.MaterialComponents.Light.NoActionBar">
+    <style name="Base.AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="windowActionModeOverlay">true</item>
         <item name="android:windowActionModeOverlay">true</item>
         <item name="android:windowIsTranslucent">false</item>
@@ -81,9 +58,6 @@
         <item name="android:letterSpacing">0.01</item>
         <item name="android:overScrollMode">never</item>
         <item name="toolbarStyle">@style/Toolbar</item>
-        <item name="buttonBarPositiveButtonStyle">@style/Widget.Button</item>
-        <item name="buttonBarNegativeButtonStyle">@style/Widget.Button.Flat.Dense</item>
-        <item name="buttonBarNeutralButtonStyle">@style/Widget.Button.Flat.Dense</item>
         <item name="actionOverflowMenuStyle">@style/OverflowMenu</item>
         <item name="dialogCornerRadius">@dimen/radius</item>
         <item name="android:listSeparatorTextViewStyle">@style/TextAppearance.ListTitle</item>
