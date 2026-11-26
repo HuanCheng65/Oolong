@@ -31,6 +31,7 @@ import oolong.client.data.storage.AppStorage
 import oolong.client.diagnostics.CrashLogs
 import oolong.client.media.image.newAppImageLoader
 import oolong.client.ui.appwidget.WidgetPreviews
+import oolong.client.ui.appwidget.WidgetUpdates
 import oolong.client.ui.appwidget.widgetEntryPoint
 import oolong.client.ui.designsystem.VoicePlayback
 import oolong.client.ui.designsystem.theme.ThemeUtil
@@ -86,6 +87,7 @@ class App : Application(), SingletonImageLoader.Factory {
         }
         thread { AppStorage.sweep(this@App) }
         WidgetPreviews.publishOnce(this, widgetEntryPoint.applicationScope())
+        WidgetUpdates.follow(this, widgetEntryPoint.applicationScope())
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

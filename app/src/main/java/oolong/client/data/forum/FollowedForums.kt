@@ -1,6 +1,10 @@
 package oolong.client.data.forum
 
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.withContext
 import oolong.client.arch.IoDispatcher
 import oolong.client.arch.query.QueryClient
@@ -23,8 +27,16 @@ class FollowedForums @Inject constructor(
     /** By the account's uid; the request is always the logged-in account's. */
     val query = client.query<String, List<FollowedForum>>(name = "followed forums", staleTime = 1.minutes) { load() }
 
+    private val changeEvents = MutableSharedFlow<Unit>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** Each time the followed forums or their sign-in changed, for what keeps its own copy outside the app's pages. */
+    val changes: SharedFlow<Unit> = changeEvents.asSharedFlow()
+
     /** Marks the followed forums to load again: those shown now load at once, the rest when next shown. */
-    fun changed() = query.invalidate()
+    fun changed() {
+        query.invalidate()
+        changeEvents.tryEmit(Unit)
+    }
 
     private suspend fun load(): List<FollowedForum> = withContext(io) {
         val forums = mutableListOf<FollowedForum>()
