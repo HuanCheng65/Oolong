@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -607,7 +608,9 @@ private fun PhotoChrome(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (picture.author != null || picture.text != null) {
-                Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                // As wide as text is read at most, centred over the actions: in a wide window a
+                // caption held to the left edge sat apart from both the picture and its actions
+                Column(modifier = Modifier.widthIn(max = MaxReadingWidth).fillMaxWidth().padding(bottom = 12.dp)) {
                     var expanded by remember(picture.picId) { mutableStateOf(false) }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         picture.author?.let {
