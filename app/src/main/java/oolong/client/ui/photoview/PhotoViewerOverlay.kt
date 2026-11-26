@@ -113,7 +113,9 @@ import oolong.client.ui.designsystem.IconButton
 import oolong.client.ui.designsystem.MediaGlassActions
 import oolong.client.ui.designsystem.MediaGlassPill
 import oolong.client.ui.designsystem.ProvideMediaGlass
+import oolong.client.ui.designsystem.ThresholdHaptics
 import oolong.client.ui.designsystem.clickMenu
+import oolong.client.ui.designsystem.rememberHaptics
 import oolong.client.ui.designsystem.theme.Symbols
 import oolong.client.ui.designsystem.window.FullColorWindow
 import oolong.client.ui.designsystem.window.isHdr
@@ -267,6 +269,9 @@ internal fun PhotoViewerOverlay(viewer: PhotoViewer, opening: PhotoOpening, orig
         )
 
         if (pictures.isNotEmpty() && phase != Phase.Closing) {
+            val haptics = rememberHaptics()
+            // Felt where letting go starts to close the viewer, and where it stops doing so
+            val dismissFeel = remember(haptics) { ThresholdHaptics(haptics) }
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -282,8 +287,10 @@ internal fun PhotoViewerOverlay(viewer: PhotoViewer, opening: PhotoOpening, orig
                     }
                     .pointerInput(pagerState) {
                         val slop = viewConfiguration.touchSlop
+                        val dismissPx = DragDismissDistance.toPx()
                         awaitEachGesture {
                             val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                            dismissFeel.reset()
                             if (phase != Phase.Open || text.active || !zoomStates[pagerState.currentPage].atRest()) return@awaitEachGesture
                             val tracker = VelocityTracker()
                             var total = Offset.Zero
@@ -308,7 +315,7 @@ internal fun PhotoViewerOverlay(viewer: PhotoViewer, opening: PhotoOpening, orig
                                 if (!change.pressed) {
                                     if (active) {
                                         val velocity = tracker.calculateVelocity()
-                                        val dismiss = drag.y > 96.dp.toPx() || velocity.y > 900.dp.toPx()
+                                        val dismiss = drag.y > dismissPx || velocity.y > 900.dp.toPx()
                                         // Back into place at the speed it was let go with
                                         if (dismiss) onClose(Velocity(velocity.x, velocity.y)) else rebound = scope.launch {
                                             release(drag, Offset.Zero, Offset(velocity.x, velocity.y)) { drag = it }
@@ -330,6 +337,7 @@ internal fun PhotoViewerOverlay(viewer: PhotoViewer, opening: PhotoOpening, orig
                                 if (active) {
                                     change.consume()
                                     drag += delta
+                                    dismissFeel.update(drag.y > dismissPx)
                                     tracker.addPosition(change.uptimeMillis, change.position)
                                 }
                             }
@@ -716,11 +724,15 @@ internal fun share(context: Context, url: String) {
     }
 }
 
+/** How far down a picture is dragged before letting go closes the viewer. */
+private val DragDismissDistance = 96.dp
+
 /**
  * Pictures tall enough to be read down open filling the width from the top. Wide ones open whole,
  * however wide: a strip filling the height would show only its start, and they are mostly seen at
  * a glance.
  */
+
 private val TallReadMode = ReadMode.Default.copy(sizeType = ReadMode.SIZE_TYPE_VERTICAL)
 
 /**

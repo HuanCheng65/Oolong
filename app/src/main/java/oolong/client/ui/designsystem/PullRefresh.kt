@@ -26,14 +26,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
@@ -293,13 +291,17 @@ private fun BoxScope.RefreshIndicator(
     refreshPx: Float,
     reveal: () -> Float,
 ) {
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     val color = ExtendedTheme.colors.emphasis
     val armed by remember(refreshPx) { derivedStateOf { state.offset >= refreshPx } }
     val bump = remember { Animatable(1f) }
+    // Felt both ways: going back under the threshold is as much a choice as going over it
+    var armedFelt by remember { mutableStateOf(false) }
     LaunchedEffect(armed) {
+        if (!armed && armedFelt && state.dragging) haptics.threshold(over = false)
+        armedFelt = armed && state.dragging && !refreshing
         if (armed && state.dragging && !refreshing) {
-            haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+            haptics.threshold(over = true)
             // Swells from where it is and settles back, rather than jumping larger first
             bump.animateTo(1f, Motion.pop(), initialVelocity = BumpVelocity)
         }

@@ -55,8 +55,10 @@ import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.navigation.transition.BesideLeadingChrome
 import oolong.client.navigation.transition.PageTransitions
+import oolong.client.ui.designsystem.ThresholdHaptics
 import oolong.client.ui.designsystem.adaptive.LocalWindowSizeClass
 import oolong.client.ui.designsystem.adaptive.WindowSizeClass
+import oolong.client.ui.designsystem.rememberHaptics
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.core.designsystem.theme.Corners
 import oolong.core.designsystem.theme.Motion
@@ -185,8 +187,12 @@ private fun <T : Any> ListDetailLayout(
 
         val coroutineScope = rememberCoroutineScope()
         val density = LocalDensity.current
+        // Felt where letting go starts to fold the list away, and where it stops doing so
+        val haptics = rememberHaptics()
+        val foldFeel = remember(haptics) { ThresholdHaptics(haptics) }
         val dragState = rememberDraggableState { delta ->
             val width = shown.value + with(density) { delta.toDp() }
+            if (detail != null) foldFeel.update(width < ListDetailState.CollapseBelow)
             coroutineScope.launch { shown.snapTo(width.coerceIn(0.dp, maxListWidth)) }
         }
         // The touch area stays inside the scene: folded away, half of it lay past the scene's edge,
@@ -199,7 +205,10 @@ private fun <T : Any> ListDetailLayout(
                 .draggable(
                     state = dragState,
                     orientation = Orientation.Horizontal,
-                    onDragStarted = { dragging = true },
+                    onDragStarted = {
+                        dragging = true
+                        foldFeel.reset()
+                    },
                     onDragStopped = { velocity ->
                         dragging = false
                         val released = shown.value

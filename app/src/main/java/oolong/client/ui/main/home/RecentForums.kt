@@ -31,12 +31,10 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -54,6 +52,7 @@ import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.model.VisitedForum
 import oolong.client.ui.designsystem.Avatar
+import oolong.client.ui.designsystem.rememberHaptics
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.Symbols
 import oolong.core.designsystem.theme.Corners
@@ -195,9 +194,9 @@ class RecentForumsExpansion(private val scope: CoroutineScope) {
 fun rememberRecentForumsExpansion(): RecentForumsExpansion {
     val scope = rememberCoroutineScope()
     val expansion = remember(scope) { RecentForumsExpansion(scope) }
-    val haptic = LocalHapticFeedback.current
+    val haptics = rememberHaptics()
     expansion.detentPx = with(LocalDensity.current) { PullDetent.toPx() }
-    expansion.onOpenedByPull = { haptic.performHapticFeedback(HapticFeedbackType.SegmentTick) }
+    expansion.onOpenedByPull = { haptics.threshold(over = true) }
     return expansion
 }
 
