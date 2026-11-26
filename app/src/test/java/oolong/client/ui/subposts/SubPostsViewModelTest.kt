@@ -16,6 +16,8 @@ import oolong.client.arch.query.QueryClient
 import oolong.client.data.block.BlockRuleSource
 import oolong.client.data.block.BlockRules
 import oolong.client.data.block.blockRulesMatching
+import oolong.client.data.post.SentReplies
+import oolong.client.data.post.SentReply
 import oolong.client.data.thread.ThreadRepository
 import oolong.client.navigation.SubPostsKey
 import oolong.client.testing.MainDispatcherRule
@@ -47,6 +49,7 @@ class SubPostsViewModelTest {
 
     private val remote = mockk<ThreadRemoteDataSource>(relaxed = true)
     private val agreeRemote = mockk<AgreeRemoteDataSource>(relaxed = true)
+    private val sentReplies = SentReplies()
     private val blockRules = MutableStateFlow(BlockRules { null })
     private val shown = mutableListOf<Int>()
 
@@ -93,6 +96,7 @@ class SubPostsViewModelTest {
                 }
             },
             sessionProvider = { Session(uid = "99", name = "me", bduss = "b", stoken = null, tbs = null, zid = null) },
+            sentReplies = sentReplies,
         )
 
     private fun CoroutineScope.collectEffects(viewModel: SubPostsViewModel) = mutableListOf<SubPostsEffect>().also { into ->
@@ -185,13 +189,14 @@ class SubPostsViewModelTest {
     }
 
     @Test
-    fun `a reply sent inside the post is loaded and scrolled to`() = runTest {
+    fun `a reply sent inside the post is loaded and scrolled to, one in another post is not`() = runTest {
         respond(floor(listOf(reply(201))), floor(listOf(reply(201), reply(250))))
         val viewModel = createViewModel()
         val effects = backgroundScope.collectEffects(viewModel)
         runCurrent()
 
-        viewModel.onReplySent(newSubPostId = 250)
+        sentReplies.add(SentReply(threadId = 9_000L, inPost = 7, postId = 1))
+        sentReplies.add(SentReply(threadId = 9_000L, inPost = 77, postId = 250))
         runCurrent()
 
         coVerify { remote.floor(9_000, 77, 52, 1, 250, true) }

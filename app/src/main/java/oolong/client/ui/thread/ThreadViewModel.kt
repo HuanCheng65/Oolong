@@ -59,6 +59,7 @@ import oolong.client.data.block.BlockVerdict
 import oolong.client.data.block.Blockable
 import oolong.client.data.block.check
 import oolong.client.data.history.ThreadHistory
+import oolong.client.data.post.SentReplies
 import oolong.client.data.thread.FloorCursor
 import oolong.client.data.thread.Posts
 import oolong.client.data.thread.SubPostSortStore
@@ -142,6 +143,7 @@ class ThreadViewModel @AssistedInject constructor(
     private val messages: MessageController,
     @ApplicationScope private val applicationScope: CoroutineScope,
     readerPositions: ReaderPositions,
+    sentReplies: SentReplies,
     subPostSort: SubPostSortStore? = null,
 ) : ViewModel() {
     private val query = MutableStateFlow(args.query())
@@ -276,6 +278,7 @@ class ThreadViewModel @AssistedInject constructor(
         lists.flatMapLatest { it.loads }.onEach(::onLoads).launchIn(viewModelScope)
         // Back from the reader, the page follows to where the reading stopped
         readerPositions.left(args.threadId).onEach(::showPost).launchIn(viewModelScope)
+        sentReplies.to(args.threadId).onEach { onReplySent(it.postId, inPost = it.inPost) }.launchIn(viewModelScope)
         combine(meta.map { it.page?.thread }.filterNotNull(), readUpTo) { thread, postId -> thread to postId }
             .debounce(HISTORY_DELAY)
             .onEach { (thread, postId) -> history.save(thread, query.value.seeLz, findPost(postId), meta.value.page?.firstPost) }
@@ -497,7 +500,7 @@ class ThreadViewModel @AssistedInject constructor(
      * The user's reply was sent: load it and show it. A reply inside post [inPost] updates that
      * post where it is.
      */
-    fun onReplySent(newPostId: Long, inPost: Long? = null) {
+    private fun onReplySent(newPostId: Long, inPost: Long? = null) {
         repository.changed(args.threadId)
         if (inPost != null) return reloadPost(inPost)
         scrollToPost = newPostId

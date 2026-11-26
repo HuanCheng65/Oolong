@@ -44,6 +44,7 @@ class PostRepository @Inject constructor(
     private val remote: PostRemoteDataSource,
     private val uploads: UploadRemoteDataSource,
     private val posterName: PosterName,
+    private val sentReplies: SentReplies,
     @ApplicationContext private val context: Context,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) {
@@ -54,11 +55,13 @@ class PostRepository @Inject constructor(
      */
     suspend fun reply(target: ReplyTarget, content: String, tbs: String?): PostedReply = withContext(io) {
         val response = remote.addPost(target.toRequest(content), tbs)
-        PostedReply(
+        val reply = PostedReply(
             threadId = response.tid.toLongOrNull() ?: target.threadId,
             postId = checkNotNull(response.pid.toLongOrNull()) { "No post id" },
             expInc = response.exp?.inc.orEmpty(),
         )
+        sentReplies.add(SentReply(target.threadId, target.postId, reply.postId))
+        reply
     }
 
     /**

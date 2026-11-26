@@ -28,8 +28,6 @@ import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.onGlobalEvent
 import oolong.client.data.post.ReplyTarget
 import oolong.client.data.settings.rememberPreferenceAsState
 import oolong.client.data.thread.ThreadSort
@@ -108,14 +106,6 @@ fun ThreadRoute(
                     }
                 }
             }
-        }
-    }
-
-    onGlobalEvent<GlobalEvent.ReplySuccess>(filter = { it.threadId == state.query.threadId }) { event ->
-        if (event.postId != null) {
-            viewModel.onReplySent(event.newSubPostId ?: event.newPostId, inPost = event.postId)
-        } else {
-            viewModel.onReplySent(event.newPostId)
         }
     }
 

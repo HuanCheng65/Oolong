@@ -5,6 +5,9 @@ import io.mockk.coEvery
 import io.mockk.mockk
 import io.mockk.slot
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.toList
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.runTest
 import oolong.core.network.post.PostRemoteDataSource
 import oolong.core.network.protos.ReplyExp
@@ -16,7 +19,8 @@ import kotlin.test.assertNull
 
 class PostRepositoryTest {
     private val remote = mockk<PostRemoteDataSource>()
-    private val repository = PostRepository(remote, mockk(), { "昵称" }, mockk<Context>(), Dispatchers.Unconfined)
+    private val sentReplies = SentReplies()
+    private val repository = PostRepository(remote, mockk(), { "昵称" }, sentReplies, mockk<Context>(), Dispatchers.Unconfined)
     private val sent = slot<AddPostRequestData>()
 
     init {
@@ -39,6 +43,16 @@ class PostRepositoryTest {
             assertNull(quote_id)
             assertNull(reply_uid)
         }
+    }
+
+    @Test
+    fun `tells the thread's pages of the reply`() = runTest {
+        val heard = mutableListOf<SentReply>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { sentReplies.to(9).toList(heard) }
+
+        repository.reply(ReplyTarget(52, "测试", 9, postId = 3), "内容", tbs = "t")
+
+        assertEquals(listOf(SentReply(threadId = 9, inPost = 3, postId = 100)), heard)
     }
 
     @Test

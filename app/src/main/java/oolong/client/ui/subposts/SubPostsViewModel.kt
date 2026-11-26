@@ -15,6 +15,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -32,6 +35,7 @@ import oolong.client.data.block.BlockRules
 import oolong.client.data.block.BlockVerdict
 import oolong.client.data.block.Blockable
 import oolong.client.data.block.check
+import oolong.client.data.post.SentReplies
 import oolong.client.data.thread.FloorCursor
 import oolong.client.data.thread.FloorPage
 import oolong.client.data.thread.SubPostSort
@@ -93,6 +97,7 @@ class SubPostsViewModel @AssistedInject constructor(
     blockRuleSource: BlockRuleSource,
     private val messages: MessageController,
     private val sessionProvider: SessionProvider,
+    sentReplies: SentReplies,
     private val sortStore: SubPostSortStore? = null,
 ) : ViewModel() {
     private val threadId: Long = key.threadId
@@ -238,8 +243,12 @@ class SubPostsViewModel @AssistedInject constructor(
             .onFailure { messages.showError(R.string.toast_delete_failure, it) }
     }
 
+    init {
+        sentReplies.to(threadId).filter { it.inPost == postId }.onEach { onReplySent(it.postId) }.launchIn(viewModelScope)
+    }
+
     /** The user replied inside this post: load the page with their reply and show it. */
-    fun onReplySent(newSubPostId: Long) {
+    private fun onReplySent(newSubPostId: Long) {
         scrollToSubPost = newSubPostId
         subPosts.refresh(FloorCursor(page = 1, subPostId = newSubPostId))
     }

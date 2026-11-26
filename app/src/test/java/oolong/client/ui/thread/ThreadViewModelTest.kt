@@ -22,6 +22,8 @@ import oolong.client.data.block.BlockRuleSource
 import oolong.client.data.block.BlockRules
 import oolong.client.data.block.blockRulesMatching
 import oolong.client.data.history.ThreadHistory
+import oolong.client.data.post.SentReplies
+import oolong.client.data.post.SentReply
 import oolong.client.data.thread.ThreadRepository
 import oolong.client.data.thread.ThreadSort
 import oolong.client.data.thread.Threads
@@ -62,6 +64,7 @@ import oolong.core.network.protos.User as ProtoUser
 
 class ThreadViewModelTest {
     private val readerPositions = ReaderPositions()
+    private val sentReplies = SentReplies()
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
@@ -125,6 +128,7 @@ class ThreadViewModelTest {
             },
             applicationScope = appScope,
             readerPositions = readerPositions,
+            sentReplies = sentReplies,
         )
     }
 
@@ -456,7 +460,7 @@ class ThreadViewModelTest {
         backgroundScope.launchCollect(viewModel, effects)
         runCurrent()
 
-        viewModel.onReplySent(newPostId = 4)
+        sentReplies.add(SentReply(threadId = 9_000L, inPost = null, postId = 4))
         runCurrent()
 
         assertEquals(listOf(2L, 3L, 4L), viewModel.state.value.posts.items.map { it.post.id })
@@ -472,7 +476,7 @@ class ThreadViewModelTest {
         backgroundScope.launchCollect(viewModel, effects)
         runCurrent()
 
-        viewModel.onReplySent(newPostId = 400)
+        sentReplies.add(SentReply(threadId = 9_000L, inPost = null, postId = 400))
         runCurrent()
 
         assertEquals(listOf(400L), viewModel.state.value.posts.items.map { it.post.id })
@@ -486,7 +490,7 @@ class ThreadViewModelTest {
         val viewModel = createViewModel()
         runCurrent()
 
-        viewModel.onReplySent(newPostId = 301, inPost = 3)
+        sentReplies.add(SentReply(threadId = 9_000L, inPost = 3, postId = 301))
         runCurrent()
 
         assertEquals(listOf(2L, 3L), viewModel.state.value.posts.items.map { it.post.id })
@@ -514,7 +518,7 @@ class ThreadViewModelTest {
 
         viewModel.jumpToPage(3)
         runCurrent()
-        viewModel.onReplySent(newPostId = 400)
+        sentReplies.add(SentReply(threadId = 9_000L, inPost = null, postId = 400))
         runCurrent()
 
         assertEquals(listOf<ThreadEffect>(ThreadEffect.ScrollToPost(400)), effects)

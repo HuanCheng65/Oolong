@@ -13,8 +13,6 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.onGlobalEvent
 import oolong.client.data.post.ReplyTarget
 import oolong.client.data.settings.rememberPreferenceAsState
 import oolong.client.model.PostContent
@@ -66,12 +64,6 @@ fun SubPostsRoute(
                 SubPostsEffect.ScrollToReplies -> listState.scrollToItem(1)
             }
         }
-    }
-
-    onGlobalEvent<GlobalEvent.ReplySuccess>(
-        filter = { it.threadId == state.threadId && it.postId != null && it.postId == state.post?.id }
-    ) { event ->
-        event.newSubPostId?.let(viewModel::onReplySent)
     }
 
     val chrome = rememberReplyChromeState()

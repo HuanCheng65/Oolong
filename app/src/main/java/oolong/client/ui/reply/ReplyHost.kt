@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
 import oolong.client.data.post.ReplyTarget
 import oolong.client.data.settings.appPreferences
 import oolong.client.media.PickMediasContract
@@ -173,7 +172,7 @@ fun openInOfficialClient(context: Context, threadId: Long, postId: Long?) {
 /**
  * A composer for this page, its state kept by [viewModel] for as long as the page lives. Sending
  * saves nothing more and closes the composer; the page hears of the new reply through
- * [GlobalEvent.ReplySuccess].
+ * [oolong.client.data.post.SentReplies].
  */
 @OptIn(FlowPreview::class)
 @Composable

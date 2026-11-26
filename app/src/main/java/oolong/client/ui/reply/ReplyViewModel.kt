@@ -19,8 +19,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import oolong.client.arch.Actions
 import oolong.client.arch.ApplicationScope
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.emitGlobalEvent
 import oolong.client.data.error.getErrorCode
 import oolong.client.data.post.PostRepository
 import oolong.client.data.post.PostedReply
@@ -153,7 +151,6 @@ class ReplyViewModel @Inject constructor(
         try {
             val reply = repository.reply(target, content, tbs)
             _state.update { it.copy(sending = false, sent = true) }
-            announce(target, reply)
             _sent.send(reply)
         } catch (e: CancellationException) {
             throw e
@@ -162,16 +159,5 @@ class ReplyViewModel @Inject constructor(
         } catch (e: Throwable) {
             _state.update { it.copy(sending = false, error = ReplyError.Send(e.getErrorCode(), e.message.orEmpty())) }
         }
-    }
-
-    /** Tells the thread and floor pages about the new reply, so that they can show it. */
-    private fun announce(target: ReplyTarget, reply: PostedReply) {
-        val event = if (target.postId != null) {
-            GlobalEvent.ReplySuccess(target.threadId, target.postId, target.postId, target.subPostId, reply.postId)
-        } else {
-            GlobalEvent.ReplySuccess(target.threadId, reply.postId)
-        }
-        // The page closes on success, so the event must outlive this view model
-        appScope.launch { emitGlobalEvent(event) }
     }
 }
