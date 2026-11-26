@@ -19,6 +19,7 @@ import android.view.KeyboardShortcutGroup
 import android.view.KeyboardShortcutInfo
 import android.view.Menu
 import android.view.inputmethod.InputMethodManager
+import androidx.activity.addCallback
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.BorderStroke
@@ -117,6 +118,7 @@ import oolong.client.navigation.ForumKey
 import oolong.client.navigation.Key
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
+import oolong.client.navigation.NewWindow
 import oolong.client.navigation.Page
 import oolong.client.navigation.SearchKey
 import oolong.client.navigation.StorageKey
@@ -180,7 +182,7 @@ private val EXTERNAL_LINK_SCHEMES = setOf("http", "https", "tbfrs", "tbpb", "com
 internal const val SPLASH_ICON_MILLIS = 400L
 
 @AndroidEntryPoint
-class MainActivity : AppCompatActivity() {
+open class MainActivity : AppCompatActivity() {
     @Inject
     lateinit var accountRepository: AccountRepository
 
@@ -223,6 +225,9 @@ class MainActivity : AppCompatActivity() {
 
     /** A page linked to before the pages are shown, which then start with it over the first. */
     private var linkedKey: Key? = null
+
+    /** Whether this window was opened on one page beside the app's own ([NewWindow]). */
+    protected open val alone: Boolean get() = false
 
     private fun navigate(key: Key) {
         navigator?.navigate(key) ?: run { linkedKey = key }
@@ -283,6 +288,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStart() {
         super.onStart()
+        // The app's own window looks after the clipboard, messages and permissions; a window
+        // opened on one page beside it would only do the same again
+        if (alone) return
         ClipBoardLinkDetector.onStart()
         runCatching {
             ContextCompat.registerReceiver(
@@ -333,6 +341,11 @@ class MainActivity : AppCompatActivity() {
         }
         // A recreated activity restores its pages, the linked one among them
         if (savedInstanceState == null) intent?.let { checkIntent(it) }
+        // A window opened on one page closes as that page is left, rather than staying behind
+        if (alone) {
+            onBackPressedDispatcher.addCallback(this) { finishAndRemoveTask() }
+            return
+        }
         fetchAccount()
         initAutoSign()
         // Notifications are about the account's messages, so they are asked for once one logs in
@@ -405,7 +418,7 @@ class MainActivity : AppCompatActivity() {
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
         // Only a focused window is given the clipboard
-        if (hasFocus) ClipBoardLinkDetector.check(this)
+        if (hasFocus && !alone) ClipBoardLinkDetector.check(this)
     }
 
     private fun openClipBoardLink(link: ClipBoardLink) {
@@ -622,7 +635,7 @@ class MainActivity : AppCompatActivity() {
         }
         TiebaLiteLocalProvider {
             TranslucentThemeBackground {
-                val backStack = rememberAppBackStack(linked = linkedKey)
+                val backStack = rememberAppBackStack(linked = linkedKey, alone = alone)
                 LaunchedEffect(backStack) {
                     snapshotFlow { (backStack.lastOrNull() as? Page)?.key }.collect { key ->
                         // By its serial name, which shrinking leaves as written
@@ -753,3 +766,13 @@ class MainActivity : AppCompatActivity() {
 /** How often, and how long apart, a wallpaper that failed to load is loaded again before it is drawn again. */
 private const val WallpaperRetries = 2
 private const val WallpaperRetryMillis = 800L
+
+/**
+ * The app's window opened on one page beside its own ([NewWindow]): the main activity's content,
+ * holding that page alone and closing as it is left. An activity of its own, launched afresh each
+ * time: the main activity is reused when it is on top, so in split screen it would take the page
+ * in itself rather than open a second window.
+ */
+class PageWindowActivity : MainActivity() {
+    override val alone: Boolean get() = true
+}

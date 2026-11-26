@@ -27,6 +27,7 @@ import oolong.client.model.ThreadSummary
 import oolong.client.model.knownFirstFloor
 import oolong.client.model.threadId
 import oolong.client.navigation.LocalNavigator
+import oolong.client.navigation.NewWindow
 import oolong.client.navigation.transition.PageOrigin
 import oolong.client.ui.designsystem.ContextMenuItem
 import oolong.client.ui.designsystem.ContextMenuPreview
@@ -93,14 +94,17 @@ fun rememberThreadPeeker(): ThreadPeeker? {
     val navigator = LocalNavigator.current
     val collect = stringResource(id = R.string.title_collect)
     val shareLabels = shareMenuLabels()
+    val newWindow = stringResource(R.string.menu_open_in_new_window)
     val blockLabels = blockMenuLabels()
     val shortcuts = LocalBlockShortcuts.current
-    return remember(menus, context, navigator, viewModel, collect, shortcuts, shareLabels, blockLabels) {
+    return remember(menus, context, navigator, viewModel, collect, shortcuts, shareLabels, blockLabels, newWindow) {
         ThreadPeeker { thread, from, at, origin, options, onDislike ->
             viewModel.prefetch(thread)
             val items = buildList {
                 add(ContextMenuItem(Symbols.Star, collect) { viewModel.store(thread) })
                 addAll(shareMenuItems(shareLabels, context, thread.threadId, thread.title))
+                // Beside this window, where windows can sit side by side
+                if (NewWindow.available(context)) add(ContextMenuItem(Symbols.NewWindow, newWindow) { NewWindow.openThread(context, thread.threadId) })
                 dislikeMenuItems(context, navigator, options, onDislike).forEachIndexed { i, item ->
                     add(if (i == 0) item.copy(startsGroup = true) else item)
                 }

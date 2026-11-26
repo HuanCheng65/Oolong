@@ -203,10 +203,12 @@ fun AppNavDisplay(
     // is wide enough but too short, and keeps one pane
     val twoPane = windowSizeClass.widthSizeClass == WindowWidthSizeClass.Expanded &&
         windowSizeClass.heightSizeClass != WindowHeightSizeClass.Compact
-    // Beside the pages on windows wider than a phone; a page over the whole window goes over it
-    val showRail = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
+    val wide = windowSizeClass.widthSizeClass != WindowWidthSizeClass.Compact
+    // Beside the pages on windows wider than a phone; a page over the whole window goes over it.
+    // Not in a window opened on one page, which has no home or tabs to go to
+    val showRail = wide && backStack.firstOrNull()?.key == MainKey
     // Room for a phone-sized sheet with the pages showing round it
-    val roomy = showRail && windowSizeClass.heightSizeClass != WindowHeightSizeClass.Compact
+    val roomy = wide && windowSizeClass.heightSizeClass != WindowHeightSizeClass.Compact
 
     val tabs = rememberSaveable(saver = MainTabs.Saver) { MainTabs() }
     val notificationCountFlow = LocalNotificationCountFlow.current
@@ -388,6 +390,11 @@ private fun MainRailContent(
             } else {
                 jump.pending = backStack.size > 1
                 while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)
+                // A window opened on one page has no home under it: the rail brings it
+                if (backStack.firstOrNull()?.key != MainKey) {
+                    backStack.clear()
+                    backStack.add(Page(MainKey))
+                }
                 tabs.selected = item.id
             }
             item.onClick?.invoke()

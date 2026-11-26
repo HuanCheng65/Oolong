@@ -106,6 +106,19 @@
             android:name="android.app.appfunctions.app_metadata"
             android:resource="@xml/app_metadata" />
 
+        <!-- The app's window opened on one page beside its own (NewWindow) -->
+        <activity
+            android:name=".PageWindowActivity"
+            android:configChanges="screenSize|screenLayout|orientation|smallestScreenSize|keyboard|navigation|keyboardHidden"
+            android:exported="false"
+            android:resizeableActivity="true"
+            android:theme="@style/Theme.Splash"
+            android:windowSoftInputMode="adjustResize">
+            <property
+                android:name="android.window.PROPERTY_SUPPORTS_MULTI_INSTANCE_SYSTEM_UI"
+                android:value="true" />
+        </activity>
+
         <!-- Pictures dragged out of the app, only for the app each drag grants one to -->
         <provider
             android:name=".media.PictureDragProvider"
@@ -230,6 +243,11 @@
             android:supportsPictureInPicture="true"
             android:theme="@style/Theme.Splash"
             android:windowSoftInputMode="adjustResize">
+            <!-- Two windows of the app may sit side by side; without this the system folds a
+                 second one back into the first -->
+            <property
+                android:name="android.window.PROPERTY_SUPPORTS_MULTI_INSTANCE_SYSTEM_UI"
+                android:value="true" />
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

@@ -121,3 +121,4 @@ view_agenda
 visibility
 visibility_off
 warning
+new_window

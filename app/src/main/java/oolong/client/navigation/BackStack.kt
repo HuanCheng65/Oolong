@@ -28,8 +28,12 @@ private val BackStackConfiguration = SavedStateConfiguration {
  * a link. It survives process death, when [linked] is not applied again.
  */
 @Composable
-fun rememberAppBackStack(linked: Key? = null): NavBackStack<NavKey> =
-    rememberNavBackStack(BackStackConfiguration, *listOfNotNull(Page(MainKey), linked?.let(::Page)).toTypedArray())
+fun rememberAppBackStack(linked: Key? = null, alone: Boolean = false): NavBackStack<NavKey> =
+    rememberNavBackStack(
+        BackStackConfiguration,
+        // A window opened on one page holds that page alone, closing as it is left
+        *(if (alone && linked != null) listOf(Page(linked)) else listOfNotNull(Page(MainKey), linked?.let(::Page))).toTypedArray(),
+    )
 
 val NavKey.key: Key
     get() = (this as Page).key
