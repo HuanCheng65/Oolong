@@ -78,7 +78,7 @@ object QuickPreviewUtil {
         link: ClipBoardThreadLink,
         lifeCycle: Lifecycle? = null,
     ): Flow<PreviewInfo> =
-        flow { emit(linkPreviewRepository.thread(link.threadId.toLong())) }
+        flow { emit(linkPreviewRepository(context).thread(link.threadId.toLong())) }
             .map {
                 PreviewInfo(
                     clipBoardLink = link,
@@ -100,7 +100,7 @@ object QuickPreviewUtil {
         link: ClipBoardForumLink,
         lifeCycle: Lifecycle? = null,
     ): Flow<PreviewInfo> =
-        flow { emit(linkPreviewRepository.forum(link.forumName)) }
+        flow { emit(linkPreviewRepository(context).forum(link.forumName)) }
             .map {
                 PreviewInfo(
                     clipBoardLink = link,

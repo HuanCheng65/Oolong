@@ -187,7 +187,7 @@ class SingleAccountSigner(
                                 position,
                                 totalCount,
                                 e.getErrorCode(),
-                                e.getErrorMessage()
+                                e.getErrorMessage(context)
                             )
                             delay(getSignDelay())
                         }
@@ -200,7 +200,7 @@ class SingleAccountSigner(
                     position,
                     totalCount,
                     e.getErrorCode(),
-                    e.getErrorMessage()
+                    e.getErrorMessage(context)
                 )
                 delay(getSignDelay())
             }

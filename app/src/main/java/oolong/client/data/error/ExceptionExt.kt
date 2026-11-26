@@ -1,7 +1,6 @@
 package oolong.client.data.error
 
 import android.content.Context
-import oolong.client.App
 import oolong.client.R
 import oolong.client.data.error.Error
 import oolong.core.network.TiebaException
@@ -17,17 +16,12 @@ fun Throwable.getErrorCode(): Int {
     }
 }
 
-fun Throwable.getErrorMessage(): String {
-    return if (message.isNullOrEmpty()) {
-        App.INSTANCE.getString(R.string.error_unknown)
-    } else {
-        message!!
-    }
-}
+fun Throwable.getErrorMessage(context: Context): String =
+    message?.takeIf { it.isNotEmpty() } ?: context.getString(R.string.error_unknown)
 
 /** The error's message as the user should read it: a network error says so instead of its technical message. */
 fun Throwable.userMessage(context: Context): String =
-    if (isNetworkError()) context.getString(R.string.error_network) else getErrorMessage()
+    if (isNetworkError()) context.getString(R.string.error_network) else getErrorMessage(context)
 
 /**
  * Whether the request got no answer: no network, the host out of reach, or the connection dropped

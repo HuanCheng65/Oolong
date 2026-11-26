@@ -4,7 +4,6 @@ import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import kotlinx.collections.immutable.persistentListOf
-import oolong.client.App
 
 object LauncherIcons {
     const val NEW_ICON = "oolong.client.MainActivity"
@@ -25,10 +24,8 @@ object LauncherIcons {
 object AppIconUtil {
     const val PREF_KEY_APP_ICON = "app_icon"
 
-    private val context: Context
-        get() = App.INSTANCE
-
     fun setIcon(
+        context: Context,
         icon: String = Settings.of(context)[SettingKeys.AppIcon],
         isThemed: Boolean = Settings.of(context)[SettingKeys.UseThemedIcon],
     ) {

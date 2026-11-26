@@ -1,5 +1,6 @@
 package oolong.client.diagnostics
 
+import android.content.Context
 import com.squareup.wire.FieldEncoding
 import com.squareup.wire.ProtoReader
 import okhttp3.FormBody
@@ -11,7 +12,6 @@ import okio.Buffer
 import okio.ByteString
 import okio.GzipSource
 import okio.buffer
-import oolong.client.App
 import oolong.client.data.identity.legacySessionProvider
 import retrofit2.Invocation
 import java.io.File
@@ -29,10 +29,22 @@ import java.util.Locale
 object RequestRecorder : Interceptor {
     private val timeFormat = SimpleDateFormat("HH:mm:ss.SSS", Locale.US)
 
-    private val logFile: File by lazy {
-        val dir = File(App.INSTANCE.filesDir, "netlog").apply { mkdirs() }
+    /** Where requests are written; nothing is written before [attach]. */
+    @Volatile
+    private var dir: File? = null
+
+    /** Writes from now on into the app's files, as the app starts in a debug build. */
+    fun attach(context: Context) {
+        dir = File(context.filesDir, "netlog")
+    }
+
+    /** This run's file, made on the first request written. */
+    private var logFile: File? = null
+
+    @Synchronized
+    private fun logFile(): File? = logFile ?: dir?.let { dir ->
         val name = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.US).format(Date())
-        File(dir, "requests-$name.txt")
+        File(dir.apply { mkdirs() }, "requests-$name.txt").also { logFile = it }
     }
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -71,7 +83,7 @@ object RequestRecorder : Interceptor {
 
     @Synchronized
     private fun write(text: String) {
-        logFile.appendText(redact(text))
+        logFile()?.appendText(redact(text))
     }
 
     private val secretCookie = Regex("\\b(BDUSS|BDUSS_BFESS|STOKEN|PTOKEN)=([^;\\s]+)", RegexOption.IGNORE_CASE)

@@ -7,7 +7,6 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import oolong.client.data.error.getErrorMessage
 import oolong.client.data.error.userMessage
 import oolong.client.diagnostics.ErrorRecords
 import oolong.client.ui.designsystem.AppToast
@@ -19,7 +18,7 @@ interface MessageController {
     fun show(@StringRes message: Int, vararg args: Any)
 
     /** Shows [message] with the error's own message as its argument. */
-    fun showError(@StringRes message: Int, error: Throwable) = show(message, error.getErrorMessage())
+    fun showError(@StringRes message: Int, error: Throwable) = show(message, error.message.orEmpty())
 }
 
 @Singleton

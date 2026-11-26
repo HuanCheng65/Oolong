@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.withContext
 import okio.ByteString.Companion.toByteString
 import oolong.client.data.error.getErrorCode
-import oolong.client.data.error.getErrorMessage
 import oolong.client.media.upload.PicInfo
 import oolong.client.media.upload.PicInfoItem
 import oolong.client.media.upload.UploadPicture
@@ -139,7 +138,8 @@ class ImageUploader(
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            throw UploadPictureFailedException(e.getErrorCode(), e.getErrorMessage())
+            // Shown with a fallback where it is empty
+            throw UploadPictureFailedException(e.getErrorCode(), e.message.orEmpty())
         } finally {
             withContext(NonCancellable + Dispatchers.IO) {
                 file.delete()

@@ -1,12 +1,12 @@
 package oolong.client.data.link
 
+import android.content.Context
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-import oolong.client.App
 import oolong.client.arch.IoDispatcher
 import oolong.core.network.forum.ForumRemoteDataSource
 import oolong.core.network.thread.ThreadRemoteDataSource
@@ -49,6 +49,6 @@ interface LinkPreviewEntryPoint {
     fun linkPreviewRepository(): LinkPreviewRepository
 }
 
-/** For the clipboard link detector, which can't be injected. */
-internal val linkPreviewRepository: LinkPreviewRepository
-    get() = EntryPointAccessors.fromApplication(App.INSTANCE, LinkPreviewEntryPoint::class.java).linkPreviewRepository()
+/** For the link previews, which can't be injected. */
+internal fun linkPreviewRepository(context: Context): LinkPreviewRepository =
+    EntryPointAccessors.fromApplication(context, LinkPreviewEntryPoint::class.java).linkPreviewRepository()

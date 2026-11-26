@@ -7,6 +7,7 @@ import coil3.SingletonImageLoader
 import coil3.intercept.Interceptor
 import coil3.request.ErrorResult
 import oolong.client.App
+import oolong.client.data.emoticon.EmoticonManager
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.robolectric.RuntimeEnvironment
@@ -39,6 +40,7 @@ class LegacyAppRule : TestWatcher() {
         App::class.java.getDeclaredField("INSTANCE")
             .apply { isAccessible = true }
             .set(null, app)
+        EmoticonManager.attach(context)
         SingletonImageLoader.setUnsafe(
             ImageLoader.Builder(context)
                 .components {

@@ -16,13 +16,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.airbnb.lottie.compose.LottieAnimation
 import com.airbnb.lottie.compose.LottieCompositionSpec
-import com.airbnb.lottie.compose.LottieConstants
 import com.airbnb.lottie.compose.rememberLottieComposition
 import oolong.client.R
 import oolong.client.data.error.TiebaNotLoggedInException
@@ -131,7 +130,7 @@ fun ErrorTipScreen(
         is TiebaNotLoggedInException -> ErrorType.NOT_LOGGED_IN
         else -> if (error.isNetworkError()) ErrorType.NETWORK else ErrorType.UNKNOWN
     }
-    val errorMessage = error.getErrorMessage()
+    val errorMessage = error.getErrorMessage(LocalContext.current)
     val errorCode = error.getErrorCode()
     ErrorTipScreen(
         errorType = errorType,

@@ -80,7 +80,7 @@ object ClientUtils {
     }
 
     private suspend fun sync(context: Context) {
-        val pushSwitch = InstallState.pushSwitch()
+        val pushSwitch = InstallState.pushSwitch(context)
         val info = SyncInfo(
             clientId = clientId,
             pushSwitch = pushSwitch.current,

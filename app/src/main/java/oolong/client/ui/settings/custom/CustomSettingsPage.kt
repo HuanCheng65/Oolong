@@ -78,7 +78,7 @@ val CustomSettings = settingsPage(R.string.title_settings_custom, CustomSettings
         switch(SettingKeys.UseThemedIcon, R.string.title_settings_use_themed_icon,
             summary = { stringResource(id = R.string.tip_settings_use_themed_icon_summary_not_supported).takeUnless { themedIconSupported() } },
             enabled = { themedIconSupported() },
-            onChange = { AppIconUtil.setIcon(isThemed = it) },
+            onChange = { AppIconUtil.setIcon(context, isThemed = it) },
             available = Availability.sdk(Build.VERSION_CODES.S),
         )
     }
@@ -149,6 +149,7 @@ internal fun currentThemeName(): String {
 @OptIn(ExperimentalMaterialApi::class, ExperimentalComposeUiApi::class)
 @Composable
 private fun AppIconPref(modifier: Modifier) {
+    val context = LocalContext.current
     ListPref(
         setting = SettingKeys.AppIcon,
         title = stringResource(id = R.string.settings_app_icon),
@@ -193,7 +194,7 @@ private fun AppIconPref(modifier: Modifier) {
                 )
             },
         ),
-        onValueChange = { AppIconUtil.setIcon(icon = it) },
+        onValueChange = { AppIconUtil.setIcon(context, icon = it) },
         useSelectedAsSummary = true,
     )
 }

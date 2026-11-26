@@ -48,7 +48,7 @@ interface AccountActions {
 /** The accounts logged in on this device, and which one the app uses. */
 @Singleton
 class AccountRepository @Inject constructor(
-    @ApplicationContext context: Context,
+    @ApplicationContext private val context: Context,
     private val dao: AccountDao,
     private val remote: AccountRemoteDataSource,
     @ApplicationScope private val scope: CoroutineScope,
@@ -102,10 +102,10 @@ class AccountRepository @Inject constructor(
     private suspend fun logIn(bduss: String, sToken: String, cookie: String?, zid: String?): Account = withContext(Dispatchers.IO) {
         val login = coroutineScope {
             val nickname = async { remote.initNickname(bduss, sToken) }
-            val firstLogin = InstallState.firstLogin(hasAccounts = accounts.value.isNotEmpty()) == "1"
+            val firstLogin = InstallState.firstLogin(context, hasAccounts = accounts.value.isNotEmpty()) == "1"
             remote.login(bduss, sToken, firstLogin).also { nickname.await() }
         }
-        InstallState.onLoginSucceeded()
+        InstallState.onLoginSucceeded(context)
         val account = accountByUid(login.user.id)?.copy() ?: Account(uid = login.user.id)
         account.apply {
             this.bduss = bduss

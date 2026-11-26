@@ -28,6 +28,7 @@ import oolong.client.data.legacy.LegacyImport
 import oolong.client.data.settings.AppIconUtil
 import oolong.client.data.storage.AppStorage
 import oolong.client.diagnostics.CrashLogs
+import oolong.client.diagnostics.RequestRecorder
 import oolong.client.media.image.newAppImageLoader
 import oolong.client.ui.appwidget.WidgetPreviews
 import oolong.client.ui.appwidget.WidgetUpdates
@@ -69,6 +70,7 @@ class App : Application(), SingletonImageLoader.Factory {
         INSTANCE = this
         super.onCreate()
         CrashLogs.install(this)
+        if (BuildConfig.DEBUG) RequestRecorder.attach(this)
         Incognito.follow(this)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
             setWebViewPath(this)
@@ -76,10 +78,11 @@ class App : Application(), SingletonImageLoader.Factory {
         // Before ClientUtils, whose sync request reads the install times set here
         Config.init(this)
         ClientUtils.init(this)
-        AppIconUtil.setIcon()
+        AppIconUtil.setIcon(this)
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
         registerActivityLifecycleCallbacks(ThemeAndVoiceCallbacks)
         registerActivityLifecycleCallbacks(OAIDGetter)
+        EmoticonManager.attach(this)
         thread {
             EmoticonManager.init(this@App)
         }
@@ -173,6 +176,10 @@ class App : Application(), SingletonImageLoader.Factory {
         private val packageName: String
             get() = INSTANCE.packageName
 
+        /**
+         * The app, for old code that reaches for it from anywhere. New code takes what it needs
+         * instead: injected (`@ApplicationContext`), from `LocalContext`, or as a parameter.
+         */
         @JvmStatic
         lateinit var INSTANCE: App
             private set

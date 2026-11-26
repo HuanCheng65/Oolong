@@ -25,7 +25,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.Json
-import oolong.client.App
 import oolong.client.R
 import oolong.client.media.FileUtil
 import oolong.client.media.ImageUtil
@@ -33,7 +32,6 @@ import oolong.client.media.image.loadBitmap
 import oolong.client.model.EmoticonCache
 import oolong.client.ui.components.rememberTextSize
 import java.io.File
-import java.lang.ref.WeakReference
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 
@@ -109,7 +107,9 @@ object EmoticonManager {
         "三道杠" to "image_emoticon84",
     )
 
-    private lateinit var contextRef: WeakReference<Context>
+    /** The application's context, which lives as long as the process; set by [attach]. */
+    @Volatile
+    private var appContext: Context? = null
 
     // Posts register emoticons while they are mapped, off the main thread, as the UI reads these
     private val emoticonIds = CopyOnWriteArrayList<String>()
@@ -143,8 +143,13 @@ object EmoticonManager {
         }
     }
 
+    /** Gives the emoticons the app's context, before anything shows one; [init] loads them later. */
+    fun attach(context: Context) {
+        appContext = context.applicationContext
+    }
+
     fun init(context: Context) {
-        contextRef = WeakReference(context)
+        attach(context)
         val emoticonCache = getEmoticonDataCache()
         if (emoticonCache.ids.isEmpty()) {
             emoticonIds.addAllAbsent(((1..50) + (61..101) + (125..137)).map { "image_emoticon$it" })
@@ -177,9 +182,7 @@ object EmoticonManager {
         }
     }
 
-    private fun getContext(): Context {
-        return contextRef.get() ?: App.INSTANCE
-    }
+    private fun getContext(): Context = checkNotNull(appContext) { "EmoticonManager used before attach" }
 
     private fun getEmoticonDataCache(): EmoticonCache {
         return runCatching {
