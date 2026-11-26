@@ -1,6 +1,7 @@
 package oolong.client.ui.components
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.drawable.ColorDrawable
 import android.util.LruCache
 import androidx.compose.animation.core.Animatable
@@ -40,12 +41,14 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.toSize
 import coil3.BitmapImage
 import coil3.SingletonImageLoader
@@ -61,6 +64,8 @@ import oolong.client.R
 import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.Settings
 import oolong.client.media.ImageUtil
+import oolong.client.media.image.loadBitmap
+import oolong.client.media.startPictureDrag
 import oolong.client.model.PhotoViewData
 import oolong.client.ui.designsystem.LocalContextMenus
 import oolong.client.ui.designsystem.ShapedPicture
@@ -252,6 +257,12 @@ fun NetworkImage(
     val menuItems = originUrl?.let { photoMenuItems(it) }
     // After a long press, the picture's menu follows this finger until it lifts
     var menuOpen by remember { mutableStateOf(false) }
+    // Where the long press landed, in the window: moved far enough from there, and not into the
+    // menu, the finger drags the picture out instead
+    var pressedAt by remember { mutableStateOf(Offset.Zero) }
+    var dragShadow by remember { mutableStateOf<Bitmap?>(null) }
+    val view = LocalView.current
+    val scope = rememberCoroutineScope()
     var boxOffset by remember { mutableStateOf(Offset.Zero) }
     val floors = LocalPhotoFloors.current
     // Loads the picture if it waits for a tap, then opens it in the viewer
@@ -280,6 +291,16 @@ fun NetworkImage(
                                 if (shouldLoad) {
                                     haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                     menuOpen = true
+                                    pressedAt = boxOffset + offset
+                                    // What a drag would carry under the finger, from the cache only: a
+                                    // long press that never drags costs no traffic
+                                    dragShadow = null
+                                    scope.launch {
+                                        dragShadow = context.loadBitmap(imageUri) {
+                                            size(DragShadowPixels)
+                                            networkCachePolicy(CachePolicy.DISABLED)
+                                        }
+                                    }
                                     menus.show(menuItems, anchor = Rect(boxOffset + offset, Size.Zero))
                                 }
                             }
@@ -306,8 +327,10 @@ fun NetworkImage(
                     }
                 }
             }
-            .pointerInput(menus) {
+            .pointerInput(menus, originUrl, imageUri) {
                 if (menus == null) return@pointerInput
+                val dragDistance = DragOutDistance.toPx()
+                val menuMargin = DragOutMenuMargin.toPx()
                 awaitEachGesture {
                     awaitFirstDown(requireUnconsumed = false)
                     while (true) {
@@ -318,7 +341,17 @@ fun NetworkImage(
                             menuOpen = false
                             break
                         }
-                        if (menuOpen) menus.moveFinger(position)
+                        if (!menuOpen) continue
+                        // Away from the press and not toward the menu, the finger lifts the picture
+                        // itself: the menu goes and the picture drags out, for an app beside this one
+                        val overMenu = menus.bounds?.inflate(menuMargin)?.contains(position) == true
+                        if (originUrl != null && !overMenu && (position - pressedAt).getDistance() > dragDistance) {
+                            menuOpen = false
+                            menus.dismiss()
+                            view.startPictureDrag(original = originUrl, shownUrl = imageUri, shown = dragShadow)
+                            break
+                        }
+                        menus.moveFinger(position)
                     }
                 }
             }
@@ -378,3 +411,12 @@ fun NetworkImage(
         shape = shape,
     )
 }
+
+/** How far from a long press the finger moves, not toward the menu, before the picture drags out. */
+private val DragOutDistance = 32.dp
+
+/** The size the picture under a dragging finger is decoded at. */
+private const val DragShadowPixels = 480
+
+/** How near the menu the finger counts as heading into it rather than dragging. */
+private val DragOutMenuMargin = 16.dp

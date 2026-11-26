@@ -180,6 +180,24 @@ class ContextMenus internal constructor() {
     internal var finger by mutableStateOf<Offset?>(null)
         private set
 
+    /** Where the menu showing now is in the window, once laid out; null while none shows. */
+    var bounds: Rect? = null
+        internal set
+
+    /** Counts the times the menu was asked to go without running anything ([dismiss]). */
+    internal var dismissals by mutableIntStateOf(0)
+        private set
+
+    /**
+     * Closes the menu without running an item, as when its finger turns from the menu to dragging
+     * the thing it was opened on.
+     */
+    fun dismiss() {
+        if (request == null) return
+        finger = null
+        dismissals++
+    }
+
     /** Where that finger last lifted, counted so each lift is heard once. */
     internal var lift by mutableStateOf<Pair<Int, Offset>?>(null)
         private set
@@ -254,6 +272,7 @@ class ContextMenus internal constructor() {
         if (request?.id != id) return
         request = null
         finger = null
+        bounds = null
     }
 }
 
@@ -470,6 +489,11 @@ private fun ContextMenuOverlay(menus: ContextMenus, request: ContextMenuRequest,
         if (count == liftsBefore) return@LaunchedEffect
         val start = fingerStart ?: return@LaunchedEffect
         if ((lifted - start).getDistance() > slop) itemAt(lifted)?.let(run)
+    }
+
+    val dismissalsBefore = remember { menus.dismissals }
+    LaunchedEffect(menus.dismissals) {
+        if (menus.dismissals != dismissalsBefore) dismiss()
     }
 
     BackHandler(enabled = !closing) { if (opened != null) foldChildren() else dismiss() }
@@ -729,6 +753,7 @@ private fun ContextMenuOverlay(menus: ContextMenus, request: ContextMenuRequest,
         val area = (if (fromButton) bounds.union(if (anchor.isWide) anchor else Rect(anchor.center, anchor.minDimension / 2)) else bounds)
             .inflate(GlassSlack.toPx())
         geometry.bounds = bounds
+        menus.bounds = bounds
         geometry.glass = glass
         geometry.corner = corner
         geometry.area = area

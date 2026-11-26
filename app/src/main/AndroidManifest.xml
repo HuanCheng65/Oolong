@@ -106,6 +106,13 @@
             android:name="android.app.appfunctions.app_metadata"
             android:resource="@xml/app_metadata" />
 
+        <!-- Pictures dragged out of the app, only for the app each drag grants one to -->
+        <provider
+            android:name=".media.PictureDragProvider"
+            android:authorities="${applicationId}.pictures"
+            android:exported="false"
+            android:grantUriPermissions="true" />
+
         <activity
             android:name=".ui.appwidget.WidgetSetupActivity"
             android:exported="true"
