@@ -30,6 +30,8 @@ import oolong.client.data.settings.SharedPreferencesUtil
 import oolong.client.data.storage.AppStorage
 import oolong.client.diagnostics.CrashLogs
 import oolong.client.media.image.newAppImageLoader
+import oolong.client.ui.appwidget.WidgetPreviews
+import oolong.client.ui.appwidget.widgetEntryPoint
 import oolong.client.ui.designsystem.VoicePlayback
 import oolong.client.ui.designsystem.theme.ThemeUtil
 import oolong.client.util.packageInfo
@@ -83,6 +85,7 @@ class App : Application(), SingletonImageLoader.Factory {
             EmoticonManager.init(this@App)
         }
         thread { AppStorage.sweep(this@App) }
+        WidgetPreviews.publishOnce(this, widgetEntryPoint.applicationScope())
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {

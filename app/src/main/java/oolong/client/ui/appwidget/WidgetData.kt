@@ -5,12 +5,14 @@ import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import oolong.client.arch.ApplicationScope
 import oolong.client.data.explore.ExploreRepository
 import oolong.client.data.forum.FollowedForums
 import oolong.client.data.forum.ForumCursor
@@ -25,6 +27,9 @@ import java.io.File
 @EntryPoint
 @InstallIn(SingletonComponent::class)
 internal interface WidgetEntryPoint {
+    @ApplicationScope
+    fun applicationScope(): CoroutineScope
+
     fun explore(): ExploreRepository
 
     fun forums(): ForumRepository

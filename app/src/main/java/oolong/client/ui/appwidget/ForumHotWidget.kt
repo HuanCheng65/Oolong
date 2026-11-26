@@ -41,11 +41,21 @@ import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import kotlinx.coroutines.flow.first
 import oolong.client.R
 
 /** One forum's hot threads under the forum's name, washed in its avatar's colour as its page is. */
 class ForumHotWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
+
+    override val previewSizeMode = WidgetPreviews.Size
+
+    /** Shown with the forum the user visited last, or asking for one when there is none. */
+    override suspend fun providePreview(context: Context, widgetCategory: Int) {
+        val name = context.widgetEntryPoint.home().visitedForums.first().firstOrNull()?.name
+        val loaded = name?.let { load(context, it, fresh = true) }
+        provideContent { Content(name, AppWidgetManager.INVALID_APPWIDGET_ID, Shown(loaded, loading = false)) }
+    }
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val firstName = getAppWidgetState<Preferences>(context, PreferencesGlanceStateDefinition, id)[ForumNameKey]

@@ -29,6 +29,13 @@ import oolong.client.util.StringUtil.getShortNumString
 class ThreadRankingWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
 
+    override val previewSizeMode = WidgetPreviews.Size
+
+    override suspend fun providePreview(context: Context, widgetCategory: Int) {
+        val loaded = load(context, fresh = true)
+        provideContent { Content(Shown(loaded, loading = false)) }
+    }
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val initial = load(context, fresh = false)
         provideContent {

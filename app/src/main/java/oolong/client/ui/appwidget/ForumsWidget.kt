@@ -43,6 +43,13 @@ import oolong.client.R
 class ForumsWidget : GlanceAppWidget() {
     override val sizeMode = SizeMode.Exact
 
+    override val previewSizeMode = WidgetPreviews.Size
+
+    override suspend fun providePreview(context: Context, widgetCategory: Int) {
+        val loaded = load(context, ForumsSource.Followed, fresh = true)
+        provideContent { Content(ForumsSource.Followed, Shown(loaded, loading = false)) }
+    }
+
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val firstSource = getAppWidgetState<Preferences>(context, PreferencesGlanceStateDefinition, id)[SourceKey].toSource()
         val initial = load(context, firstSource, fresh = false)
