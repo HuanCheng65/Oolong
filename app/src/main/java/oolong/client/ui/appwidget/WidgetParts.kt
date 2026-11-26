@@ -118,20 +118,27 @@ internal data class Shown<T>(val value: T?, val loading: Boolean)
 internal val RefreshKey = longPreferencesKey("refresh")
 
 /**
- * What [load] gives, again whenever [keys] change: first what was kept from the last load, at once,
- * then a fresh load. [initial] is what was kept for the first keys, read before the widget showed.
+ * What [load] gives: first what was kept from the last load, at once, then a fresh load. [initial]
+ * is what was kept for the first [what], read before the widget showed.
+ *
+ * Asked again for the same [what], as [refresh] changes, what shows stays until the fresh load
+ * replaces it: each change sends every size's layout to the launcher again, which some launchers
+ * (HyperOS's) redraw visibly, so a widget mustn't pass through its kept or an empty state. Asked
+ * for something else, it shows what was kept for that first, if anything was.
  *
  * Loading here rather than before the content is provided is what makes a widget that is already
  * showing load again: an update to a running widget only recomposes it.
  */
 @Composable
-internal fun <T : Any> rememberShown(initial: T?, vararg keys: Any?, load: suspend (fresh: Boolean) -> T?): Shown<T> {
-    // The first keys' kept load is [initial]; later keys show their own while the fresh one runs
-    val firstRun = remember { booleanArrayOf(true) }
-    val shown by produceState(Shown(initial, loading = true), *keys) {
-        if (!firstRun[0]) value = Shown(load(false), loading = true)
-        firstRun[0] = false
-        value = Shown(load(true), loading = false)
+internal fun <T : Any> rememberShown(initial: T?, vararg what: Any?, refresh: Any?, load: suspend (fresh: Boolean) -> T?): Shown<T> {
+    val shownFor = remember { arrayOfNulls<Any?>(1) }
+    val shown by produceState(Shown(initial, loading = true), *what, refresh) {
+        val same = shownFor[0]?.let { (it as Array<*>).contentEquals(what) } ?: true
+        if (!same) load(false)?.let { value = Shown(it, loading = true) }
+        shownFor[0] = arrayOf(*what)
+        val fresh = load(true)
+        // A failed load keeps what shows, if anything does
+        if (fresh != null || value.value == null) value = Shown(fresh, loading = false)
     }
     return shown
 }

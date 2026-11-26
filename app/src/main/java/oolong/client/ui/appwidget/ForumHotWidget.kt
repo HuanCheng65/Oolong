@@ -83,8 +83,8 @@ class ForumHotWidget : GlanceAppWidget() {
         provideContent {
             val name = currentState(ForumNameKey)
             val shows = currentState(ShowsKey).toShows()
-            val shown = rememberShown(initial, name, shows, currentState(RefreshKey)) { fresh -> name?.let { load(context, it, shows, fresh) } }
-            Content(name, appWidgetId, shown, signing = currentState(SigningKey) == true)
+            val shown = rememberShown(initial, name, shows, refresh = currentState(RefreshKey)) { fresh -> name?.let { load(context, it, shows, fresh) } }
+            Content(name, appWidgetId, shown, signing = currentState(SigningKey) == true, signedHere = currentState(SignedKey))
         }
     }
 
@@ -95,7 +95,7 @@ class ForumHotWidget : GlanceAppWidget() {
      * is the widget's, or [AppWidgetManager.INVALID_APPWIDGET_ID] for none.
      */
     @Composable
-    internal fun Content(name: String?, appWidgetId: Int, shown: Shown<Loaded>, signing: Boolean) {
+    internal fun Content(name: String?, appWidgetId: Int, shown: Shown<Loaded>, signing: Boolean, signedHere: String? = null) {
         val context = LocalContext.current
         val size = LocalSize.current
         val loaded = shown.value
@@ -121,7 +121,9 @@ class ForumHotWidget : GlanceAppWidget() {
                     )
                 }
                 Column(modifier = GlanceModifier.fillMaxSize().padding(horizontal = if (narrow) 14.dp else WidgetPadding, vertical = 12.dp)) {
-                    Header(content, loaded.avatar, signing, narrow)
+                    // Signed in from here today, it shows so at once, before the forum loads again
+                    val signed = content.signedIn || signedHere == signedMark(content.id)
+                    Header(content.copy(signedIn = signed), loaded.avatar, signing, narrow)
                     val (rows, rowHeight) = fitRows(
                         size.height - 24.dp - HeaderHeight,
                         if (narrow) NarrowRowHeight else RowHeight,
@@ -251,6 +253,12 @@ class ForumHotWidget : GlanceAppWidget() {
         /** Set while the header's sign-in runs, so it says so. */
         internal val SigningKey = booleanPreferencesKey("forum_signing")
 
+        /** The forum signed in to from the header, and the day: see [signedMark]. */
+        internal val SignedKey = stringPreferencesKey("forum_signed")
+
+        /** [forumId] on today's date, as the header's sign-in leaves it. */
+        internal fun signedMark(forumId: Long): String = "$forumId@${DateFormat.format("yyyyMMdd", System.currentTimeMillis())}"
+
         internal val ForumIdParam = ActionParameters.Key<Long>("forum_id")
         internal val ForumNameParam = ActionParameters.Key<String>("forum_name")
 
@@ -309,15 +317,16 @@ class SignForumAction : ActionCallback {
         val id = parameters[ForumHotWidget.ForumIdParam] ?: return
         val name = parameters[ForumHotWidget.ForumNameParam] ?: return
         val widget = ForumHotWidget()
-        setSigning(context, glanceId, true)
+        setState(context, glanceId, signing = true, signed = null)
         widget.update(context, glanceId)
         val entry = context.widgetEntryPoint
         val result = runCatching {
             val tbs = entry.accounts().current.value?.tbs ?: throw IllegalStateException(context.getString(R.string.text_login_first))
             entry.sign().sign(id, name, tbs)
         }
-        // Loaded again, the forum comes back signed in, with its level
-        setSigning(context, glanceId, false)
+        // Signed, it shows so at once; the level comes with the load the change below brings,
+        // rather than loading again here and drawing the widget once more in between
+        setState(context, glanceId, signing = false, signed = result.getOrNull()?.let { ForumHotWidget.signedMark(id) })
         widget.update(context, glanceId)
         result
             .onSuccess { entry.followedForums().changed() }
@@ -327,11 +336,11 @@ class SignForumAction : ActionCallback {
             }
     }
 
-    private suspend fun setSigning(context: Context, glanceId: GlanceId, signing: Boolean) {
+    private suspend fun setState(context: Context, glanceId: GlanceId, signing: Boolean, signed: String?) {
         updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) {
             it.toMutablePreferences().apply {
                 if (signing) this[ForumHotWidget.SigningKey] = true else remove(ForumHotWidget.SigningKey)
-                if (!signing) this[RefreshKey] = System.currentTimeMillis()
+                if (signed != null) this[ForumHotWidget.SignedKey] = signed
             }
         }
     }

@@ -55,7 +55,7 @@ class ForumsWidget : GlanceAppWidget() {
         val initial = load(context, firstSource, fresh = false)
         provideContent {
             val source = currentState(SourceKey).toSource()
-            val shown = rememberShown(initial, source, currentState(RefreshKey)) { load(context, source, it) }
+            val shown = rememberShown(initial, source, refresh = currentState(RefreshKey)) { load(context, source, it) }
             Content(source, shown)
         }
     }

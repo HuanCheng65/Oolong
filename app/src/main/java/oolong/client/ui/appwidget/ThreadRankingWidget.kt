@@ -41,7 +41,7 @@ class ThreadRankingWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val initial = load(context, fresh = false)
         provideContent {
-            val shown = rememberShown(initial, currentState(RefreshKey)) { load(context, it) }
+            val shown = rememberShown(initial, refresh = currentState(RefreshKey)) { load(context, it) }
             Content(shown)
         }
     }
