@@ -1,5 +1,6 @@
 package oolong.client.ui.settings.more
 
+import android.content.Context
 import android.content.Intent
 import android.content.pm.verify.domain.DomainVerificationManager
 import android.content.pm.verify.domain.DomainVerificationUserState
@@ -8,6 +9,7 @@ import android.provider.Settings
 import android.text.format.Formatter
 import androidx.annotation.RequiresApi
 import androidx.annotation.StringRes
+import androidx.annotation.VisibleForTesting
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -53,6 +55,10 @@ class MoreState(
 
 /** Everything else: links, storage and troubleshooting. */
 object MoreSettings : SettingsPage<MoreState>(R.string.title_settings_more, MoreSettingsKey) {
+    /** How the storage row's size is measured; screenshot tests give a fixed one, as the real one moves with every build. */
+    @VisibleForTesting
+    internal var measureStorage: suspend (Context) -> Long = AppStorage::total
+
     @Composable
     override fun rememberState(): MoreState {
         val context = LocalContext.current
@@ -61,7 +67,7 @@ object MoreSettings : SettingsPage<MoreState>(R.string.title_settings_more, More
         // Measured again on coming back, as the storage page may have cleared some
         var storageTotal by remember { mutableStateOf<Long?>(null) }
         LifecycleResumeEffect(Unit) {
-            val job = coroutineScope.launch { storageTotal = AppStorage.total(context) }
+            val job = coroutineScope.launch { storageTotal = measureStorage(context) }
             onPauseOrDispose { job.cancel() }
         }
         return MoreState(storageTotal, legacySource)

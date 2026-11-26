@@ -11,6 +11,7 @@ import oolong.client.ui.settings.account.AccountManagePage
 import oolong.client.ui.settings.custom.CustomSettingsPage
 import oolong.client.ui.settings.custom.FontSizePage
 import oolong.client.ui.settings.habit.HabitSettingsPage
+import oolong.client.ui.settings.more.MoreSettings
 import oolong.client.ui.settings.more.MoreSettingsPage
 import oolong.client.ui.settings.oksign.OKSignSettingsPage
 import oolong.client.ui.settings.post.PostSettingsPage
@@ -79,13 +80,13 @@ class SettingsScreenshotTest {
 
     @Test
     fun other() {
-        captureScreenshot { MoreSettingsPage(navigator = NoOpNavigator) }
+        withFixedStorage { captureScreenshot { MoreSettingsPage(navigator = NoOpNavigator) } }
     }
 
     @Test
     @Config(qualifiers = "+en")
     fun otherEnglish() {
-        captureScreenshot { MoreSettingsPage(navigator = NoOpNavigator) }
+        withFixedStorage { captureScreenshot { MoreSettingsPage(navigator = NoOpNavigator) } }
     }
 
     @Test
@@ -109,6 +110,17 @@ class SettingsScreenshotTest {
             ) {
                 AccountManagePage(navigator = NoOpNavigator)
             }
+        }
+    }
+
+    /** Shows the storage row with a fixed size, not the test build's own, which changes with the code. */
+    private fun withFixedStorage(capture: () -> Unit) {
+        val measure = MoreSettings.measureStorage
+        MoreSettings.measureStorage = { 2_600_000L }
+        try {
+            capture()
+        } finally {
+            MoreSettings.measureStorage = measure
         }
     }
 }
