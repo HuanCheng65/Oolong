@@ -3,6 +3,7 @@ package oolong.client.ui.designsystem
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.Orientation
 import androidx.compose.foundation.gestures.TargetedFlingBehavior
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
@@ -108,7 +109,9 @@ fun LazyLoadHorizontalPager(
         ProvideShouldLoad(
             shouldLoad = it == state.currentPage
         ) {
-            pageContent(it)
+            Box(modifier = Modifier.pagerPageFocus(showing = it == state.currentPage), propagateMinConstraints = true) {
+                pageContent(it)
+            }
         }
     }
 }

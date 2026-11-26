@@ -1,11 +1,13 @@
 package oolong.client.ui.designsystem
 
+import androidx.compose.foundation.focusGroup
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.composed
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.isSecondaryPressed
@@ -42,3 +44,10 @@ private fun Modifier.secondaryClicks(onClick: (Offset) -> Unit): Modifier =
             }
         }
     }
+
+/**
+ * Keeps a keyboard's focus out of a pager's page while it isn't [showing]: moving focus into a
+ * page off screen would turn the pager to it, so Tab through one page's buttons jumped to the next.
+ */
+fun Modifier.pagerPageFocus(showing: Boolean): Modifier =
+    focusProperties { onEnter = { if (!showing) cancelFocusChange() } }.focusGroup()
