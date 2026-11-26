@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.appwidget.updateAll
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
@@ -26,6 +27,8 @@ internal object WidgetUpdates {
     fun follow(context: Context, scope: CoroutineScope) {
         val app = context.applicationContext
         val entryPoint = app.widgetEntryPoint
+        // Whatever the launcher shows of them, after an update or a restart, is drawn again
+        scope.launch { drawAll(app) }
         scope.launch {
             merge(
                 entryPoint.followedForums().changes,
@@ -35,6 +38,13 @@ internal object WidgetUpdates {
                 refreshAll(app, ForumHotWidget())
                 refreshAll(app, TopicsAndForumsWidget())
             }
+        }
+    }
+
+    /** Draws every placed widget of every kind again, from what each kept and then freshly. */
+    suspend fun drawAll(context: Context) {
+        listOf(HotTopicsWidget(), ThreadRankingWidget(), ForumHotWidget(), ForumsWidget(), TopicsAndForumsWidget()).forEach {
+            runCatching { it.updateAll(context) }
         }
     }
 

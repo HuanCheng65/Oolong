@@ -137,6 +137,14 @@
         </activity>
 
         <receiver
+            android:name=".ui.appwidget.WidgetRefreshReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <receiver
             android:name=".ui.appwidget.HotTopicsWidgetReceiver"
             android:exported="false"
             android:label="@string/hot_section_topics">
