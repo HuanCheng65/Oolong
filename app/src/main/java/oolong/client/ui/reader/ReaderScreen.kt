@@ -115,6 +115,7 @@ import oolong.client.ui.designsystem.WavyLoader
 import oolong.client.ui.designsystem.adaptive.LocalWindowSizeClass
 import oolong.client.ui.designsystem.adaptive.WindowWidthSizeClass
 import oolong.client.ui.designsystem.floatingGlass
+import oolong.client.ui.designsystem.pageShortcuts
 import oolong.client.ui.designsystem.theme.ExtendedColors
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.LocalExtendedColors
@@ -417,6 +418,8 @@ private fun ReaderContent(
                 // Hidden while loading on to where it opens, so it doesn't show the start first
                 modifier = Modifier
                     .fillMaxSize()
+                    // Space pages through it as a book's pages turn
+                    .pageShortcuts(list = listState)
                     .graphicsLayer { alpha = shownAfterSeek.value },
             ) {
                 item(key = "cover") {
