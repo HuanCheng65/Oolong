@@ -27,7 +27,8 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.data.post.ReplyTarget
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.media.PickMediasContract
 import oolong.client.ui.editor.EditRequest
 import oolong.client.ui.editor.EditorPlace
@@ -54,7 +55,7 @@ class ReplyComposer internal constructor(
     internal var target by mutableStateOf<ReplyTarget?>(null)
     internal var subPostAuthor by mutableStateOf<Pair<String, String>?>(null)
     internal var tbs: String? = null
-    internal var showNotice by mutableStateOf(context.appPreferences.postOrReplyWarning)
+    internal var showNotice by mutableStateOf(Settings.of(context)[SettingKeys.PostOrReplyWarning])
 
     /** Opens the editor on the attached picture at an index. */
     internal var editImage: (Int) -> Unit = {}
@@ -111,7 +112,7 @@ class ReplyComposer internal constructor(
             ReplyComposerEvent.ToggleFullScreen -> chrome.fullScreen = !chrome.fullScreen
             ReplyComposerEvent.DismissNotice -> {
                 showNotice = false
-                context.appPreferences.postOrReplyWarning = false
+                Settings.of(context)[SettingKeys.PostOrReplyWarning] = false
             }
 
             ReplyComposerEvent.OpenOfficialClient -> openOfficialClient()
@@ -136,7 +137,7 @@ class ReplyComposer internal constructor(
                 val text = editor.text
                 // A reply to a reply in a floor names its author first, as the official client does
                 val content = if (author != null) "回复 #(reply, ${author.first}, ${author.second}) :$text" else text
-                viewModel.send(target, content, tbs, tail = context.appPreferences.littleTail)
+                viewModel.send(target, content, tbs, tail = Settings.of(context)[SettingKeys.LittleTail])
             }
         }
     }
@@ -250,7 +251,7 @@ fun ReplyComposer.Content(handle: @Composable () -> Unit, fill: Boolean) {
         fullScreen = chrome.fullScreen,
         fill = fill,
         showNotice = showNotice,
-        hasTail = !context.appPreferences.littleTail.isNullOrBlank(),
+        hasTail = !Settings.of(context)[SettingKeys.LittleTail].isNullOrBlank(),
         canAttachImages = canAttachImages,
         onEvent = ::onEvent,
         handle = handle,

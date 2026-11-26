@@ -4,7 +4,8 @@ import android.content.Context
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.colorspace.ColorSpaces
 import androidx.core.graphics.toColorInt
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.ui.designsystem.theme.ThemeUtil
 import kotlin.math.hypot
 
@@ -228,6 +229,6 @@ fun themeColors(
 
 /** The colour the user picked for [theme], if it is the custom theme. */
 fun pickedColor(context: Context, theme: String): Color? {
-    val saved = if (theme == ThemeUtil.THEME_CUSTOM) context.appPreferences.customPrimaryColor else null
+    val saved = if (theme == ThemeUtil.THEME_CUSTOM) Settings.of(context)[SettingKeys.CustomPrimaryColor] else null
     return saved?.let { runCatching { Color(it.toColorInt()) }.getOrNull() }
 }

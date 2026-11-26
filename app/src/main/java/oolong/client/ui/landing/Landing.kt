@@ -46,16 +46,13 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.graphics.BlurEffect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.TileMode
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -69,7 +66,6 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withLink
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.offset
@@ -83,7 +79,8 @@ import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.SPLASH_ICON_MILLIS
 import oolong.client.data.legacy.LegacyImport
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.diagnostics.UsageStats
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.LoginKey
@@ -131,7 +128,7 @@ fun LandingHost() {
         mutableStateOf(
             when {
                 LegacyImport.consumeImported(context) -> Stage.Done
-                !context.appPreferences.landingShown -> Stage.Welcome
+                !Settings.of(context)[SettingKeys.LandingShown] -> Stage.Welcome
                 else -> Stage.Gone
             }
         )
@@ -166,14 +163,14 @@ private fun Landing(stage: Stage, onStage: (Stage) -> Unit) {
         if (state.leaving) return
         state.leaving = true
         if (stage == Stage.Welcome) {
-            context.appPreferences.usageStats = usageStats
-            context.appPreferences.usageStatsAsked = true
+            Settings.of(context)[SettingKeys.UsageStats] = usageStats
+            Settings.of(context)[SettingKeys.UsageStatsAsked] = true
             if (usageStats) UsageStats.sendSoon(context)
         }
         then()
         scope.launch {
             state.leave.animateTo(1f, Leave)
-            context.appPreferences.landingShown = true
+            Settings.of(context)[SettingKeys.LandingShown] = true
             onStage(Stage.Gone)
         }
     }

@@ -15,7 +15,7 @@ import androidx.core.graphics.drawable.IconCompat
 import androidx.core.net.toUri
 import oolong.client.R
 import oolong.client.data.link.isInternalHost
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
 import oolong.client.media.image.loadBitmap
 import oolong.client.navigation.Navigator
 import oolong.client.navigation.ThreadKey
@@ -23,6 +23,7 @@ import oolong.client.navigation.WebViewKey
 import oolong.client.ui.designsystem.theme.currentColors
 import oolong.client.util.toastShort
 import org.json.JSONObject
+import oolong.client.data.settings.Settings as AppSettings
 
 fun launchUrl(
     context: Context,
@@ -82,12 +83,12 @@ fun launchUrl(
             }
             return
         }
-        if (isInternalHost(host) || context.appPreferences.useWebView) {
+        if (isInternalHost(host) || AppSettings.of(context)[SettingKeys.UseWebView]) {
             navigator.navigate(
                 WebViewKey(url)
             )
         } else {
-            if (context.appPreferences.useCustomTabs) {
+            if (AppSettings.of(context)[SettingKeys.UseCustomTabs]) {
                 val intentBuilder = CustomTabsIntent.Builder()
                     .setShowTitle(true)
                     .setDefaultColorSchemeParams(

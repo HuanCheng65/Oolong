@@ -11,7 +11,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.InlineTextContent
 import androidx.compose.foundation.text.appendInlineContent
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.LocalContentColor
 import androidx.compose.material.Text
@@ -40,7 +39,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import oolong.client.R
 import oolong.client.arch.LoadStatus
 import oolong.client.arch.PagerState
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.model.StoredThread
 import oolong.client.model.User
 import oolong.client.navigation.LocalNavigator
@@ -102,8 +102,8 @@ fun ThreadStorePage(
                 ThreadKey(
                     threadId = thread.threadId,
                     postId = thread.markPostId,
-                    seeLz = context.appPreferences.collectThreadSeeLz,
-                    sortType = if (context.appPreferences.collectThreadDescSort) ThreadSortType.SORT_TYPE_DESC else ThreadSortType.SORT_TYPE_DEFAULT,
+                    seeLz = Settings.of(context)[SettingKeys.CollectThreadSeeLz],
+                    sortType = if (Settings.of(context)[SettingKeys.CollectThreadDescSort]) ThreadSortType.SORT_TYPE_DESC else ThreadSortType.SORT_TYPE_DEFAULT,
                     from = ThreadPageFrom.FROM_STORE,
                     extra = ThreadPageFromStoreExtra(
                         maxPid = thread.maxPostId,

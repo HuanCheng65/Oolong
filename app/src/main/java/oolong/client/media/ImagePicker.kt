@@ -9,7 +9,8 @@ import android.os.ext.SdkExtensions.getExtensionVersion
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContract
 import oolong.client.App
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.ui.picker.ImagePickerActivity
 
 fun isPhotoPickerAvailable(): Boolean {
@@ -23,7 +24,7 @@ fun isPhotoPickerAvailable(): Boolean {
 }
 
 fun shouldUsePhotoPicker(): Boolean {
-    return !App.INSTANCE.appPreferences.doNotUsePhotoPicker && isPhotoPickerAvailable()
+    return !Settings.of(App.INSTANCE)[SettingKeys.DoNotUsePhotoPicker] && isPhotoPickerAvailable()
 }
 
 fun Intent.getClipDataUris(): List<Uri> {

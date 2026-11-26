@@ -37,7 +37,8 @@ import androidx.compose.ui.unit.sp
 import kotlinx.collections.immutable.ImmutableList
 import oolong.client.R
 import oolong.client.data.emoticon.EmoticonUtil.emoticonInlineId
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.media.ImageUtil
 import oolong.client.model.PhotoViewData
 import oolong.client.model.PostContent
@@ -141,7 +142,7 @@ fun PostImage(
         modifier = Modifier
             .then(size)
             .aspectRatio(image.aspectRatio),
-        shape = if (rounded) SmoothCornerShape(context.appPreferences.radius.dp) else null,
+        shape = if (rounded) SmoothCornerShape(Settings.of(context)[SettingKeys.Radius].dp) else null,
         photoViewData = photoViewData,
         contentScale = ContentScale.Crop,
     )
@@ -152,7 +153,7 @@ private fun PostVideo(video: PostContent.Video) {
     if (video.coverUrl.isBlank()) return
     val context = LocalContext.current
     val navigator = LocalNavigator.current
-    val shape = SmoothCornerShape(context.appPreferences.radius.dp)
+    val shape = SmoothCornerShape(Settings.of(context)[SettingKeys.Radius].dp)
     if (video.url.isNotBlank()) {
         VideoCover(
             video = remember(video) {

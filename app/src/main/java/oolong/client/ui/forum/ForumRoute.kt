@@ -14,7 +14,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.model.ForumDetail
 import oolong.client.navigation.ForumDetailKey
 import oolong.client.navigation.ForumRuleDetailKey
@@ -79,7 +80,7 @@ fun ForumRoute(
         }
     }
 
-    val fab = when (context.appPreferences.forumFabFunction) {
+    val fab = when (Settings.of(context)[SettingKeys.ForumFabFunction]) {
         "refresh" -> ForumFab.Refresh
         "back_to_top" -> ForumFab.BackToTop
         else -> ForumFab.Hidden

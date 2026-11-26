@@ -68,7 +68,8 @@ import kotlinx.collections.immutable.persistentListOf
 import oolong.client.App
 import oolong.client.R
 import oolong.client.data.emoticon.EmoticonUtil.emoticonString
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.media.ImageUtil
 import oolong.client.model.FeedReply
 import oolong.client.model.ForumSummary
@@ -114,7 +115,6 @@ import oolong.core.designsystem.theme.Motion
 import oolong.core.designsystem.theme.PressFeedback
 import oolong.core.designsystem.theme.SmoothCornerShape
 import oolong.core.designsystem.theme.pressScale
-import kotlin.math.max
 import kotlin.math.min
 
 private val ThreadImage.url: String
@@ -451,7 +451,7 @@ private fun ThreadMedia(
     val hasPhoto = remember(mediaCount) { mediaCount > 0 }
     val isSinglePhoto = remember(mediaCount) { mediaCount == 1 }
 
-    val hideMedia = context.appPreferences.hideMedia
+    val hideMedia = Settings.of(context)[SettingKeys.HideMedia]
 
     val windowWidthSizeClass = LocalWindowSizeClass.current.widthSizeClass
     val singleMediaFraction = remember(windowWidthSizeClass) {

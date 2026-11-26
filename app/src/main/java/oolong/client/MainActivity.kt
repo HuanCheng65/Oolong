@@ -101,7 +101,7 @@ import oolong.client.data.link.ClipBoardThreadLink
 import oolong.client.data.link.QuickPreviewUtil
 import oolong.client.data.link.toTiebaKey
 import oolong.client.data.settings.SettingKeys
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.Settings
 import oolong.client.data.settings.settingAsState
 import oolong.client.diagnostics.CrashLogs
 import oolong.client.diagnostics.CrashReports
@@ -450,13 +450,13 @@ class MainActivity : AppCompatActivity() {
                 DialogNegativeButton(
                     text = stringResource(id = R.string.button_dont_remind_again),
                     onClick = {
-                        appPreferences.ignoreBatteryOptimizationsDialog = true
+                        Settings.of(this@MainActivity)[SettingKeys.IgnoreBatteryOptimizationsDialog] = true
                     }
                 )
             },
         )
         LaunchedEffect(Unit) {
-            if (appPreferences.autoSign && !isIgnoringBatteryOptimizations() && !appPreferences.ignoreBatteryOptimizationsDialog) {
+            if (Settings.of(this@MainActivity)[SettingKeys.AutoSign] && !isIgnoringBatteryOptimizations() && !Settings.of(this@MainActivity)[SettingKeys.IgnoreBatteryOptimizationsDialog]) {
                 okSignAlertDialogState.show()
             }
         }
@@ -515,7 +515,7 @@ class MainActivity : AppCompatActivity() {
                 DialogPositiveButton(
                     text = stringResource(id = R.string.button_send_usage_stats),
                     onClick = {
-                        appPreferences.usageStats = true
+                        Settings.of(this@MainActivity)[SettingKeys.UsageStats] = true
                         UsageStats.sendSoon(this@MainActivity)
                     },
                 )
@@ -533,8 +533,8 @@ class MainActivity : AppCompatActivity() {
                 CrashLogs.takeUnnoticed(this@MainActivity)
             }
             if (entry == null) {
-                if (appPreferences.landingShown && !appPreferences.usageStatsAsked) {
-                    appPreferences.usageStatsAsked = true
+                if (Settings.of(this@MainActivity)[SettingKeys.LandingShown] && !Settings.of(this@MainActivity)[SettingKeys.UsageStatsAsked]) {
+                    Settings.of(this@MainActivity)[SettingKeys.UsageStatsAsked] = true
                     usageStatsDialogState.show()
                 }
                 return@LaunchedEffect

@@ -24,7 +24,8 @@ import oolong.client.data.emoticon.EmoticonManager.getEmoticonIdByName
 import oolong.client.data.emoticon.EmoticonSpanV2
 import oolong.client.data.emoticon.EmoticonUtil
 import oolong.client.data.emoticon.EmoticonUtil.emoticonString
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.ui.components.TextLinkActions
 import oolong.client.ui.designsystem.theme.currentColors
 import java.util.Locale
@@ -81,7 +82,7 @@ object StringUtil {
 
     @JvmStatic
     fun getUsernameString(context: Context, username: String, nickname: String?): CharSequence {
-        val showBoth = context.appPreferences.showBothUsernameAndNickname
+        val showBoth = Settings.of(context)[SettingKeys.ShowBothUsernameAndNickname]
         if (TextUtils.isEmpty(nickname)) {
             return if (TextUtils.isEmpty(username)) "" else username
         } else if (showBoth && !TextUtils.isEmpty(username) && !TextUtils.equals(
@@ -107,7 +108,7 @@ object StringUtil {
         nickname: String?,
         color: Color = Color.Unspecified
     ): AnnotatedString {
-        val showBoth = App.isInitialized && context.appPreferences.showBothUsernameAndNickname
+        val showBoth = App.isInitialized && Settings.of(context)[SettingKeys.ShowBothUsernameAndNickname]
         return buildAnnotatedString {
             if (showBoth && !nickname.isNullOrBlank() && username != nickname && username.isNotBlank()) {
                 append(nickname)

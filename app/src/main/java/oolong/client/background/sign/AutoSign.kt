@@ -17,7 +17,8 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.edit
 import oolong.client.R
 import oolong.client.background.sign.AutoSignAlarm
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -40,7 +41,7 @@ object AutoSign {
     fun schedule(context: Context) {
         val alarms = context.getSystemService(AlarmManager::class.java) ?: return
         val alarm = alarmIntent(context)
-        if (!context.appPreferences.autoSign) {
+        if (!Settings.of(context)[SettingKeys.AutoSign]) {
             alarms.cancel(alarm)
             context.getSystemService(JobScheduler::class.java)?.cancel(CheckJobId)
             return
@@ -135,8 +136,7 @@ object AutoSign {
     }.getOrNull()
 
     private fun isDue(context: Context): Boolean {
-        val preferences = context.appPreferences
-        if (!preferences.autoSign) return false
+        if (!Settings.of(context)[SettingKeys.AutoSign]) return false
         if (System.currentTimeMillis() < todayAt(context)) return false
         val today = day(System.currentTimeMillis())
         val last = lastRun(context)
@@ -162,7 +162,7 @@ object AutoSign {
 
     /** Today at the chosen time, in the device's time zone. */
     private fun todayAt(context: Context): Long {
-        val (hour, minute) = (context.appPreferences.autoSignTime ?: DefaultTime).split(':')
+        val (hour, minute) = Settings.of(context)[SettingKeys.AutoSignTime].split(':')
             .mapNotNull { it.toIntOrNull() }
             .takeIf { it.size == 2 } ?: listOf(9, 0)
         return Calendar.getInstance().apply {

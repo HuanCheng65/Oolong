@@ -33,7 +33,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -41,7 +40,8 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.arch.LoadStatus
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.model.ForumDetail
 import oolong.client.model.ForumTab
 import oolong.client.ui.components.FeedCardPlaceholder
@@ -63,7 +63,6 @@ import oolong.client.ui.designsystem.rememberSharedHeaderState
 import oolong.client.ui.designsystem.sharedHeaderPinned
 import oolong.client.ui.designsystem.states.DefaultErrorScreen
 import oolong.client.ui.designsystem.states.StateScreen
-import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.Symbols
 import oolong.client.ui.designsystem.toListStart
 import oolong.client.ui.designsystem.underSharedHeader
@@ -119,7 +118,7 @@ private fun ForumContent(
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     // One choice for every tab and every forum
-    var topsFolded by remember { mutableStateOf(context.appPreferences.forumTopsFolded) }
+    var topsFolded by remember { mutableStateOf(Settings.of(context)[SettingKeys.ForumTopsFolded]) }
     // Saved, so each tab keeps its place while another page is open on top
     val listStates = tabs.associateWith { tab -> key(tab) { rememberLazyListState() } }
 
@@ -252,7 +251,7 @@ private fun ForumContent(
                         topsFolded = topsFolded,
                         onFoldTops = {
                             topsFolded = it
-                            context.appPreferences.forumTopsFolded = it
+                            Settings.of(context)[SettingKeys.ForumTopsFolded] = it
                         },
                     )
                 }

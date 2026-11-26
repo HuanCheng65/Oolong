@@ -58,7 +58,8 @@ import coil3.request.CachePolicy
 import coil3.request.ImageRequest
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.media.ImageUtil
 import oolong.client.model.PhotoViewData
 import oolong.client.ui.designsystem.LocalContextMenus
@@ -80,7 +81,7 @@ private val DarkenFilter = ColorFilter.tint(Color.Black.copy(alpha = NightDim), 
 @Composable
 fun nightImageDim(): Float {
     val context = LocalContext.current
-    return if (ExtendedTheme.colors.isNightMode && context.appPreferences.imageDarkenWhenNightMode) NightDim else 0f
+    return if (ExtendedTheme.colors.isNightMode && Settings.of(context)[SettingKeys.ImageDarkenWhenNightMode]) NightDim else 0f
 }
 
 /** A picture darkened by [dim] of black, or null when there is nothing to darken. */
@@ -129,7 +130,7 @@ internal object ShownPictures {
 
 fun shouldLoadImage(context: Context, skipNetworkCheck: Boolean): Boolean {
     val imageLoadSettings =
-        context.appPreferences.imageLoadType?.toIntOrNull() ?: ImageUtil.SETTINGS_SMART_ORIGIN
+        Settings.of(context)[SettingKeys.ImageLoadType].toIntOrNull() ?: ImageUtil.SETTINGS_SMART_ORIGIN
     return skipNetworkCheck ||
         imageLoadSettings == ImageUtil.SETTINGS_SMART_ORIGIN ||
         imageLoadSettings == ImageUtil.SETTINGS_ALL_ORIGIN ||

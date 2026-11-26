@@ -20,7 +20,6 @@ import android.text.TextUtils
 import android.util.Base64
 import android.webkit.URLUtil
 import android.widget.ImageView
-import android.widget.Toast
 import androidx.annotation.IntDef
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
@@ -39,7 +38,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import oolong.client.App.Companion.INSTANCE
 import oolong.client.R
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.media.image.downloadImage
 import oolong.client.media.upload.PictureFormat
 import oolong.client.ui.designsystem.theme.ThemeUtil
@@ -426,7 +426,7 @@ object ImageUtil {
     }
 
     private fun getRadiusDp(context: Context): Int {
-        return context.appPreferences.radius
+        return Settings.of(context)[SettingKeys.Radius]
     }
 
     fun clear(imageView: ImageView?) {
@@ -548,7 +548,7 @@ object ImageUtil {
 
     @get:ImageLoadSettings
     private val imageLoadSettings: Int
-        get() = INSTANCE.appPreferences.imageLoadType!!.toInt()
+        get() = Settings.of(INSTANCE)[SettingKeys.ImageLoadType].toInt()
 
     fun imageToBase64(inputStream: InputStream?): String? {
         if (inputStream == null) {

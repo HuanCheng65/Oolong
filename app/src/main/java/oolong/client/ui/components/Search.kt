@@ -55,7 +55,8 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import oolong.client.R
 import oolong.client.data.block.BlockVerdict
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.model.QuotedPost
 import oolong.client.model.SearchAuthor
 import oolong.client.model.SearchedPost
@@ -393,7 +394,7 @@ fun SearchMedia(
     val picCount = pictures.size
     val hasPhoto = picCount > 0
     val isSinglePhoto = picCount == 1
-    val hideMedia = context.appPreferences.hideMedia
+    val hideMedia = Settings.of(context)[SettingKeys.HideMedia]
 
     val windowWidthSizeClass = LocalWindowSizeClass.current.widthSizeClass
     val singleMediaFraction = remember(windowWidthSizeClass) {

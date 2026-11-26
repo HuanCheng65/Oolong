@@ -13,7 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import oolong.client.MainActivity
 import oolong.client.data.link.QuickPreviewUtil
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.util.TiebaUtil
 import oolong.client.util.clipBoardManager
 import java.util.regex.Pattern
@@ -67,7 +68,7 @@ object ClipBoardLinkDetector {
     fun check(activity: MainActivity) {
         if (!due) return
         due = false
-        if (!activity.appPreferences.clipboardLinks) return
+        if (!Settings.of(activity)[SettingKeys.ClipboardLinks]) return
         val manager = activity.clipBoardManager
         val description = manager.primaryClipDescription ?: return
         if (!description.hasMimeType(ClipDescription.MIMETYPE_TEXT_PLAIN) && !description.hasMimeType(ClipDescription.MIMETYPE_TEXT_HTML)) return

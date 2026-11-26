@@ -20,11 +20,9 @@ import androidx.activity.compose.BackHandler
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.VectorConverter
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
@@ -130,7 +128,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.ui.components.LocalAccount
 import oolong.client.ui.designsystem.ContextMenuItem
 import oolong.client.ui.designsystem.IconButton
@@ -256,7 +255,7 @@ internal fun VideoViewerOverlay(viewer: VideoViewer, opening: VideoOpening, orig
         onDispose { controller?.show(WindowInsetsCompat.Type.systemBars()) }
     }
 
-    val autoPip = remember { context.appPreferences.videoAutoPip }
+    val autoPip = remember { Settings.of(context)[SettingKeys.VideoAutoPip] }
     // Shrunk into a window of its own, the viewer shows only the video
     var inPip by remember { mutableStateOf(activity?.isInPictureInPictureMode == true) }
     DisposableEffect(activity) {

@@ -35,7 +35,8 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import java.util.Date
 import kotlin.math.roundToInt
 
@@ -58,7 +59,7 @@ internal fun WidgetPicture(bitmap: Bitmap?, size: Dp, radius: Dp, modifier: Glan
             )
             // Dimmed at night, as pictures in the app are: a white screenshot would glare off the
             // dark surface. Only where the veil can take the picture's rounded corners
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && LocalContext.current.appPreferences.imageDarkenWhenNightMode) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && Settings.of(LocalContext.current)[SettingKeys.ImageDarkenWhenNightMode]) {
                 Box(modifier = GlanceModifier.size(size).background(WidgetColors.pictureDim).cornerRadius(radius)) {}
             }
         }

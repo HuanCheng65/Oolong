@@ -11,7 +11,8 @@ import kotlinx.coroutines.withContext
 import oolong.client.data.account.AccountRepository
 import oolong.client.data.error.getErrorCode
 import oolong.client.data.error.getErrorMessage
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.model.Account
 import oolong.client.model.SignDataBean
 import oolong.core.network.forum.ForumGuideResponse
@@ -39,7 +40,7 @@ abstract class IOKSigner(
     }
 
     fun getSignDelay(): Long {
-        return if (context.appPreferences.oksignSlowMode) {
+        return if (Settings.of(context)[SettingKeys.OksignSlowMode]) {
             ThreadLocalRandom.current().nextInt(3500, 8000).toLong()
         } else {
             2000
@@ -101,7 +102,7 @@ class SingleAccountSigner(
             .zip(
                 flow { emit(followedForums()) }
             ) { getForumListBean, likeForums ->
-                val useMSign = context.appPreferences.oksignUseOfficialOksign
+                val useMSign = Settings.of(context)[SettingKeys.OksignUseOfficialOksign]
                 val mSignLevel = getForumListBean.level.toIntOrNull() ?: 0
                 val mSignMax = getForumListBean.msignStepNum.toIntOrNull() ?: 0
                 signData.addAll(

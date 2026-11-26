@@ -14,7 +14,6 @@ import kotlinx.coroutines.sync.withLock
 import oolong.client.BuildConfig
 import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.Settings
-import oolong.client.data.settings.appPreferences
 import oolong.client.data.update.UpdateChannel
 import oolong.client.data.update.UpdateHost
 import oolong.client.util.Roms
@@ -67,7 +66,7 @@ object UsageStats {
     suspend fun sendIfDue(context: Context) = sending.withLock { send(context) }
 
     private suspend fun send(context: Context) {
-        if (BuildConfig.BUILD_TYPE != "release" || !context.appPreferences.usageStats) return
+        if (BuildConfig.BUILD_TYPE != "release" || !Settings.of(context)[SettingKeys.UsageStats]) return
         val preferences = preferences(context)
         val now = System.currentTimeMillis()
         val today = utcDay(now)

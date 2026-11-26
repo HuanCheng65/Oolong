@@ -41,7 +41,8 @@ import oolong.client.R
 import oolong.client.data.link.isInternalHost
 import oolong.client.data.link.isTiebaHost
 import oolong.client.data.link.toTiebaKey
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.data.web.WebSessions
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
@@ -121,10 +122,10 @@ open class MyWebViewClient(
             }
 
             isHttp && !isInternal -> {
-                if (context.appPreferences.useWebView)
+                if (Settings.of(context)[SettingKeys.UseWebView])
                     false
                 else {
-                    if (context.appPreferences.useCustomTabs) {
+                    if (Settings.of(context)[SettingKeys.UseCustomTabs]) {
                         runCatching {
                             CustomTabsIntent.Builder()
                                 .setShowTitle(true)

@@ -69,7 +69,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -83,7 +82,8 @@ import androidx.compose.ui.util.lerp
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.data.settings.appPreferences
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.rememberSettings
 import oolong.client.ui.designsystem.LocalPressedByGlass
 import oolong.client.ui.designsystem.MyBackHandler
 import oolong.client.ui.designsystem.floatingGlass
@@ -927,13 +927,12 @@ internal fun blurEffect(radius: Float) =
  */
 @Composable
 private fun rememberImeHeight(imeBottom: Int, imeTarget: Int): Int {
-    val context = LocalContext.current
-    val preferences = remember { context.appPreferences }
-    var height by remember { mutableStateOf(preferences.imeHeight) }
+    val settings = rememberSettings()
+    var height by remember { mutableStateOf(settings[SettingKeys.ImeHeight]) }
     LaunchedEffect(imeBottom, imeTarget) {
         if (imeBottom > 0 && imeBottom == imeTarget && imeBottom != height) {
             height = imeBottom
-            preferences.imeHeight = imeBottom
+            settings[SettingKeys.ImeHeight] = imeBottom
         }
     }
     return height.coerceAtLeast(1)

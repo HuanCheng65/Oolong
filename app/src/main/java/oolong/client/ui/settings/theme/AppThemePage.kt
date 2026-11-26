@@ -74,8 +74,8 @@ import oolong.client.data.settings.Appearance
 import oolong.client.data.settings.ColorStyle
 import oolong.client.data.settings.MonetStyle
 import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.data.settings.ThemeSettings
-import oolong.client.data.settings.appPreferences
 import oolong.client.data.settings.settingAsState
 import oolong.client.navigation.AppThemeKey
 import oolong.client.navigation.LocalNavigator
@@ -609,7 +609,7 @@ private fun CustomColorDialog(customPrimaryColorDialogState: DialogState) {
             DialogPositiveButton(
                 text = stringResource(id = R.string.button_finish),
                 onClick = {
-                    context.appPreferences.customPrimaryColor = customPrimaryColor.toHexString()
+                    Settings.of(context)[SettingKeys.CustomPrimaryColor] = customPrimaryColor.toHexString()
                     ThemeUtil.selectAccent(ThemeUtil.THEME_CUSTOM)
                 }
             )
