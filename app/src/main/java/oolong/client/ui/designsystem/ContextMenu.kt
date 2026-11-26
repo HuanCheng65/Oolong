@@ -66,6 +66,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.Placeable
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onPlaced
@@ -73,6 +74,7 @@ import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.semantics
@@ -132,10 +134,17 @@ class ContextMenuItem(
      * what follows starts from a still page.
      */
     val removesAnchor: Boolean = false,
+    /**
+     * One of the menu's common actions, shown small: the compact items at the head of a menu
+     * share one row, each an icon over its label, so a long menu takes fewer rows. Needs an icon.
+     */
+    val compact: Boolean = false,
+    /** What the head row calls it where [label] is too long for a small button; [label] otherwise. */
+    val shortLabel: String? = null,
     val onClick: () -> Unit = {},
 ) {
-    fun copy(startsGroup: Boolean = this.startsGroup) =
-        ContextMenuItem(icon, label, startsGroup, detail, leading, selected, children, removesAnchor, onClick)
+    fun copy(startsGroup: Boolean = this.startsGroup, compact: Boolean = this.compact) =
+        ContextMenuItem(icon, label, startsGroup, detail, leading, selected, children, removesAnchor, compact, shortLabel, onClick)
 }
 
 /**
@@ -434,6 +443,8 @@ private fun ContextMenuOverlay(menus: ContextMenus, request: ContextMenuRequest,
     }
 
     val items = request.items
+    // How many common actions head the menu in one row
+    val compactCount = remember(items) { items.takeWhile { it.compact && it.icon != null }.size }
     // The item whose children show over the menu, and how far they have come out of its row
     var opened by remember { mutableStateOf<Int?>(null) }
     val sub = remember { Animatable(0f) }
@@ -596,14 +607,36 @@ private fun ContextMenuOverlay(menus: ContextMenus, request: ContextMenuRequest,
                         onOver = { pressedOn = it },
                         onPick = run,
                     )
-                    .widthIn(min = MenuMinWidth, max = MenuMaxWidth)
+                    // Wide enough for the head row's labels, which a narrow menu would cut short
+                    .widthIn(min = MenuMinWidth, max = maxOf(MenuMaxWidth, CompactCellMinWidth * compactCount + 12.dp))
                     .width(IntrinsicSize.Max)
                     // A menu longer than the screen scrolls
                     .verticalScroll(itemsScroll)
                     .padding(vertical = 6.dp),
             ) {
+                // The common actions at the head, side by side in one row
+                if (compactCount > 0) {
+                    Row(modifier = Modifier.fillMaxWidth().padding(horizontal = 6.dp)) {
+                        for (index in 0 until compactCount) {
+                            CompactMenuCell(
+                                item = items[index],
+                                highlighted = hovered == index,
+                                onClick = { run(index) },
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .onGloballyPositioned { cell ->
+                                        itemsCoordinates?.let { itemPlaces[index] = it.localBoundingBoxOf(cell) }
+                                    },
+                            )
+                        }
+                    }
+                    if (compactCount < items.size) {
+                        Divider(color = colors.divider, modifier = Modifier.padding(horizontal = 18.dp, vertical = 2.dp))
+                    }
+                }
                 items.forEachIndexed { index, item ->
-                    if (item.startsGroup && index > 0) {
+                    if (index < compactCount) return@forEachIndexed
+                    if (item.startsGroup && index > compactCount) {
                         Divider(color = colors.divider, modifier = Modifier.padding(horizontal = 18.dp, vertical = 2.dp))
                     }
                     MenuRow(
@@ -670,30 +703,13 @@ private fun ContextMenuOverlay(menus: ContextMenus, request: ContextMenuRequest,
         val margin = Margin.toPx()
         val top = insets.getTop(this) + margin
         val bottom = constraints.maxHeight - insets.getBottom(this) - margin
-        val items = itemsMeasurable.measure(Constraints(maxHeight = (bottom - top).roundToInt().coerceAtLeast(0)))
-        val size = Size(items.width.toFloat(), items.height.toFloat())
-        // A button's menu covers it, from the side it sits on; a press's sits beside the finger
-        val fromRight = anchor.center.x > constraints.maxWidth / 2
-        val bounds: Rect
-        val previewPlaceable = if (preview != null) {
-            // The preview stays where the pressed thing was as far as it can, with the menu under it
-            val menuGap = PreviewGap.toPx()
-            val width = min(constraints.maxWidth - 2 * margin, PreviewMaxWidth.toPx())
-            val maxHeight = min((bottom - top) * PreviewMaxHeight, bottom - top - menuGap - size.height)
-            val placeable = previewMeasurable.measure(
-                Constraints(
-                    minWidth = width.roundToInt(),
-                    maxWidth = width.roundToInt(),
-                    maxHeight = maxHeight.roundToInt().coerceAtLeast(0),
-                ),
-            )
-            val total = placeable.height + menuGap + size.height
-            val previewTop = preview.from.translate(-origin).top.coerceIn(top, (bottom - total).coerceAtLeast(top))
-            val previewLeft = (constraints.maxWidth - width) / 2
-            val final = Rect(Offset(previewLeft, previewTop), Size(width, placeable.height.toFloat()))
+        val room = (bottom - top).coerceAtLeast(0f)
+
+        // Where the preview ends up, and where it is now on its way there from the pressed thing
+        fun setPreview(final: Rect) {
+            val from = preview?.from?.translate(-origin) ?: final
             // With motion reduced it stays where it ends up, only fading
             val l = if (reduced) 1f else lift.value
-            val from = preview.from.translate(-origin)
             geometry.preview = final
             geometry.previewNow = Rect(
                 lerp(from.left, final.left, l),
@@ -701,9 +717,56 @@ private fun ContextMenuOverlay(menus: ContextMenus, request: ContextMenuRequest,
                 lerp(from.right, final.right, l),
                 lerp(from.bottom, final.bottom, l),
             )
-            bounds = Rect(Offset(if (fromRight) final.right - size.width else final.left, final.bottom + menuGap), size)
-            placeable
+        }
+        // A button's menu covers it, from the side it sits on; a press's sits beside the finger
+        val fromRight = anchor.center.x > constraints.maxWidth / 2
+        val bounds: Rect
+        val items: Placeable
+        val previewPlaceable = if (preview != null) {
+            val menuGap = PreviewGap.toPx()
+            // How tall the menu would be unscrolled, to share the room with the preview
+            val menuHeight = itemsMeasurable.maxIntrinsicHeight(MenuMaxWidth.roundToPx()).toFloat()
+            val menuWidth = MenuMaxWidth.toPx()
+            // A preview shows as much as the room lets it. Where the window is wide enough for
+            // both side by side, as on a tablet, the menu goes beside it and the preview has all
+            // the height; only a narrow window stacks them
+            val beside = constraints.maxWidth - 2 * margin >= PreviewMinWidth.toPx() + menuGap + menuWidth
+            if (beside) {
+                val width = min(constraints.maxWidth - 2 * margin - menuGap - menuWidth, PreviewMaxWidth.toPx())
+                val placeable = previewMeasurable.measure(Constraints(minWidth = width.roundToInt(), maxWidth = width.roundToInt()))
+                val shown = min(placeable.height.toFloat(), room)
+                items = itemsMeasurable.measure(Constraints(maxHeight = room.roundToInt()))
+                val groupLeft = (constraints.maxWidth - (width + menuGap + items.width)) / 2
+                val previewTop = preview.from.translate(-origin).top.coerceIn(top, (bottom - shown).coerceAtLeast(top))
+                val final = Rect(Offset(groupLeft, previewTop), Size(width, shown))
+                setPreview(final)
+                // Beside the preview's top, as far as the menu still fits
+                val menuTop = previewTop.coerceAtMost((bottom - items.height).coerceAtLeast(top))
+                bounds = Rect(Offset(final.right + menuGap, menuTop), Size(items.width.toFloat(), items.height.toFloat()))
+                placeable
+            } else {
+                // The preview stays where the pressed thing was as far as it can, with the menu
+                // under it, and has all the height the menu leaves; at least a share of the room
+                // however long the menu, which scrolls in what is left
+                val width = min(constraints.maxWidth - 2 * margin, PreviewMaxWidth.toPx())
+                val maxHeight = max(room - menuGap - menuHeight, room * PreviewMinHeight)
+                // Laid out whole and cut at the bottom: squeezed into less height, what overflowed
+                // was centred and drawn over what came before it, as a picture over the text
+                val placeable = previewMeasurable.measure(Constraints(minWidth = width.roundToInt(), maxWidth = width.roundToInt()))
+                val shown = min(placeable.height.toFloat(), maxHeight.coerceAtLeast(0f))
+                items = itemsMeasurable.measure(Constraints(maxHeight = (room - menuGap - shown).roundToInt().coerceAtLeast(0)))
+                val total = shown + menuGap + items.height
+                val previewTop = preview.from.translate(-origin).top.coerceIn(top, (bottom - total).coerceAtLeast(top))
+                val previewLeft = (constraints.maxWidth - width) / 2
+                val final = Rect(Offset(previewLeft, previewTop), Size(width, shown))
+                setPreview(final)
+                val size = Size(items.width.toFloat(), items.height.toFloat())
+                bounds = Rect(Offset(if (fromRight) final.right - size.width else final.left, final.bottom + menuGap), size)
+                placeable
+            }
         } else {
+            items = itemsMeasurable.measure(Constraints(maxHeight = room.roundToInt()))
+            val size = Size(items.width.toFloat(), items.height.toFloat())
             val left = when {
                 !fromButton -> anchor.center.x - size.width / 2
                 fromRight -> anchor.right - size.width
@@ -896,6 +959,34 @@ private fun MenuRow(
                     .then(if (arrow != null) Modifier.graphicsLayer(arrow) else Modifier),
             )
         }
+    }
+}
+
+/** A common action in the menu's head row: its icon over its label, small. */
+@Composable
+private fun CompactMenuCell(item: ContextMenuItem, highlighted: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val colors = ExtendedTheme.colors
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = modifier
+            .heightIn(min = CompactItemHeight)
+            .widthIn(min = CompactCellMinWidth)
+            .background(if (highlighted) colors.chip else Color.Transparent, ItemShape)
+            // Presses are followed by the menu as a whole, so a finger can slide between items
+            .semantics(mergeDescendants = true) {
+                role = Role.Button
+                // Read out in full, whatever the button shows
+                contentDescription = item.label
+                onClick {
+                    onClick()
+                    true
+                }
+            }
+            .padding(horizontal = 4.dp, vertical = 10.dp),
+    ) {
+        item.icon?.let { Icon(it, contentDescription = null, tint = colors.text, modifier = Modifier.size(20.dp)) }
+        Text(text = item.shortLabel ?: item.label, color = colors.text, fontSize = 11.5.sp, lineHeight = 14.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -1189,8 +1280,11 @@ private const val PreviewLead = 60L
 /** A preview's widest, on large screens. */
 private val PreviewMaxWidth = 420.dp
 
-/** A preview's tallest, as a share of the room on screen; more of it is cut off. */
-private const val PreviewMaxHeight = 0.6f
+/** The share of the room a preview keeps however long its menu, which scrolls in the rest. */
+private const val PreviewMinHeight = 0.4f
+
+/** The narrowest a preview may be to have its menu beside it rather than under it. */
+private val PreviewMinWidth = 360.dp
 
 private val PreviewGap = 12.dp
 private val PreviewBackdropBlur = 20.dp
@@ -1202,6 +1296,10 @@ private val IconBlur = 20.dp
 private val MenuMinWidth = 180.dp
 private val MenuMaxWidth = 280.dp
 private val ItemHeight = 44.dp
+
+/** A common action in the head row: an icon over a small label, wide enough for six characters. */
+private val CompactItemHeight = 60.dp
+private val CompactCellMinWidth = 76.dp
 private val MenuBlur = 24.dp
 
 /** An item's highlight, inset 6dp in the menu and so as round as the menu less that. */
