@@ -76,8 +76,7 @@
             android:exported="true"
             android:enabled="true"
             android:foregroundServiceType="specialUse"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:process=":oksign">
+            android:permission="android.permission.BIND_JOB_SERVICE">
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="oksign" />
