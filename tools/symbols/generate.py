@@ -16,7 +16,7 @@ import xml.etree.ElementTree as ET
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
 CACHE = os.path.join(HERE, ".cache")
-OUT = os.path.join(ROOT, "app/src/main/java/oolong/client/ui/common/theme/compose/Symbols.kt")
+OUT = os.path.join(ROOT, "app/src/main/java/oolong/client/ui/designsystem/theme/Symbols.kt")
 DRAWABLES = os.path.join(ROOT, "app/src/main/res/drawable")
 URL = "https://raw.githubusercontent.com/google/material-design-icons/master/symbols/android/{name}/materialsymbolsrounded/{file}"
 ANDROID = "{http://schemas.android.com/apk/res/android}"
@@ -78,7 +78,7 @@ def main():
         k = kotlin_name(name, fill)
         entries.append(f'    val {k}: ImageVector by lazy {{ symbol("{k}", {"true" if mirror else "false"}, {args}) }}\n')
     with open(OUT, "w") as f:
-        f.write('''package oolong.client.ui.common.theme.compose
+        f.write('''package oolong.client.ui.designsystem.theme
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
