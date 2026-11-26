@@ -116,7 +116,6 @@ fun DiagnosticsPage(
             stringResource(id = R.string.diagnostics_locale) to info.locale,
         )
         PrefsScreen(
-            dataStore = context.dataStore,
             dividerThickness = 0.dp,
             modifier = Modifier.fillMaxSize(),
             contentPadding = padding,

@@ -10,15 +10,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.ProvidableCompositionLocal
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.graphicsLayer
@@ -26,8 +23,6 @@ import androidx.compose.ui.layout.layout
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import oolong.client.ui.designsystem.Container
 import oolong.client.ui.designsystem.GlassScaffold
 import oolong.client.ui.designsystem.maskTo
@@ -38,19 +33,15 @@ import oolong.core.designsystem.theme.Radius
 import oolong.core.designsystem.theme.SmoothCornerShape
 import kotlin.math.roundToInt
 
-lateinit var LocalPrefsDataStore: ProvidableCompositionLocal<DataStore<Preferences>>
-
 /**
  * Main preference screen which holds [PrefsListItem]s
  *
- * @param dataStore DataStore which will be used to save all the preferences
  * @param modifier Modifier applied to the column holding the list of Prefs
  * @param contentPadding padding around the list, such as the bars of a [GlassScaffold]
  *
  */
 @Composable
 fun PrefsScreen(
-    dataStore: DataStore<Preferences>,
     modifier: Modifier = Modifier,
     dividerThickness: Dp = 1.dp, // 0 for no divider
     dividerIndent: Dp = 0.dp, // indents on both sides
@@ -58,36 +49,32 @@ fun PrefsScreen(
     scrollState: ScrollState = rememberScrollState(),
     content: PrefsScope.() -> Unit
 ) {
-    LocalPrefsDataStore = staticCompositionLocalOf { dataStore }
     val prefsScope = PrefsScopeImpl().apply(content)
 
-    // Now the dataStore can be accessed by calling LocalPrefsDataStore.current from any child Pref
-    CompositionLocalProvider(LocalPrefsDataStore provides dataStore) {
-        Container {
-            // A plain column rather than a lazy list: settings pages are short, and with every row
-            // laid out a search result can scroll to any of them. Long data lists don't belong here.
-            Column(
-                modifier = modifier
-                    .fillMaxSize()
-                    .verticalScrollUnderBar(scrollState)
-                    .padding(contentPadding),
-            ) {
-                val items = prefsScope.prefsItems
-                // How open each keyed setting is: 1 shown, 0 closed. One still closing keeps its
-                // place in its block, so the block's corners don't move till it has gone
-                val openness = remember { mutableMapOf<Any, Openness>() }
-                items.forEach { item -> if (item.isSetting && item.key != null) openness.getOrPut(item.key) { Openness(item.shown) } }
-                val present = items.map { item -> !item.isSetting || (item.key?.let { openness[it]?.present } ?: true) }
-                items.forEachIndexed { index, item ->
-                    key(item.key ?: index) {
-                        if (!item.isSetting) {
-                            prefsScope.getPrefsItem(index)()
-                        } else {
-                            val open = item.key?.let { openness[it] }
-                            if (open != null) LaunchedEffect(item.shown) { open.follow(item.shown) }
-                            if (present[index]) {
-                                SettingInGroup(items, present, index, dividerThickness, dividerIndent, open) { prefsScope.getPrefsItem(index)() }
-                            }
+    Container {
+        // A plain column rather than a lazy list: settings pages are short, and with every row
+        // laid out a search result can scroll to any of them. Long data lists don't belong here.
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScrollUnderBar(scrollState)
+                .padding(contentPadding),
+        ) {
+            val items = prefsScope.prefsItems
+            // How open each keyed setting is: 1 shown, 0 closed. One still closing keeps its
+            // place in its block, so the block's corners don't move till it has gone
+            val openness = remember { mutableMapOf<Any, Openness>() }
+            items.forEach { item -> if (item.isSetting && item.key != null) openness.getOrPut(item.key) { Openness(item.shown) } }
+            val present = items.map { item -> !item.isSetting || (item.key?.let { openness[it]?.present } ?: true) }
+            items.forEachIndexed { index, item ->
+                key(item.key ?: index) {
+                    if (!item.isSetting) {
+                        prefsScope.getPrefsItem(index)()
+                    } else {
+                        val open = item.key?.let { openness[it] }
+                        if (open != null) LaunchedEffect(item.shown) { open.follow(item.shown) }
+                        if (present[index]) {
+                            SettingInGroup(items, present, index, dividerThickness, dividerIndent, open) { prefsScope.getPrefsItem(index)() }
                         }
                     }
                 }

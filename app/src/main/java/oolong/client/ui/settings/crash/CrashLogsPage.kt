@@ -40,7 +40,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import oolong.client.R
-import oolong.client.data.settings.dataStore
 import oolong.client.diagnostics.CrashLogs
 import oolong.client.diagnostics.CrashReports
 import oolong.client.navigation.CrashLogKey
@@ -111,7 +110,6 @@ fun CrashLogsPage(
                     )
                 }
                 else -> PrefsScreen(
-                    dataStore = context.dataStore,
                     dividerThickness = 0.dp,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = padding,

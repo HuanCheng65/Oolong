@@ -1,5 +1,6 @@
 package oolong.client.data.settings
 
+import oolong.client.diagnostics.CrashReports
 import oolong.client.ui.designsystem.theme.ThemeUtil
 import oolong.client.ui.designsystem.theme.ThemeUtil.TRANSLUCENT_THEME_LIGHT
 
@@ -119,4 +120,45 @@ object SettingKeys {
     val UseCustomTabs = Setting.boolean("use_custom_tabs", true)
 
     val UseWebView = Setting.boolean("use_webview", true)
+
+    // Settings that had no property above: each was read where it is used, by its key
+
+    val PredictiveBack = Setting.boolean("predictiveBack", true)
+
+    /** How crash records are sent: one of [CrashReports.Mode]'s values. */
+    val CrashReportMode = Setting.string(CrashReports.ModeKey, CrashReports.Mode.Ask.value)
+
+    val SearchAtTop = Setting.boolean("searchAtTop", false)
+
+    val MainTabSwipe = Setting.boolean("mainTabSwipe", true)
+
+    /** Whether the incognito switch on the user page has been explained once. */
+    val IncognitoExplained = Setting.boolean("incognitoExplained", false)
+
+    val RecentForumsGuideShown = Setting.boolean("recentForumsGuideShown", false)
+
+    /** The name of a [oolong.client.ui.designsystem.ChromeStyle]. */
+    val ChromeStyle = Setting.string("chromeStyle", "Floating")
+
+    /** Whether the user keeps a history at all; see [oolong.client.data.history.Incognito]. */
+    val KeepHistory = Setting.boolean("keepHistory", true)
+
+    /** The list pane's width beside a detail pane, in dp, once dragged. */
+    val ListPaneWidth = Setting.optionalFloat("list_pane_width")
+
+    val ReaderFontSize = Setting.int("reader_font_size", 17)
+
+    val ReaderSpacing = Setting.int("reader_spacing", 1)
+
+    val ReaderSerif = Setting.boolean("reader_serif", false)
+
+    val ReaderWeight = Setting.int("reader_weight", 0)
+
+    /** The name of a [oolong.client.ui.reader.ReaderPaper]. */
+    val ReaderPaper = Setting.string("reader_paper", "White")
+
+    val BlockLowLevel = Setting.boolean("blockLowLevel", false)
+
+    /** The level below which posters are blocked, while [BlockLowLevel] is on; a number as text. */
+    val BlockLowLevelBelow = Setting.string("blockLowLevelBelow", "3")
 }

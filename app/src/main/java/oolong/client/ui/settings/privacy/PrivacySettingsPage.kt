@@ -3,7 +3,7 @@ package oolong.client.ui.settings.privacy
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.dp
 import oolong.client.R
-import oolong.client.data.history.KeepHistoryKey
+import oolong.client.data.settings.SettingKeys
 import oolong.client.navigation.BlackListKey
 import oolong.client.navigation.DislikedForumsKey
 import oolong.client.navigation.LocalNavigator
@@ -24,7 +24,7 @@ val PrivacySettings = settingsPage(R.string.title_privacy_settings, PrivacySetti
         link(R.string.settings_disliked_forums, to = DislikedForumsKey)
     }
     group(R.string.title_history) {
-        switch(KeepHistoryKey.name, R.string.settings_keep_history, default = true, aliases = R.string.search_aliases_keep_history)
+        switch(SettingKeys.KeepHistory, R.string.settings_keep_history, aliases = R.string.search_aliases_keep_history)
     }
 }
 

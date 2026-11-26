@@ -17,13 +17,12 @@ import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.os.LocaleListCompat
-import androidx.datastore.preferences.core.stringPreferencesKey
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import oolong.client.R
 import oolong.client.data.settings.AppIconUtil
 import oolong.client.data.settings.LauncherIcons
+import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.ThemeSettings
-import oolong.client.data.settings.appPreferences
 import oolong.client.data.settings.rememberPreferenceAsMutableState
 import oolong.client.navigation.AppThemeKey
 import oolong.client.navigation.CustomSettingsKey
@@ -32,9 +31,7 @@ import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
 import oolong.client.navigation.ProvideNavigator
 import oolong.client.navigation.SearchPlacementKey
-import oolong.client.navigation.transition.PredictiveBackKey
 import oolong.client.ui.designsystem.ChromeStyle
-import oolong.client.ui.designsystem.ChromeStyleKey
 import oolong.client.ui.designsystem.DefaultGlassClarity
 import oolong.client.ui.designsystem.GlassClarityKey
 import oolong.client.ui.designsystem.GlassMaterialKey
@@ -43,11 +40,8 @@ import oolong.client.ui.designsystem.Sizes
 import oolong.client.ui.designsystem.Slider
 import oolong.client.ui.designsystem.available
 import oolong.client.ui.designsystem.chosenGlassTier
-import oolong.client.ui.designsystem.theme.ReduceMotionKey
 import oolong.client.ui.designsystem.theme.TextScale
 import oolong.client.ui.designsystem.theme.ThemeUtil
-import oolong.client.ui.main.MainTabSwipeKey
-import oolong.client.ui.main.SearchAtTopKey
 import oolong.client.ui.settings.components.Availability
 import oolong.client.ui.settings.components.SettingsHeader
 import oolong.client.ui.settings.components.SettingsScreen
@@ -56,8 +50,6 @@ import oolong.client.ui.settings.components.prefs.widgets.TextPref
 import oolong.client.ui.settings.components.settingsPage
 import oolong.client.ui.settings.components.stored
 import oolong.client.ui.thread.SubPostStyle
-import oolong.client.ui.thread.SubPostStyleKey
-import oolong.client.ui.thread.SubPostsCollapsedKey
 import kotlin.math.roundToInt
 
 /** Appearance: the theme, the language and layout, text size and the app's icon, and the glass effects. */
@@ -73,21 +65,20 @@ val CustomSettings = settingsPage(R.string.title_settings_custom, CustomSettings
             onSelect = { tag -> AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(tag)) },
         )
         link(R.string.title_search_placement, to = SearchPlacementKey, value = {
-            stringResource(id = if (stored(SearchAtTopKey, false)) R.string.search_place_top else R.string.search_place_bottom)
+            stringResource(id = if (stored(SettingKeys.SearchAtTop)) R.string.search_place_top else R.string.search_place_bottom)
         })
         choice(
             R.string.title_sub_post_style,
             options = listOf(SubPostStyle.Timeline.name to R.string.sub_post_style_timeline, SubPostStyle.Classic.name to R.string.sub_post_style_classic),
-            value = { stored(SubPostStyleKey, SubPostStyle.Timeline.name) },
-            onSelect = { style -> edit { it[SubPostStyleKey] = style } },
+            value = { stored(SettingKeys.SubPostStyle) },
+            onSelect = { style -> settings[SettingKeys.SubPostStyle] = style },
         )
-        switch(SubPostsCollapsedKey.name, R.string.title_sub_posts_collapsed, default = false)
+        switch(SettingKeys.SubPostsCollapsed, R.string.title_sub_posts_collapsed)
     }
     group(R.string.settings_group_text_and_icon) {
         link(R.string.title_custom_font_size, to = FontSizeKey, aliases = R.string.search_aliases_font_size, value = { fontSizeValue() })
         custom(R.string.settings_app_icon) { modifier -> AppIconPref(modifier) }
-        switch(
-            "useThemedIcon", R.string.title_settings_use_themed_icon, default = false,
+        switch(SettingKeys.UseThemedIcon, R.string.title_settings_use_themed_icon,
             summary = { stringResource(id = R.string.tip_settings_use_themed_icon_summary_not_supported).takeUnless { themedIconSupported() } },
             enabled = { themedIconSupported() },
             onChange = { AppIconUtil.setIcon(isThemed = it) },
@@ -98,24 +89,23 @@ val CustomSettings = settingsPage(R.string.title_settings_custom, CustomSettings
         choice(
             R.string.title_chrome_style,
             options = listOf(ChromeStyle.Floating.name to R.string.chrome_style_floating, ChromeStyle.Classic.name to R.string.chrome_style_classic),
-            value = { stored(ChromeStyleKey, ChromeStyle.Floating.name) },
-            onSelect = { style -> edit { it[ChromeStyleKey] = style } },
+            value = { stored(SettingKeys.ChromeStyle) },
+            onSelect = { style -> settings[SettingKeys.ChromeStyle] = style },
         )
         // Where the device draws only one material, there is nothing to choose
         choice(
             R.string.title_glass_material,
             options = GlassTier.available.map { it to it.title },
             value = { chosenGlassTier() },
-            onSelect = { tier -> edit { it[GlassMaterialKey] = tier.name } },
+            onSelect = { tier -> settings.edit(GlassMaterialKey) { it[GlassMaterialKey] = tier.name } },
             available = SeveralMaterials,
         )
         custom(R.string.title_glass_clarity, available = SeveralMaterials, shown = { chosenGlassTier() != GlassTier.Solid }) { GlassClarityPref() }
-        switch(
-            PredictiveBackKey.name, R.string.title_settings_predictive_back, default = true,
+        switch(SettingKeys.PredictiveBack, R.string.title_settings_predictive_back,
             summary = { stringResource(id = R.string.summary_settings_predictive_back) },
         )
-        switch(ReduceMotionKey.name, R.string.title_settings_reduce_motion, default = false)
-        switch(MainTabSwipeKey.name, R.string.title_settings_main_tab_swipe, default = true)
+        switch(SettingKeys.ReduceMotion, R.string.title_settings_reduce_motion)
+        switch(SettingKeys.MainTabSwipe, R.string.title_settings_main_tab_swipe)
     }
 }
 
@@ -144,7 +134,7 @@ private fun appLanguage(): String {
 
 /** Whether the launcher icon in use has a themed form; only the new one does. */
 @Composable
-private fun themedIconSupported(): Boolean = stored(stringPreferencesKey("app_icon"), LauncherIcons.NEW_ICON) == LauncherIcons.NEW_ICON
+private fun themedIconSupported(): Boolean = stored(SettingKeys.AppIcon) == LauncherIcons.NEW_ICON
 
 /** The colour in use, by the name the theme page gives it. */
 @Composable
@@ -163,10 +153,9 @@ internal fun currentThemeName(): String {
 @Composable
 private fun AppIconPref(modifier: Modifier) {
     ListPref(
-        key = "app_icon",
+        setting = SettingKeys.AppIcon,
         title = stringResource(id = R.string.settings_app_icon),
         modifier = modifier,
-        defaultValue = LauncherIcons.DEFAULT_ICON,
         entries = mapOf(
             LauncherIcons.NEW_ICON to stringResource(id = R.string.app_icon_new),
             LauncherIcons.NEW_ICON_INVERT to stringResource(id = R.string.app_icon_new_inverted),

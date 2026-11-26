@@ -2,7 +2,6 @@ package oolong.client.ui.settings.components
 
 import androidx.annotation.StringRes
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
@@ -25,7 +24,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import oolong.client.data.settings.dataStore
 import oolong.client.navigation.Key
 import oolong.client.navigation.LocalNavigator
 import oolong.client.ui.components.LocalAccount
@@ -90,7 +88,6 @@ fun <S> SettingsContent(
         }
     }
     PrefsScreen(
-        dataStore = LocalContext.current.dataStore,
         dividerThickness = 0.dp,
         modifier = modifier.fillMaxSize().onGloballyPositioned { highlight.viewportTop = it.positionInRoot().y },
         contentPadding = contentPadding,

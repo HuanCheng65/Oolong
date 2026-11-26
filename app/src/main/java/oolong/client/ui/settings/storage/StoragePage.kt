@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -49,7 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.data.settings.dataStore
 import oolong.client.data.storage.AppStorage
 import oolong.client.data.storage.StorageUse
 import oolong.client.media.automask.Ability
@@ -123,7 +121,6 @@ fun StoragePage(
         LaunchedEffect(use != null) { if (use != null) shown.animateTo(1f, Motion.fadeIn()) }
         val now = use ?: return@GlassScaffold
         PrefsScreen(
-            dataStore = context.dataStore,
             dividerThickness = 0.dp,
             modifier = Modifier.fillMaxSize().graphicsLayer { alpha = shown.value },
             contentPadding = padding,

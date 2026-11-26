@@ -22,6 +22,9 @@ class Setting<T>(val key: Preferences.Key<T & Any>, val default: T) {
 
         fun string(name: String, default: String): Setting<String> = Setting(stringPreferencesKey(name), default)
 
+        /** A number that may be unset, as a width not yet dragged. */
+        fun optionalFloat(name: String): Setting<Float?> = Setting(floatPreferencesKey(name), null)
+
         /** A string that may be unset, as a path or a colour not yet chosen. */
         fun optionalString(name: String): Setting<String?> = Setting(stringPreferencesKey(name), null)
     }

@@ -19,13 +19,11 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.data.legacy.LegacyImport
-import oolong.client.data.settings.AppPreferencesUtils
+import oolong.client.data.settings.SettingKeys
 import oolong.client.data.storage.AppStorage
 import oolong.client.diagnostics.CrashReports
 import oolong.client.navigation.CrashLogsKey
@@ -74,15 +72,13 @@ object MoreSettings : SettingsPage<MoreState>(R.string.title_settings_more, More
             choice(
                 R.string.title_link_opening,
                 options = LinkOpening.entries.map { it to it.title },
-                value = { LinkOpening.of(useWebView = stored(UseWebView, true), useCustomTabs = stored(UseCustomTabs, true)) },
+                value = { LinkOpening.of(useWebView = stored(SettingKeys.UseWebView), useCustomTabs = stored(SettingKeys.UseCustomTabs)) },
                 onSelect = { opening ->
-                    edit {
-                        it[UseWebView] = opening == LinkOpening.WebView
-                        it[UseCustomTabs] = opening == LinkOpening.CustomTabs
-                    }
+                    settings[SettingKeys.UseWebView] = opening == LinkOpening.WebView
+                    settings[SettingKeys.UseCustomTabs] = opening == LinkOpening.CustomTabs
                 },
             )
-            switch("clipboard_links", R.string.settings_clipboard_links, default = true)
+            switch(SettingKeys.ClipboardLinks, R.string.settings_clipboard_links)
         }
         // Links to an unverified domain only open in the app once the user allows them
         group(SettingsHeader.Gap(8.dp), available = Availability.sdk(Build.VERSION_CODES.S)) {
@@ -97,7 +93,7 @@ object MoreSettings : SettingsPage<MoreState>(R.string.title_settings_more, More
             })
         }
         group(R.string.settings_group_troubleshooting) {
-            switch(AppPreferencesUtils.UsageStatsKey, R.string.title_usage_stats, default = false)
+            switch(SettingKeys.UsageStats, R.string.title_usage_stats)
             choice(
                 R.string.title_crash_report_mode,
                 options = listOf(
@@ -105,8 +101,8 @@ object MoreSettings : SettingsPage<MoreState>(R.string.title_settings_more, More
                     CrashReports.Mode.Always to R.string.crash_report_mode_always,
                     CrashReports.Mode.Never to R.string.crash_report_mode_never,
                 ),
-                value = { CrashReports.Mode.entries.firstOrNull { it.value == stored(CrashReportMode, CrashReports.Mode.Ask.value) } ?: CrashReports.Mode.Ask },
-                onSelect = { mode -> edit { it[CrashReportMode] = mode.value } },
+                value = { CrashReports.Mode.entries.firstOrNull { it.value == stored(SettingKeys.CrashReportMode) } ?: CrashReports.Mode.Ask },
+                onSelect = { mode -> settings[SettingKeys.CrashReportMode] = mode.value },
             )
             link(R.string.title_crash_logs, to = CrashLogsKey)
             link(R.string.title_error_records, to = ErrorRecordsKey)
@@ -138,11 +134,6 @@ private enum class LinkOpening(@StringRes val title: Int) {
         }
     }
 }
-
-private val CrashReportMode = stringPreferencesKey(CrashReports.ModeKey)
-
-private val UseWebView = booleanPreferencesKey("use_webview")
-private val UseCustomTabs = booleanPreferencesKey("use_custom_tabs")
 
 /**
  * Whether Tieba's links open in the app or in a browser. Links to an unverified domain only open

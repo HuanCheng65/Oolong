@@ -1,6 +1,5 @@
 package oolong.client.ui.settings.components.prefs.widgets
 
-import android.util.Log
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.layout.Box
 import androidx.compose.material.*
@@ -11,11 +10,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
-import kotlinx.coroutines.launch
 import oolong.client.R
+import oolong.client.data.settings.Setting
+import oolong.client.data.settings.rememberSettings
+import oolong.client.data.settings.settingAsState
 import oolong.client.ui.designsystem.Dialog
 import oolong.client.ui.designsystem.DialogNegativeButton
 import oolong.client.ui.designsystem.choiceMenuItems
@@ -25,17 +25,15 @@ import oolong.client.ui.designsystem.picker.ListSinglePicker
 import oolong.client.ui.designsystem.rememberDialogState
 import oolong.client.ui.designsystem.rememberMenuTriggerState
 import oolong.client.ui.designsystem.theme.ExtendedTheme
-import oolong.client.ui.settings.components.prefs.LocalPrefsDataStore
 import oolong.client.ui.settings.components.prefs.PrefsChoiceValue
 
 /**
  * Preference that shows a list of entries in a Dialog where a single entry can be selected at one time.
  *
- * @param key Key used to identify this Pref in the DataStore
+ * @param setting The setting this Pref shows and sets
  * @param title Main text which describes the Pref. Shown above the summary and in the Dialog.
  * @param modifier Modifier applied to the Text aspect of this Pref
  * @param summary Used to give some more information about what this Pref is for
- * @param defaultValue Default selected key if this Pref hasn't been saved already. Otherwise the value from the dataStore is used.
  * @param onValueChange Will be called with the selected key when an item is selected
  * @param useSelectedAsSummary If true, uses the current selected item as the summary
  * @param dialogBackgroundColor Background color of the Dialog
@@ -50,11 +48,10 @@ import oolong.client.ui.settings.components.prefs.PrefsChoiceValue
 @ExperimentalComposeUiApi
 @Composable
 fun ListPref(
-    key: String,
+    setting: Setting<String>,
     title: String,
     modifier: Modifier = Modifier,
     summary: String? = null,
-    defaultValue: String? = null,
     onValueChange: ((String) -> Unit)? = null,
     useSelectedAsSummary: Boolean = false,
     textColor: Color = ExtendedTheme.colors.text,
@@ -64,27 +61,12 @@ fun ListPref(
     icons: Map<String, @Composable () -> Unit> = emptyMap(),
 ) {
     val dialogState = rememberDialogState()
-    val selectionKey = stringPreferencesKey(key)
-    val scope = rememberCoroutineScope()
+    val settings = rememberSettings()
+    val selected by settingAsState(setting)
 
-    val datastore = LocalPrefsDataStore.current
-    val prefs by remember { datastore.data }.collectAsState(initial = null)
-
-    var selected = defaultValue
-    prefs?.get(selectionKey)?.also { selected = it } // starting value if it exists in datastore
-
-    fun edit(current: Pair<String, String>) = run {
-        selected = current.first
+    fun edit(current: Pair<String, String>) {
         onValueChange?.invoke(current.first)
-        scope.launch {
-            try {
-                datastore.edit { preferences ->
-                    preferences[selectionKey] = current.first
-                }
-            } catch (e: Exception) {
-                Log.e("ListPref", "Could not write pref $key to database. ${e.printStackTrace()}")
-            }
-        }
+        settings[setting] = current.first
     }
 
     val chosen = entries[selected] ?: "Not Set"

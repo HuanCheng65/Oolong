@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -22,14 +21,13 @@ import androidx.core.content.ContextCompat
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.LifecycleResumeEffect
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.background.sign.AutoSign
 import oolong.client.data.settings.BackgroundSettings
+import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.dataStore
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
@@ -42,7 +40,6 @@ import oolong.client.ui.settings.components.SettingsScope
 import oolong.client.ui.settings.components.SettingsScreen
 import oolong.client.ui.settings.components.prefs.PrefsExternal
 import oolong.client.ui.settings.components.prefs.widgets.TextPref
-import oolong.client.ui.settings.components.res
 import oolong.client.ui.settings.components.stored
 import oolong.client.util.PermissionUtils
 import oolong.client.util.isIgnoringBatteryOptimizations
@@ -123,15 +120,14 @@ object OKSignSettings : SettingsPage<OKSignState>(R.string.title_oksign, OKSignS
 
     override fun SettingsScope<OKSignState>.content() {
         group(R.string.settings_group_sign_mode) {
-            switch("oksign_slow_mode", R.string.title_oksign_slow_mode, default = true, summary = { stringResource(id = R.string.summary_oksign_slow_mode) })
-            switch(
-                "oksign_use_official_oksign", R.string.title_oksign_use_official_oksign, default = true,
+            switch(SettingKeys.OksignSlowMode, R.string.title_oksign_slow_mode, summary = { stringResource(id = R.string.summary_oksign_slow_mode) })
+            switch(SettingKeys.OksignUseOfficialOksign, R.string.title_oksign_use_official_oksign,
                 summary = { stringResource(id = R.string.summary_oksign_use_official_oksign) },
             )
         }
         group(R.string.title_auto_sign) {
-            switch("auto_sign", R.string.title_auto_sign, default = false)
-            time("auto_sign_time", R.string.title_auto_sign_time, default = "09:00", enabled = { stored(booleanPreferencesKey("auto_sign"), true) })
+            switch(SettingKeys.AutoSign, R.string.title_auto_sign)
+            time(SettingKeys.AutoSignTime, R.string.title_auto_sign_time, enabled = { stored(SettingKeys.AutoSign) })
             info(R.string.title_auto_sign_last, value = { lastRunText(conditions.lastRun) })
         }
         group(R.string.settings_group_auto_sign_conditions) {

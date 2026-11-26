@@ -65,11 +65,16 @@ class Settings internal constructor(private val store: DataStore<Preferences>) {
     operator fun <T> set(setting: Setting<T>, value: T) = write(setting.key) { if (value == null) it.remove(setting.key) else it[setting.key] = value }
 
     /** Removes [setting], so that it reads as its default again. */
-    fun remove(setting: Setting<*>) = write(setting.key) { it.remove(setting.key) }
+    fun remove(setting: Setting<*>) = write(listOf(setting.key)) { it.remove(setting.key) }
 
-    private fun write(key: Preferences.Key<*>, change: (MutablePreferences) -> Unit) {
+    /** Changes the settings under [keys] together, for settings that go as a group. */
+    fun edit(vararg keys: Preferences.Key<*>, change: (MutablePreferences) -> Unit) = write(keys.toList(), change)
+
+    private fun write(key: Preferences.Key<*>, change: (MutablePreferences) -> Unit) = write(listOf(key), change)
+
+    private fun write(keys: List<Preferences.Key<*>>, change: (MutablePreferences) -> Unit) {
         synchronized(pending) {
-            pending[key] = (pending[key] ?: 0) + 1
+            keys.forEach { pending[it] = (pending[it] ?: 0) + 1 }
             values.value = values.value.toMutablePreferences().apply(change)
         }
         scope.launch(writes) {
@@ -77,8 +82,10 @@ class Settings internal constructor(private val store: DataStore<Preferences>) {
                 store.edit(change)
             } finally {
                 synchronized(pending) {
-                    val left = (pending[key] ?: 1) - 1
-                    if (left == 0) pending.remove(key) else pending[key] = left
+                    keys.forEach {
+                        val left = (pending[it] ?: 1) - 1
+                        if (left == 0) pending.remove(it) else pending[it] = left
+                    }
                 }
             }
         }

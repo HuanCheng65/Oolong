@@ -14,16 +14,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.persistentListOf
 import oolong.client.R
 import oolong.client.data.block.DefaultLowLevel
 import oolong.client.data.block.HideBlockedContentKey
-import oolong.client.data.block.LowLevelEnabledKey
 import oolong.client.data.block.LowLevelKey
+import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.dataStore
 import oolong.client.data.settings.putBoolean
 import oolong.client.data.settings.putString
@@ -83,12 +81,12 @@ object BlockSettings : SettingsPage<BlockState>(R.string.title_block_settings, B
 
     override fun SettingsScope<BlockState>.content() {
         group(R.string.settings_block_common) {
-            switch("blockVideo", R.string.settings_block_video, default = false)
-            switch(LowLevelEnabledKey, R.string.settings_block_low_level, default = false)
+            switch(SettingKeys.BlockVideo, R.string.settings_block_video)
+            switch(SettingKeys.BlockLowLevel, R.string.settings_block_low_level)
             // Found by the switch above, which it belongs to
             custom(
                 R.string.settings_block_low_level_below,
-                shown = { stored(booleanPreferencesKey(LowLevelEnabledKey), false) },
+                shown = { stored(SettingKeys.BlockLowLevel) },
                 searchable = false,
             ) { modifier -> LowLevelPref(modifier) }
             action(
@@ -104,7 +102,7 @@ object BlockSettings : SettingsPage<BlockState>(R.string.title_block_settings, B
                 val context = LocalContext.current
                 SegmentedControl(
                     options = persistentListOf(stringResource(id = R.string.settings_blocked_fold), stringResource(id = R.string.settings_blocked_hide)),
-                    selected = if (stored(booleanPreferencesKey(HideBlockedContentKey), false)) 1 else 0,
+                    selected = if (stored(SettingKeys.HideBlockedContent)) 1 else 0,
                     onSelect = { context.dataStore.putBoolean(HideBlockedContentKey, it == 1) },
                     modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
                 )
@@ -134,7 +132,7 @@ fun BlockSettingsPage(navigator: Navigator = LocalNavigator.current) {
 @Composable
 private fun LowLevelPref(modifier: Modifier) {
     val context = LocalContext.current
-    val level = stored(stringPreferencesKey(LowLevelKey), DefaultLowLevel.toString()).toIntOrNull() ?: DefaultLowLevel
+    val level = stored(SettingKeys.BlockLowLevelBelow).toIntOrNull() ?: DefaultLowLevel
     TextPref(
         title = stringResource(id = R.string.settings_block_low_level_below),
         modifier = modifier,

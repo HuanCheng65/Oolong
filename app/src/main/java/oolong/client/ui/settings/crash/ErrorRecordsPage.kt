@@ -30,7 +30,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import oolong.client.R
-import oolong.client.data.settings.dataStore
 import oolong.client.diagnostics.ErrorRecords
 import oolong.client.navigation.ErrorRecordKey
 import oolong.client.navigation.LocalNavigator
@@ -95,7 +94,6 @@ fun ErrorRecordsPage(
                     )
                 }
                 else -> PrefsScreen(
-                    dataStore = context.dataStore,
                     dividerThickness = 0.dp,
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = padding,

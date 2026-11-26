@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import oolong.client.data.settings.collectPreferenceAsState
 
 /**
  * Receiver scope which is used by [PrefsScreen].
@@ -130,19 +128,3 @@ internal class PrefsItem(
 )
 
 private val GroupSpacing = 8.dp
-
-@Composable
-fun depend(key: String): Boolean {
-    return LocalPrefsDataStore.current.collectPreferenceAsState(
-        key = booleanPreferencesKey(key),
-        defaultValue = true
-    ).value
-}
-
-@Composable
-fun dependNot(key: String): Boolean {
-    return !LocalPrefsDataStore.current.collectPreferenceAsState(
-        key = booleanPreferencesKey(key),
-        defaultValue = false
-    ).value
-}

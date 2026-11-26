@@ -12,9 +12,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.stringPreferencesKey
 import oolong.client.R
 import oolong.client.data.account.AccountActions
+import oolong.client.data.settings.SettingKeys
 import oolong.client.model.Account
 import oolong.client.navigation.AccountManageKey
 import oolong.client.navigation.LocalNavigator
@@ -127,9 +127,8 @@ object AccountSettings : SettingsPage<AccountState>(R.string.title_account_manag
                 onClick = { navigator.navigate(WebViewKey("https://wappass.baidu.com/static/manage-chunk/change-username.html#/showUsername", task = true)) },
             )
             action(R.string.title_copy_bduss, enabled = { account != null }, onClick = { state.copyBdussDialog.show() })
-            text(
-                "little_tail", R.string.title_my_tail,
-                summary = { stored(stringPreferencesKey("little_tail"), "").ifEmpty { stringResource(id = R.string.tip_no_little_tail) } },
+            text(SettingKeys.LittleTail, R.string.title_my_tail,
+                summary = { stored(SettingKeys.LittleTail).orEmpty().ifEmpty { stringResource(id = R.string.tip_no_little_tail) } },
                 dialogTitle = R.string.title_dialog_modify_little_tail,
             )
         }

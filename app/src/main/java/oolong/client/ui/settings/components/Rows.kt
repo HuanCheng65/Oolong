@@ -10,19 +10,17 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.edit
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.launch
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.Setting
+import oolong.client.data.settings.Settings
+import oolong.client.data.settings.rememberSettings
+import oolong.client.data.settings.settingAsState
 import oolong.client.navigation.Key
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
@@ -43,18 +41,17 @@ import oolong.client.ui.settings.components.prefs.widgets.TextPref
 import oolong.client.ui.settings.components.prefs.widgets.TimePickerPerf
 
 /** What a row's action has at hand: the page's state, and what to act with. */
-class ActionScope<S>(val state: S, val context: Context, val navigator: Navigator, private val scope: CoroutineScope) {
-    /** Changes stored settings. */
-    fun edit(transform: (MutablePreferences) -> Unit) {
-        scope.launch { context.dataStore.edit(transform) }
-    }
-}
+class ActionScope<S>(val state: S, val context: Context, val navigator: Navigator, val settings: Settings)
 
-/** The setting stored as [key], or [default] while there is none, following its changes. */
+/** [setting]'s value, following its changes. */
+@Composable
+fun <T> stored(setting: Setting<T>): T = settingAsState(setting).value
+
+/** The setting stored as [key], one of a group read together, or [default] while there is none. */
 @Composable
 fun <T> stored(key: Preferences.Key<T>, default: T): T {
-    val dataStore = LocalContext.current.dataStore
-    return remember(dataStore, key) { dataStore.data.map { it[key] ?: default } }.collectAsState(initial = default).value
+    val settings = rememberSettings()
+    return remember(settings, key) { settings.all.map { it[key] ?: default } }.collectAsState(initial = settings.all.value[key] ?: default).value
 }
 
 /**
@@ -82,11 +79,10 @@ class GroupScope<S> internal constructor() {
         items += SettingsRow(title, kind, available, shown, aliases, searchable, content, target)
     }
 
-    /** A setting that is on or off, stored as [key]. */
+    /** A [setting] that is on or off. */
     fun switch(
-        key: String,
+        setting: Setting<Boolean>,
         @StringRes title: Int,
-        default: Boolean,
         summary: (@Composable S.(on: Boolean) -> String?)? = null,
         enabled: @Composable S.() -> Boolean = { true },
         onChange: (ActionScope<S>.(Boolean) -> Unit)? = null,
@@ -98,21 +94,19 @@ class GroupScope<S> internal constructor() {
         val state = this
         val scope = actionScope(state)
         SwitchPref(
-            key = key,
+            setting = setting,
             title = stringResource(id = title),
             modifier = modifier,
             summary = { on -> summary?.invoke(state, on) },
-            defaultChecked = default,
             onCheckedChange = onChange?.let { change -> { on -> scope.change(on) } },
             enabled = enabled(state),
         )
     }
 
-    /** One of [options], stored as [key]: values with their names. */
+    /** [setting] as one of [options]: values with their names. */
     fun choice(
-        key: String,
+        setting: Setting<String>,
         @StringRes title: Int,
-        default: String,
         vararg options: Pair<String, Int>,
         enabled: @Composable S.() -> Boolean = { true },
         available: Availability = Availability.Always,
@@ -121,12 +115,11 @@ class GroupScope<S> internal constructor() {
         searchable: Boolean = true,
     ) = row(title, SettingsRow.Kind.Value, available, shown, aliases, searchable) { modifier ->
         ListPref(
-            key = key,
+            setting = setting,
             title = stringResource(id = title),
             modifier = modifier,
             entries = options.associate { (value, name) -> value to stringResource(id = name) },
             useSelectedAsSummary = true,
-            defaultValue = default,
             enabled = enabled(this),
         )
     }
@@ -238,11 +231,10 @@ class GroupScope<S> internal constructor() {
         )
     }
 
-    /** A time of day, stored as [key] as "HH:mm". */
+    /** A time of day, [setting] as "HH:mm". */
     fun time(
-        key: String,
+        setting: Setting<String>,
         @StringRes title: Int,
-        default: String,
         enabled: @Composable S.() -> Boolean = { true },
         available: Availability = Availability.Always,
         shown: (@Composable S.() -> Boolean)? = null,
@@ -251,34 +243,31 @@ class GroupScope<S> internal constructor() {
     ) = row(title, SettingsRow.Kind.Value, available, shown, aliases, searchable) { modifier ->
         val text = stringResource(id = title)
         TimePickerPerf(
-            key = key,
+            setting = setting,
             title = text,
             modifier = modifier,
-            defaultValue = default,
             dialogTitle = text,
             enabled = enabled(this),
         )
     }
 
-    /** A line of text, stored as [key], with a [summary] under its title. */
+    /** A line of text, [setting], with a [summary] under its title. */
     fun text(
-        key: String,
+        setting: Setting<String?>,
         @StringRes title: Int,
         summary: (@Composable S.() -> String?)? = null,
         @StringRes dialogTitle: Int = title,
-        default: String = "",
         available: Availability = Availability.Always,
         shown: (@Composable S.() -> Boolean)? = null,
         @StringRes aliases: Int? = null,
         searchable: Boolean = true,
     ) = row(title, SettingsRow.Kind.Value, available, shown, aliases, searchable) { modifier ->
         EditTextPref(
-            key = key,
+            setting = setting,
             title = stringResource(id = title),
             modifier = modifier,
             summary = summary?.invoke(this),
             dialogTitle = stringResource(id = dialogTitle),
-            defaultValue = default,
         )
     }
 
@@ -303,4 +292,4 @@ class GroupScope<S> internal constructor() {
 }
 
 @Composable
-private fun <S> actionScope(state: S) = ActionScope(state, LocalContext.current, LocalNavigator.current, rememberCoroutineScope())
+private fun <S> actionScope(state: S) = ActionScope(state, LocalContext.current, LocalNavigator.current, rememberSettings())
