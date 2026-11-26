@@ -14,6 +14,11 @@ import android.os.Looper
 import android.os.Process
 import android.os.SystemClock
 import android.util.Log
+import android.view.KeyEvent
+import android.view.KeyboardShortcutGroup
+import android.view.KeyboardShortcutInfo
+import android.view.Menu
+import android.view.inputmethod.InputMethodManager
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.foundation.BorderStroke
@@ -113,6 +118,7 @@ import oolong.client.navigation.Key
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
 import oolong.client.navigation.Page
+import oolong.client.navigation.SearchKey
 import oolong.client.navigation.StorageKey
 import oolong.client.navigation.ThreadKey
 import oolong.client.navigation.WebViewKey
@@ -131,7 +137,9 @@ import oolong.client.ui.designsystem.AvatarIcon
 import oolong.client.ui.designsystem.Dialog
 import oolong.client.ui.designsystem.DialogNegativeButton
 import oolong.client.ui.designsystem.DialogPositiveButton
+import oolong.client.ui.designsystem.LocalPageShortcuts
 import oolong.client.ui.designsystem.LocalWallpaperGlass
+import oolong.client.ui.designsystem.PageShortcuts
 import oolong.client.ui.designsystem.Sizes
 import oolong.client.ui.designsystem.adaptive.DevicePosture
 import oolong.client.ui.designsystem.adaptive.isBookPosture
@@ -308,7 +316,11 @@ class MainActivity : AppCompatActivity() {
         // which before Android 13 only reaches the activity's configuration
         resources.configuration.locales[0]?.let { Locale.setDefault(it) }
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        setContent { AppContent(this, accountRepository) { Content() } }
+        setContent {
+            AppContent(this, accountRepository) {
+                CompositionLocalProvider(LocalPageShortcuts provides pageShortcuts) { Content() }
+            }
+        }
         // The condition is only checked when a frame is drawn
         window.decorView.postDelayed(
             { window.decorView.invalidate() },
@@ -329,6 +341,65 @@ class MainActivity : AppCompatActivity() {
                 requestNotificationPermission()
             }
         }
+    }
+
+    /** Where a keyboard's page shortcuts go, among the lists and refreshable areas on screen. */
+    private val pageShortcuts = PageShortcuts()
+
+    /**
+     * A keyboard's shortcuts for the whole app (design-system.md §10): Esc goes back, Ctrl+K or /
+     * searches, Ctrl+R or F5 refreshes, J and K move through items, Space and Shift+Space page.
+     * The keys that are also letters only count while nothing takes typing.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN && handleShortcut(event)) return true
+        return super.dispatchKeyEvent(event)
+    }
+
+    private fun handleShortcut(event: KeyEvent): Boolean {
+        val ctrl = event.isCtrlPressed
+        val plain = !ctrl && !event.isAltPressed && !event.isMetaPressed
+        val typing = getSystemService(InputMethodManager::class.java)?.isAcceptingText == true
+        return when {
+            event.keyCode == KeyEvent.KEYCODE_ESCAPE && plain -> {
+                onBackPressedDispatcher.onBackPressed()
+                true
+            }
+
+            ctrl && event.keyCode == KeyEvent.KEYCODE_K || plain && !typing && event.keyCode == KeyEvent.KEYCODE_SLASH -> {
+                navigate(SearchKey())
+                true
+            }
+
+            ctrl && event.keyCode == KeyEvent.KEYCODE_R || event.keyCode == KeyEvent.KEYCODE_F5 -> pageShortcuts.refresh()
+            typing -> false
+            plain && event.keyCode == KeyEvent.KEYCODE_J -> pageShortcuts.moveItem(1)
+            plain && event.keyCode == KeyEvent.KEYCODE_K -> pageShortcuts.moveItem(-1)
+            event.keyCode == KeyEvent.KEYCODE_SPACE && !ctrl -> pageShortcuts.page(down = !event.isShiftPressed)
+            event.keyCode == KeyEvent.KEYCODE_PAGE_DOWN -> pageShortcuts.page(down = true)
+            event.keyCode == KeyEvent.KEYCODE_PAGE_UP -> pageShortcuts.page(down = false)
+            else -> false
+        }
+    }
+
+    /** The shortcuts, for the system's list of them (Meta+/). */
+    override fun onProvideKeyboardShortcuts(data: MutableList<KeyboardShortcutGroup>, menu: Menu?, deviceId: Int) {
+        super.onProvideKeyboardShortcuts(data, menu, deviceId)
+        fun item(label: Int, key: Int, modifiers: Int = 0) = KeyboardShortcutInfo(getString(label), key, modifiers)
+        data += KeyboardShortcutGroup(
+            getString(R.string.app_name),
+            listOf(
+                item(R.string.shortcut_back, KeyEvent.KEYCODE_ESCAPE),
+                item(R.string.shortcut_search, KeyEvent.KEYCODE_K, KeyEvent.META_CTRL_ON),
+                item(R.string.shortcut_search, KeyEvent.KEYCODE_SLASH),
+                item(R.string.shortcut_refresh, KeyEvent.KEYCODE_R, KeyEvent.META_CTRL_ON),
+                item(R.string.shortcut_next_item, KeyEvent.KEYCODE_J),
+                item(R.string.shortcut_previous_item, KeyEvent.KEYCODE_K),
+                item(R.string.shortcut_page_down, KeyEvent.KEYCODE_SPACE),
+                item(R.string.shortcut_page_up, KeyEvent.KEYCODE_SPACE, KeyEvent.META_SHIFT_ON),
+                item(R.string.shortcut_send_reply, KeyEvent.KEYCODE_ENTER, KeyEvent.META_CTRL_ON),
+            ),
+        )
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {

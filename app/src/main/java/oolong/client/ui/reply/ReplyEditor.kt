@@ -10,6 +10,7 @@ import android.text.Spanned
 import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.Gravity
+import android.view.KeyEvent
 import android.view.inputmethod.EditorInfo
 import android.webkit.MimeTypeMap
 import androidx.appcompat.widget.AppCompatEditText
@@ -60,6 +61,9 @@ class ReplyEditorState {
      * where the reply can't have pictures, which leaves them to the field as usual.
      */
     var onImages: ((List<Uri>) -> Unit)? = null
+
+    /** Sends the reply, as Ctrl+Enter on a keyboard asks; null while it can't be sent. */
+    var onSend: (() -> Unit)? = null
 
     /** What is written, emoticons as their codes. */
     var text by mutableStateOf("")
@@ -125,6 +129,7 @@ fun ReplyEditor(
                 view.onFocused = onFocus
                 view.onImages = { uris -> state.onImages?.invoke(uris) }
                 view.takesImages = { state.onImages != null }
+                view.onSend = { state.onSend?.invoke() != null }
                 state.view = view
             }
         },
@@ -150,6 +155,9 @@ internal class ReplyEditText(context: Context) : AppCompatEditText(context) {
     var onFocused: () -> Unit = {}
     var onImages: (List<Uri>) -> Unit = {}
     var takesImages: () -> Boolean = { false }
+
+    /** Sends the reply; false when it can't be sent. */
+    var onSend: () -> Boolean = { false }
     private var fixing = false
 
     init {
@@ -208,6 +216,12 @@ internal class ReplyEditText(context: Context) : AppCompatEditText(context) {
             }
             if (copies.isNotEmpty()) onImages(copies)
         }
+    }
+
+    // Ctrl+Enter sends, as in other apps' message fields; Enter alone starts a new line
+    override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
+        if ((keyCode == KeyEvent.KEYCODE_ENTER || keyCode == KeyEvent.KEYCODE_NUMPAD_ENTER) && event.isCtrlPressed && onSend()) return true
+        return super.onKeyDown(keyCode, event)
     }
 
     fun setCursorColor(color: Int) {

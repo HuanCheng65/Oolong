@@ -39,6 +39,7 @@ fun MyLazyColumn(
     LazyColumn(
         // A list laid out from the bottom has nothing to say about its top
         modifier = (if (reverseLayout) modifier else modifier.pageScroll(state))
+            .pageShortcuts(list = state)
             .highFrameRateWhile(state.isScrollInProgress),
         state = state,
         contentPadding = contentPadding,

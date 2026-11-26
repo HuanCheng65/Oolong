@@ -248,6 +248,9 @@ fun ReplyComposer.Content(handle: @Composable () -> Unit, fill: Boolean) {
     editor.onImages = if (canAttachImages) {
         { uris -> viewModel.addImages(uris.take(MaxImages - viewModel.state.value.images.size).map(Uri::toString)) }
     } else null
+    editor.onSend = if (!state.busy && (editor.text.isNotBlank() || state.images.isNotEmpty())) {
+        { onEvent(ReplyComposerEvent.Send) }
+    } else null
     ReplyComposerContent(
         replyTo = chrome.replyTo,
         editor = editor,

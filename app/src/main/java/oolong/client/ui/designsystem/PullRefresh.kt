@@ -212,6 +212,8 @@ fun PullRefresh(
     Box(
         modifier = modifier
             .onSizeChanged { state.height = it.height.toFloat() }
+            // A keyboard's refresh does what a pull does, while one could be pulled
+            .pageShortcuts(onRefresh = { if (curEnabled && !curRefreshing) curOnRefresh() }.takeIf { enabled })
             .nestedScroll(connection),
     ) {
         Box(modifier = Modifier.graphicsLayer { translationY = state.offset }) {

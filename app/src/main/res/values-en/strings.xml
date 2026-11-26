@@ -1071,4 +1071,11 @@
     <string name="appwidget_mix_name">Topics and forums</string>
     <string name="appwidget_mix_description">Hot topics and the forums you go to</string>
     <string name="assistant_display_description">Read hot topics, search and read threads, open them in Oolong</string>
+    <string name="shortcut_back">Back</string>
+    <string name="shortcut_refresh">Refresh</string>
+    <string name="shortcut_next_item">Next item</string>
+    <string name="shortcut_previous_item">Previous item</string>
+    <string name="shortcut_page_down">Page down</string>
+    <string name="shortcut_page_up">Page up</string>
+    <string name="shortcut_send_reply">Send reply</string>
 </resources>
