@@ -22,7 +22,9 @@ val keystoreFile: String = keystoreProperties.getProperty("keystore.file", "")
 
 android {
     namespace = "oolong.migration"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) { minorApiLevel = 1 }
+    }
     defaultConfig {
         applicationId = "com.huanchengfly.tieba.post"
         minSdk = 24

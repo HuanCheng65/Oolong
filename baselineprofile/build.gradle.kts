@@ -14,7 +14,9 @@ ktlint {
 
 android {
     namespace = "oolong.baselineprofile"
-    compileSdk = 37
+    compileSdk {
+        version = release(37) { minorApiLevel = 1 }
+    }
     defaultConfig {
         minSdk = 28
         targetSdk = 34

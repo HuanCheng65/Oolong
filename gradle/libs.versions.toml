@@ -8,7 +8,7 @@ hilt = "2.60.1"
 androidx-hilt = "1.4.0"
 wire = "6.4.0"
 
-compose-bom = "2026.09.00"
+compose-bom = "2026.11.01"
 navigation3 = "1.2.0"
 coil = "3.6.3"
 lottie = "6.7.1"
