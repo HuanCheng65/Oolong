@@ -17,6 +17,8 @@ fun Uri.toDeepLinkKey(): Key? {
         "history" -> HistoryKey
         "search" -> SearchKey()
         "favorite" -> ThreadStoreKey
+        "topics" -> HotTopicListKey
+        "topic" -> argument?.toLongOrNull()?.let { TopicKey(it, getQueryParameter("name").orEmpty()) }
         else -> null
     }
 }
