@@ -14,6 +14,10 @@ import androidx.appfunctions.AppFunctionServiceEntryPoint
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.first
 import oolong.client.MainActivity
+import oolong.client.data.block.BlockPlace
+import oolong.client.data.block.BlockRuleSource
+import oolong.client.data.block.Blockable
+import oolong.client.data.block.check
 import oolong.client.data.explore.ExploreRepository
 import oolong.client.data.forum.FollowedForums
 import oolong.client.data.forum.ForumCursor
@@ -25,6 +29,7 @@ import oolong.client.data.thread.ThreadQuery
 import oolong.client.data.thread.ThreadRepository
 import oolong.client.model.ForumTab
 import oolong.client.model.HotTopic
+import oolong.client.model.Post
 import oolong.client.model.PostContent
 import oolong.client.model.RankReason
 import oolong.client.model.SearchOrder
@@ -61,6 +66,8 @@ abstract class AssistantFunctions : AppFunctionService() {
 
     @Inject internal lateinit var account: HistoryOwner
 
+    @Inject internal lateinit var blockRules: BlockRuleSource
+
     /**
      * Lists what Tieba (百度贴吧) is talking about right now: the hot topics (热议话题), most
      * discussed first.
@@ -72,7 +79,9 @@ abstract class AssistantFunctions : AppFunctionService() {
     suspend fun getHotTopics(limit: Int? = null): List<AssistantTopic> {
         RateLimit.take()
         val count = limit.orDefault(10, 1..30)
-        return explore.topics().take(count).mapIndexed { index, topic ->
+        val rules = blockRules.rules.first()
+        val topics = explore.topics().filter { rules.check(Blockable(Nobody, "${it.name} ${it.description}", BlockPlace.Feeds, title = it.name)) == null }
+        return topics.take(count).mapIndexed { index, topic ->
             AssistantTopic(
                 rank = index + 1,
                 name = topic.name,
@@ -95,7 +104,8 @@ abstract class AssistantFunctions : AppFunctionService() {
     suspend fun getTopThreads(byLikes: Boolean? = null, limit: Int? = null): List<AssistantThread> {
         RateLimit.take()
         val measure = if (byLikes == true) ThreadMeasure.MostLiked else ThreadMeasure.MostRead
-        return explore.threadRanking(measure).take(limit.orDefault(10, 1..20)).map { ranked ->
+        val rules = blockRules.rules.first()
+        return explore.threadRanking(measure).filter { rules.check(it.thread, BlockPlace.Feeds) == null }.take(limit.orDefault(10, 1..20)).map { ranked ->
             ranked.thread.toAssistantThread(readers = (ranked.reason as? RankReason.Readers)?.count)
         }
     }
@@ -115,7 +125,12 @@ abstract class AssistantFunctions : AppFunctionService() {
         if (keyword.isBlank()) throw AppFunctionInvalidArgumentException("The keyword is empty.")
         RateLimit.take()
         val order = if (newestFirst == true) SearchOrder.Newest else SearchOrder.Relevant
-        return search.threads(keyword.trim(), order, page.orDefault(1, 1..50)).items.map { post ->
+        val rules = blockRules.rules.first()
+        val posts = search.threads(keyword.trim(), order, page.orDefault(1, 1..50)).items.filter { post ->
+            val author = User(post.author.id, post.author.name, post.author.nameShow, post.author.portrait)
+            rules.check(Blockable(author, post.content, BlockPlace.Feeds, title = post.title, forum = post.forumName)) == null
+        }
+        return posts.map { post ->
             AssistantSearchResult(
                 threadId = post.threadId,
                 title = post.title,
@@ -147,10 +162,13 @@ abstract class AssistantFunctions : AppFunctionService() {
             threads.page(ThreadQuery(threadId, seeLz = onlyAuthor == true), ThreadCursor.Number(pageNumber))
         }.getOrElse { throw AppFunctionElementNotFoundException("The thread $threadId couldn't be read: ${it.message}") }
         val thread = loaded.thread
+        val rules = blockRules.rules.first()
+        if (rules.check(thread.summary, BlockPlace.Feeds) != null) throw AppFunctionElementNotFoundException("The user has blocked this thread.")
+        fun shown(post: Post) = rules.check(post.author, post.content, BlockPlace.Thread, byThreadAuthor = post.author.id == thread.author.id) == null
         return AssistantThreadContent(
             thread = thread.summary.toAssistantThread(readers = null),
             firstPost = loaded.firstPost?.takeIf { pageNumber == 1 }?.let { AssistantPost(1, it.author.displayName, it.content.asText(), it.time) },
-            posts = loaded.posts.items.map { AssistantPost(it.floor, it.author.displayName, it.content.asText(), it.time) },
+            posts = loaded.posts.items.filter(::shown).map { AssistantPost(it.floor, it.author.displayName, it.content.asText(), it.time) },
             page = loaded.currentPage,
             totalPages = loaded.totalPage,
         )
@@ -171,7 +189,8 @@ abstract class AssistantFunctions : AppFunctionService() {
         val page = runCatching {
             forums.threads(forumName = name, forumId = 0, tab = ForumTab.Hot, cursor = ForumCursor.FrsPage(1))
         }.getOrElse { throw AppFunctionElementNotFoundException("No forum named $name could be read: ${it.message}") }
-        return page.threads.items.filter { it.isTop != true }.take(limit.orDefault(10, 1..30)).map { it.toAssistantThread(readers = null) }
+        val rules = blockRules.rules.first()
+        return page.threads.items.filter { it.isTop != true && rules.check(it, BlockPlace.Forum) == null }.take(limit.orDefault(10, 1..30)).map { it.toAssistantThread(readers = null) }
     }
 
     /**
@@ -231,6 +250,9 @@ abstract class AssistantFunctions : AppFunctionService() {
         fun Int?.orDefault(default: Int, range: IntRange): Int = (this ?: default).coerceIn(range)
 
         val User.displayName: String get() = nameShow.ifEmpty { name }
+
+        /** The author of what has none, such as a hot topic, for the rules to look at its words alone. */
+        val Nobody = User(id = 0, name = "", nameShow = "", portrait = "")
 
         fun List<PostContent>.asText(): String = joinToString("") { content ->
             when (content) {
