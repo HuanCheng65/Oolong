@@ -199,9 +199,6 @@
 -keep,allowobfuscation,allowshrinking class kotlinx.coroutines.Deferred
 -keep,allowobfuscation,allowshrinking class * extends kotlinx.coroutines.Deferred
 
--keep,allowobfuscation,allowshrinking class oolong.client.arch.ApiResult
--keep,allowobfuscation,allowshrinking class * extends oolong.client.arch.ApiResult
-
 -keep,allowobfuscation,allowshrinking interface retrofit2.Call
 -keep,allowobfuscation,allowshrinking class retrofit2.Response
  -keep,allowobfuscation,allowshrinking class kotlin.coroutines.Continuation
