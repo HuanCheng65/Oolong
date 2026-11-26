@@ -3,7 +3,7 @@
     android:description="@string/appwidget_forums_description"
     android:configure="oolong.client.ui.appwidget.WidgetSetupActivity"
     android:widgetFeatures="reconfigurable|configuration_optional"
-    android:initialLayout="@layout/glance_default_loading_layout"
+    android:initialLayout="@layout/appwidget_loading"
     android:minWidth="110dp"
     android:minHeight="110dp"
     android:minResizeWidth="110dp"

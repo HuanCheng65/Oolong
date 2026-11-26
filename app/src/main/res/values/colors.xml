@@ -52,4 +52,6 @@
 
 
     <color name="colorSplashBg">#ffffff</color>
+    <!-- A widget's surface, as WidgetColors.surface -->
+    <color name="appwidget_surface">#FFFFFFFF</color>
 </resources>
