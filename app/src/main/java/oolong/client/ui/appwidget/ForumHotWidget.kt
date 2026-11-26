@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
@@ -108,10 +109,14 @@ class ForumHotWidget : GlanceAppWidget() {
                 Column(modifier = GlanceModifier.fillMaxSize().padding(horizontal = WidgetPadding, vertical = 12.dp)) {
                     Header(content, avatar)
                     val narrow = size.width < 200.dp
-                    val rowHeight = if (narrow) NarrowRowHeight else RowHeight
-                    val rows = ((size.height - 24.dp - HeaderHeight) / rowHeight).toInt().coerceAtLeast(1)
+                    val (rows, rowHeight) = fitRows(
+                        size.height - 24.dp - HeaderHeight,
+                        if (narrow) NarrowRowHeight else RowHeight,
+                        if (narrow) NarrowRowLeast else RowLeast,
+                        content.threads.size,
+                    )
                     content.threads.take(rows).forEachIndexed { index, thread ->
-                        if (narrow) NarrowRow(thread) else ThreadRow(thread, thumbs.getOrNull(index))
+                        if (narrow) NarrowRow(thread, rowHeight) else ThreadRow(thread, thumbs.getOrNull(index), rowHeight)
                     }
                 }
             }
@@ -139,24 +144,27 @@ class ForumHotWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun ThreadRow(thread: ForumContent.Item, thumb: Bitmap?) {
+    private fun ThreadRow(thread: ForumContent.Item, thumb: Bitmap?, height: Dp) {
         val context = LocalContext.current
-        WidgetRow(RowHeight, openLink(context, WidgetLinks.thread(thread.id))) {
+        WidgetRow(height, openLink(context, WidgetLinks.thread(thread.id))) {
             Column(modifier = GlanceModifier.defaultWeight()) {
                 Text(text = thread.title, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp, fontWeight = FontWeight.Medium), maxLines = 1)
                 Replies(thread.replies)
             }
             if (thread.image.isNotEmpty()) {
                 Spacer(GlanceModifier.width(12.dp))
-                WidgetPicture(thumb, ThumbSize, 9.dp)
+                WidgetPicture(thumb, minOf(ThumbSize, height - 6.dp), 9.dp)
             }
         }
     }
 
     @Composable
-    private fun NarrowRow(thread: ForumContent.Item) {
+    private fun NarrowRow(thread: ForumContent.Item, height: Dp) {
         val context = LocalContext.current
-        Column(modifier = GlanceModifier.fillMaxWidth().padding(vertical = 6.dp).clickable(openLink(context, WidgetLinks.thread(thread.id)))) {
+        Column(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = GlanceModifier.fillMaxWidth().height(height).clickable(openLink(context, WidgetLinks.thread(thread.id))),
+        ) {
             Text(text = thread.title, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp, fontWeight = FontWeight.Medium), maxLines = 2)
             Replies(thread.replies)
         }
@@ -181,8 +189,10 @@ class ForumHotWidget : GlanceAppWidget() {
         private val ThumbSize = 42.dp
         private val AvatarSize = 34.dp
         private val HeaderHeight = 44.dp
-        private val RowHeight = 50.dp
-        private val NarrowRowHeight = 68.dp
+        private val RowHeight = 48.dp
+        private val RowLeast = 42.dp
+        private val NarrowRowHeight = 66.dp
+        private val NarrowRowLeast = 60.dp
         private val WashHeight = 110.dp
 
         fun setupIntent(context: Context, appWidgetId: Int): Intent =

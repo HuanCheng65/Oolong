@@ -69,9 +69,9 @@ class ThreadRankingWidget : GlanceAppWidget() {
             val threads = loaded.content.threads
             val (thumbs, avatars) = loaded.thumbs to loaded.avatars
             WidgetHeader(context.getString(R.string.hot_section_threads), context.getString(R.string.appwidget_ranking_note))
-            val rows = ((size.height - 28.dp - 30.dp) / RowHeight).toInt().coerceAtLeast(1)
+            val (rows, rowHeight) = fitRows(listRoom(size.height), RowHeight, RowLeast, threads.size)
             threads.take(rows).forEachIndexed { index, thread ->
-                WidgetRow(RowHeight, openLink(context, WidgetLinks.thread(thread.id))) {
+                WidgetRow(rowHeight, openLink(context, WidgetLinks.thread(thread.id))) {
                     RankText(index + 1)
                     Spacer(GlanceModifier.width(10.dp))
                     Column(modifier = GlanceModifier.defaultWeight()) {
@@ -90,7 +90,7 @@ class ThreadRankingWidget : GlanceAppWidget() {
                     }
                     if (thread.image.isNotEmpty()) {
                         Spacer(GlanceModifier.width(10.dp))
-                        WidgetPicture(thumbs.getOrNull(index), ThumbSize, 9.dp)
+                        WidgetPicture(thumbs.getOrNull(index), minOf(ThumbSize, rowHeight - 6.dp), 9.dp)
                     }
                 }
             }
@@ -100,7 +100,8 @@ class ThreadRankingWidget : GlanceAppWidget() {
     private companion object {
         val ThumbSize = 42.dp
         val AvatarSize = 14.dp
-        val RowHeight = 52.dp
+        val RowHeight = 50.dp
+        val RowLeast = 42.dp
     }
 }
 

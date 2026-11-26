@@ -133,3 +133,15 @@ internal fun <T : Any> rememberShown(initial: T?, vararg keys: Any?, load: suspe
     }
     return shown
 }
+
+/**
+ * How [room] splits into rows of about [ideal] height, never less than [least]: how many, at most
+ * [most], and how tall each, sharing all the room between them so none is left at the bottom.
+ * With fewer items than would fill it, rows grow to at most half again their ideal height.
+ */
+internal fun fitRows(room: Dp, ideal: Dp, least: Dp, most: Int): Pair<Int, Dp> {
+    if (room <= 0.dp || most <= 0) return 0 to ideal
+    var rows = (room / ideal).roundToInt().coerceIn(1, most)
+    while (rows > 1 && room / rows < least) rows--
+    return rows to minOf(room / rows, ideal * 1.5f)
+}

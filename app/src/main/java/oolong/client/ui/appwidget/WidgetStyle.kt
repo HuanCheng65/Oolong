@@ -56,8 +56,16 @@ internal object WidgetColors {
     private fun pair(day: Long, night: Long): ColorProvider = ColorProvider(day = Color(day), night = Color(night))
 }
 
-/** The inset of a widget's content from its edges. */
+/** The inset of a widget's content from its edges, at its sides and at its top and bottom. */
 internal val WidgetPadding = 16.dp
+internal val WidgetPaddingVertical = 10.dp
+
+/** A heading's height, with the gap under it. */
+internal val WidgetHeaderHeight = 20.dp
+internal val WidgetHeaderGap = 4.dp
+
+/** What a padded widget with a heading has left for its rows. */
+internal fun listRoom(height: androidx.compose.ui.unit.Dp) = height - WidgetPaddingVertical * 2 - WidgetHeaderHeight - WidgetHeaderGap
 
 /** The widget's surface, with the system's widget corners where there are any to follow. */
 @Composable
@@ -72,7 +80,7 @@ internal fun WidgetSurface(
             .appWidgetBackground()
             .background(WidgetColors.surface)
             .widgetCorners()
-            .then(if (padded) GlanceModifier.padding(horizontal = WidgetPadding, vertical = 14.dp) else GlanceModifier),
+            .then(if (padded) GlanceModifier.padding(horizontal = WidgetPadding, vertical = WidgetPaddingVertical) else GlanceModifier),
         content = content,
     )
 }
@@ -86,7 +94,7 @@ internal fun GlanceModifier.widgetCorners(): GlanceModifier =
 internal fun WidgetHeader(title: String, note: String? = null, onClick: Action? = null) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = GlanceModifier.fillMaxWidth().height(24.dp).then(onClick?.let { GlanceModifier.clickable(it) } ?: GlanceModifier),
+        modifier = GlanceModifier.fillMaxWidth().padding(bottom = WidgetHeaderGap).height(WidgetHeaderHeight + WidgetHeaderGap).then(onClick?.let { GlanceModifier.clickable(it) } ?: GlanceModifier),
     ) {
         Text(text = title, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp, fontWeight = FontWeight.Bold), maxLines = 1)
         if (note != null) {

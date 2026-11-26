@@ -88,16 +88,16 @@ class HotTopicsWidget : GlanceAppWidget() {
 
             size.height >= 300.dp -> WidgetSurface(padded = false) {
                 Hero(topics.first(), hero, context.clock(content.loadedAt))
-                val rows = ((size.height - HeroHeight - 12.dp) / HeroRowHeight).toInt().coerceAtLeast(0)
+                val (rows, rowHeight) = fitRows(size.height - HeroHeight - 12.dp, HeroRowHeight, TopicRowLeast, topics.size - 1)
                 Column(modifier = GlanceModifier.padding(horizontal = WidgetPadding, vertical = 6.dp)) {
-                    topics.drop(1).take(rows).forEachIndexed { index, topic -> TopicRow(index + 2, topic, thumbs.getOrNull(index + 1), HeroRowHeight) }
+                    topics.drop(1).take(rows).forEachIndexed { index, topic -> TopicRow(index + 2, topic, thumbs.getOrNull(index + 1), rowHeight) }
                 }
             }
 
             else -> WidgetSurface {
                 WidgetHeader(context.getString(R.string.hot_section_topics), context.clock(content.loadedAt), openLink(context, "oolong://topics"))
-                val rows = ((size.height - 28.dp - 30.dp) / TopicRowHeight).toInt().coerceAtLeast(1)
-                topics.take(rows).forEachIndexed { index, topic -> TopicRow(index + 1, topic, thumbs.getOrNull(index), TopicRowHeight) }
+                val (rows, rowHeight) = fitRows(listRoom(size.height), TopicRowHeight, TopicRowLeast, topics.size)
+                topics.take(rows).forEachIndexed { index, topic -> TopicRow(index + 1, topic, thumbs.getOrNull(index), rowHeight) }
             }
         }
     }
@@ -163,7 +163,8 @@ class HotTopicsWidgetReceiver : GlanceAppWidgetReceiver() {
 
 /** A topic thumbnail's size, and the height of a topic's row in a list. */
 internal val TopicThumbSize = 30.dp
-internal val TopicRowHeight = 39.dp
+internal val TopicRowHeight = 34.dp
+internal val TopicRowLeast = 26.dp
 
 @Composable
 internal fun TopicRow(rank: Int, topic: TopicsContent.Item, thumb: Bitmap?, height: androidx.compose.ui.unit.Dp) {
@@ -171,12 +172,12 @@ internal fun TopicRow(rank: Int, topic: TopicsContent.Item, thumb: Bitmap?, heig
     WidgetRow(height, openLink(context, WidgetLinks.topic(topic.id, topic.name))) {
         RankText(rank)
         Spacer(GlanceModifier.width(8.dp))
-        WidgetPicture(thumb, TopicThumbSize, 8.dp)
+        // A shorter row takes a smaller cover, so rows never touch
+        WidgetPicture(thumb, minOf(TopicThumbSize, height - 6.dp), 8.dp)
         Spacer(GlanceModifier.width(10.dp))
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = GlanceModifier.defaultWeight()) {
-            Text(text = topic.name, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp), maxLines = 1)
-            TopicTag(topic.tag)
-        }
+        // The name takes what is left and is cut short; the tag beside the heat always shows whole
+        Text(text = topic.name, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp), maxLines = 1, modifier = GlanceModifier.defaultWeight())
+        TopicTag(topic.tag)
         Spacer(GlanceModifier.width(8.dp))
         Text(
             text = topic.discussCount.getShortNumString(),

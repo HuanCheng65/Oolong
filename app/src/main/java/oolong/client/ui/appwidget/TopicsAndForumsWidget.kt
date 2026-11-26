@@ -78,10 +78,8 @@ class TopicsAndForumsWidget : GlanceAppWidget() {
             WidgetHeader(context.getString(R.string.hot_section_topics), context.clock(loaded.topics.loadedAt), openLink(context, "oolong://topics"))
             // The forums keep their row; the topics take what room is left above it
             val forumsHeight = if (loaded.forums.isEmpty()) 0.dp else ForumsRowHeight + 17.dp
-            val room = size.height - 28.dp - 30.dp - forumsHeight
-            val rows = (room / TopicRowHeight).toInt().coerceIn(1, loaded.topics.topics.size)
-            // Rows share out what room is left over, up to a point, rather than leave a gap at the bottom
-            val rowHeight = minOf(room / rows, MaxRowHeight)
+            val room = listRoom(size.height) - forumsHeight
+            val (rows, rowHeight) = fitRows(room, TopicRowHeight, TopicRowLeast, loaded.topics.topics.size)
             loaded.topics.topics.take(rows).forEachIndexed { index, topic -> TopicRow(index + 1, topic, loaded.thumbs.getOrNull(index), rowHeight) }
             if (loaded.forums.isNotEmpty()) {
                 Spacer(GlanceModifier.height(6.dp))
@@ -98,7 +96,6 @@ class TopicsAndForumsWidget : GlanceAppWidget() {
     private companion object {
         const val FORUMS = 4
         val ForumsRowHeight = 76.dp
-        val MaxRowHeight = 48.dp
     }
 }
 
