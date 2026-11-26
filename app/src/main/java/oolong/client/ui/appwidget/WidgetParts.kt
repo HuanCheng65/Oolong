@@ -16,6 +16,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
@@ -34,6 +35,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import oolong.client.data.settings.appPreferences
 import java.util.Date
 import kotlin.math.roundToInt
 
@@ -47,12 +49,19 @@ internal fun Context.clock(time: Long): String = DateFormat.getTimeFormat(this).
 @Composable
 internal fun WidgetPicture(bitmap: Bitmap?, size: Dp, radius: Dp, modifier: GlanceModifier = GlanceModifier) {
     if (bitmap != null) {
-        Image(
-            provider = ImageProvider(bitmap),
-            contentDescription = null,
-            contentScale = ContentScale.FillBounds,
-            modifier = modifier.size(size),
-        )
+        Box(modifier = modifier.size(size)) {
+            Image(
+                provider = ImageProvider(bitmap),
+                contentDescription = null,
+                contentScale = ContentScale.FillBounds,
+                modifier = GlanceModifier.size(size),
+            )
+            // Dimmed at night, as pictures in the app are: a white screenshot would glare off the
+            // dark surface. Only where the veil can take the picture's rounded corners
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && LocalContext.current.appPreferences.imageDarkenWhenNightMode) {
+                Box(modifier = GlanceModifier.size(size).background(WidgetColors.pictureDim).cornerRadius(radius)) {}
+            }
+        }
     } else {
         val rounded = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) GlanceModifier.cornerRadius(radius) else GlanceModifier
         Box(modifier = modifier.size(size).background(WidgetColors.placeholder).then(rounded)) {}

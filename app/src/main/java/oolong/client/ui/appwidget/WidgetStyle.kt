@@ -51,6 +51,7 @@ internal object WidgetColors {
     val hot = pair(0xFFD94545, 0xFFEF6B6B)
     val hotContainer = pair(0x1AD94545, 0x29EF6B6B)
     val placeholder = pair(0x0F000000, 0x14FFFFFF)
+    val pictureDim = pair(0x00000000, 0x4D000000)
 
     private fun pair(day: Long, night: Long): ColorProvider = ColorProvider(day = Color(day), night = Color(night))
 }
