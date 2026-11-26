@@ -2,6 +2,7 @@ package oolong.core.designsystem.theme
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.IndicationNodeFactory
+import androidx.compose.foundation.interaction.FocusInteraction
 import androidx.compose.foundation.interaction.HoverInteraction
 import androidx.compose.foundation.interaction.Interaction
 import androidx.compose.foundation.interaction.InteractionSource
@@ -14,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.drawscope.ContentDrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.node.CompositionLocalConsumerModifierNode
 import androidx.compose.ui.node.DelegatableNode
@@ -30,7 +32,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 /**
  * How pressed things respond, in place of Material's ripple (design-system.md §8.1): a veil of the
  * content colour. Controls that stand on their own also shrink, with [pressScale]. Under a mouse
- * or touchpad pointer the veil shows at half strength, to say what a click would press.
+ * or touchpad pointer the veil shows at half strength, to say what a click would press; focused
+ * from a keyboard, a ring of the content colour goes round it, to say what Enter would press.
  */
 object PressFeedback {
     /** The veil over the whole bounds. The app's default indication. */
@@ -75,6 +78,11 @@ private const val PressedOverlayAlpha = 0.08f
 
 /** The veil's opacity under a pointer: half a press. */
 private const val HoveredOverlayAlpha = PressedOverlayAlpha / 2
+
+/** The ring round what a keyboard focused, and its opacity of the content colour. */
+private val FocusRingWidth = 2.dp
+private const val FocusRingAlpha = 0.6f
+private val FocusRingShape = SmoothCornerShape(Radius.xs)
 
 /** How long a tap shows its press before letting go, about 80% of the way in. */
 private const val MinPressMillis = 100L
@@ -124,6 +132,9 @@ private class PressNode(
     /** 0 with no pointer over it, 1 with one. */
     private val hover = Animatable(0f, visibilityThreshold = Motion.ProgressThreshold)
 
+    /** Whether a keyboard focused it; touch never focuses what it presses. */
+    private var focused = false
+
     override fun onAttach() {
         coroutineScope.launch { followPresses(interactionSource.interactions, progress) { invalidateDraw() } }
         coroutineScope.launch {
@@ -134,6 +145,11 @@ private class PressNode(
                 when (interaction) {
                     is HoverInteraction.Enter -> hovers++
                     is HoverInteraction.Exit -> hovers = (hovers - 1).coerceAtLeast(0)
+                    is FocusInteraction.Focus, is FocusInteraction.Unfocus -> {
+                        focused = interaction is FocusInteraction.Focus
+                        invalidateDraw()
+                        return@collect
+                    }
                     else -> return@collect
                 }
                 if ((before > 0) == (hovers > 0)) return@collect
@@ -147,8 +163,17 @@ private class PressNode(
         drawContent()
         val pressed = (PressedOverlayAlpha * progress.value).coerceIn(0f, PressedOverlayAlpha)
         val alpha = maxOf(pressed, HoveredOverlayAlpha * hover.value)
-        if (alpha <= 0f) return
-        val color = currentValueOf(LocalContentColor).copy(alpha = alpha)
-        if (shape == null) drawRect(color) else drawOutline(shape.createOutline(size, layoutDirection, this), color)
+        val content = currentValueOf(LocalContentColor)
+        if (alpha > 0f) {
+            val color = content.copy(alpha = alpha)
+            if (shape == null) drawRect(color) else drawOutline(shape.createOutline(size, layoutDirection, this), color)
+        }
+        if (focused) {
+            val ring = Stroke(FocusRingWidth.toPx())
+            val color = content.copy(alpha = FocusRingAlpha)
+            // Where the press veil fills the bounds, the ring still rounds their corners a little
+            val outline = (shape ?: FocusRingShape).createOutline(size, layoutDirection, this)
+            drawOutline(outline, color, style = ring)
+        }
     }
 }
