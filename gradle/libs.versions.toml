@@ -80,6 +80,7 @@ androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", versi
 androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "androidx-media3" }
 androidx-profileinstaller = { module = "androidx.profileinstaller:profileinstaller", version = "1.4.1" }
 androidx-palette = { module = "androidx.palette:palette-ktx", version = "1.0.0" }
+androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version = "1.2.0" }
 androidx-window = { module = "androidx.window:window", version = "1.5.1" }
 google-material = { module = "com.google.android.material:material", version = "1.14.0" }
 

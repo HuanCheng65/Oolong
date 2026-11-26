@@ -311,6 +311,7 @@ dependencies {
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
     implementation(libs.androidx.palette)
+    implementation(libs.androidx.glance.appwidget)
     // Installs the baseline profile on sideloaded installs, which no store compiles ahead
     implementation(libs.androidx.profileinstaller)
     baselineProfile(project(":baselineprofile"))

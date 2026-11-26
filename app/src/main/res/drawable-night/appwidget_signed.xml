@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The mark on a forum signed in to today, ringed in the widget's surface colour -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="20dp"
+    android:height="20dp"
+    android:viewportWidth="20"
+    android:viewportHeight="20">
+    <path
+        android:fillColor="#5588D7"
+        android:pathData="M10,1a9,9 0,1 1,0 18a9,9 0,1 1,0 -18z"
+        android:strokeWidth="2"
+        android:strokeColor="#1F2227" />
+    <path
+        android:pathData="M6.2,10.3L8.7,12.8L13.9,7.6"
+        android:strokeWidth="1.9"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round" />
+</vector>

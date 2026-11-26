@@ -1028,4 +1028,21 @@
     <plurals name="stored_with_replies">
         <item quantity="other">%d 帖有新回复</item>
     </plurals>
+    <string name="appwidget_topics_description">贴吧正在热议的话题</string>
+    <string name="appwidget_ranking_description">近一天浏览最多的帖子</string>
+    <string name="appwidget_ranking_note">浏览最多 · 近一天</string>
+    <string name="appwidget_forum_name">吧热门</string>
+    <string name="appwidget_forum_description">一个吧的热门帖子</string>
+    <string name="appwidget_forums_name">常逛的吧</string>
+    <string name="appwidget_forums_description">关注的吧或最近逛的吧</string>
+    <string name="appwidget_forum_title">%1$s吧</string>
+    <string name="appwidget_load_failed">加载失败，点按重试</string>
+    <string name="appwidget_pick_forum">点按选择一个吧</string>
+    <string name="appwidget_login">登录后显示你的吧</string>
+    <string name="appwidget_no_forums">还没有逛过的吧</string>
+    <string name="appwidget_setup_forum">选择吧</string>
+    <string name="appwidget_setup_forums">显示哪些吧</string>
+    <string name="appwidget_source_followed">关注的吧</string>
+    <string name="appwidget_source_visited">最近逛的吧</string>
+    <string name="appwidget_setup_search">输入吧名</string>
 </resources>

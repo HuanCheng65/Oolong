@@ -87,6 +87,64 @@
             android:name=".ui.picker.ImagePickerActivity"
             android:configChanges="screenSize|screenLayout|orientation|smallestScreenSize|keyboardHidden" />
 
+        <activity
+            android:name=".ui.appwidget.WidgetSetupActivity"
+            android:exported="true"
+            android:excludeFromRecents="true"
+            android:taskAffinity="">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_CONFIGURE" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".ui.appwidget.HotTopicsWidgetReceiver"
+            android:exported="false"
+            android:label="@string/hot_section_topics">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_topics" />
+        </receiver>
+
+        <receiver
+            android:name=".ui.appwidget.ThreadRankingWidgetReceiver"
+            android:exported="false"
+            android:label="@string/hot_section_threads">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_ranking" />
+        </receiver>
+
+        <receiver
+            android:name=".ui.appwidget.ForumHotWidgetReceiver"
+            android:exported="false"
+            android:label="@string/appwidget_forum_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_forum" />
+        </receiver>
+
+        <receiver
+            android:name=".ui.appwidget.ForumsWidgetReceiver"
+            android:exported="false"
+            android:label="@string/appwidget_forums_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_forums" />
+        </receiver>
+
         <receiver
             android:name=".background.sign.BootCompleteSignReceiver"
             android:enabled="true"

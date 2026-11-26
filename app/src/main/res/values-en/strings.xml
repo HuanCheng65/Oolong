@@ -1051,4 +1051,21 @@
         <item quantity="one">%d thread with new replies</item>
         <item quantity="other">%d threads with new replies</item>
     </plurals>
+    <string name="appwidget_topics_description">What Tieba is talking about</string>
+    <string name="appwidget_ranking_description">The most read threads of the last day</string>
+    <string name="appwidget_ranking_note">Most read · last day</string>
+    <string name="appwidget_forum_name">Forum hot threads</string>
+    <string name="appwidget_forum_description">The hot threads of one forum</string>
+    <string name="appwidget_forums_name">Your forums</string>
+    <string name="appwidget_forums_description">The forums you follow or visited lately</string>
+    <string name="appwidget_forum_title">%1$s</string>
+    <string name="appwidget_load_failed">Couldn\'t load. Tap to retry</string>
+    <string name="appwidget_pick_forum">Tap to choose a forum</string>
+    <string name="appwidget_login">Log in to see your forums</string>
+    <string name="appwidget_no_forums">No forums visited yet</string>
+    <string name="appwidget_setup_forum">Choose a forum</string>
+    <string name="appwidget_setup_forums">Forums to show</string>
+    <string name="appwidget_source_followed">Followed forums</string>
+    <string name="appwidget_source_visited">Recently visited</string>
+    <string name="appwidget_setup_search">Forum name</string>
 </resources>
