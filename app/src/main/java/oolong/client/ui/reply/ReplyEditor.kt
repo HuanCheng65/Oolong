@@ -2,6 +2,7 @@ package oolong.client.ui.reply
 
 import android.content.Context
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Build
 import android.text.Editable
 import android.text.InputType
@@ -10,6 +11,7 @@ import android.text.TextWatcher
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.inputmethod.EditorInfo
+import android.webkit.MimeTypeMap
 import androidx.appcompat.widget.AppCompatEditText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
@@ -20,11 +22,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.viewinterop.AndroidView
+import androidx.core.view.ViewCompat
+import androidx.lifecycle.findViewTreeLifecycleOwner
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import oolong.client.data.emoticon.EmoticonSpanV2
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.util.StringUtil
 import oolong.client.util.hideKeyboard
 import oolong.client.util.showKeyboard
+import java.io.File
+import java.util.UUID
 
 /**
  * The reply's text, and the keyboard, driven from Compose. The text keeps emoticons as their
@@ -44,6 +54,12 @@ class ReplyEditorState {
         }
     private var pending: String? = null
     private var focusPending = false
+
+    /**
+     * Takes pictures dropped on the field or sent by the keyboard, copied into the app; null
+     * where the reply can't have pictures, which leaves them to the field as usual.
+     */
+    var onImages: ((List<Uri>) -> Unit)? = null
 
     /** What is written, emoticons as their codes. */
     var text by mutableStateOf("")
@@ -107,6 +123,8 @@ fun ReplyEditor(
             ReplyEditText(context).also { view ->
                 view.onChange = { state.text = it }
                 view.onFocused = onFocus
+                view.onImages = { uris -> state.onImages?.invoke(uris) }
+                view.takesImages = { state.onImages != null }
                 state.view = view
             }
         },
@@ -130,6 +148,8 @@ fun ReplyEditor(
 internal class ReplyEditText(context: Context) : AppCompatEditText(context) {
     var onChange: (String) -> Unit = {}
     var onFocused: () -> Unit = {}
+    var onImages: (List<Uri>) -> Unit = {}
+    var takesImages: () -> Boolean = { false }
     private var fixing = false
 
     init {
@@ -143,6 +163,16 @@ internal class ReplyEditText(context: Context) : AppCompatEditText(context) {
         imeOptions = EditorInfo.IME_FLAG_NO_FULLSCREEN
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) importantForAutofill = IMPORTANT_FOR_AUTOFILL_NO
         setOnFocusChangeListener { _, hasFocus -> if (hasFocus) onFocused() }
+        // Pictures dragged in from another app, or sent by the keyboard, become the reply's
+        // pictures rather than an address in its text
+        ViewCompat.setOnReceiveContentListener(this, arrayOf("image/*")) { _, payload ->
+            if (!takesImages()) return@setOnReceiveContentListener payload
+            val split = payload.partition { item -> item.uri != null && payload.clip.description.hasMimeType("image/*") }
+            val images = split.first?.clip
+            val uris = images?.let { clip -> (0 until clip.itemCount).mapNotNull { clip.getItemAt(it).uri } }.orEmpty()
+            if (uris.isNotEmpty()) copyIn(uris)
+            split.second
+        }
         setOnClickListener { onFocused() }
         addTextChangedListener(object : TextWatcher {
             override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
@@ -155,6 +185,29 @@ internal class ReplyEditText(context: Context) : AppCompatEditText(context) {
                 onChange(s.toString())
             }
         })
+    }
+
+    /**
+     * Copies [uris] into the app before taking them: the right to read what another app hands
+     * over ends with the drop, and the reply may be sent much later.
+     */
+    private fun copyIn(uris: List<Uri>) {
+        val scope = findViewTreeLifecycleOwner()?.lifecycleScope ?: return
+        val resolver = context.contentResolver
+        val folder = File(context.cacheDir, "dropped").apply { mkdirs() }
+        scope.launch {
+            val copies = withContext(Dispatchers.IO) {
+                uris.mapNotNull { uri ->
+                    runCatching {
+                        val extension = MimeTypeMap.getSingleton().getExtensionFromMimeType(resolver.getType(uri)) ?: "jpg"
+                        val file = File(folder, "${UUID.randomUUID()}.$extension")
+                        resolver.openInputStream(uri)?.use { input -> file.outputStream().use { input.copyTo(it) } } ?: return@runCatching null
+                        Uri.fromFile(file)
+                    }.getOrNull()
+                }
+            }
+            if (copies.isNotEmpty()) onImages(copies)
+        }
     }
 
     fun setCursorColor(color: Int) {

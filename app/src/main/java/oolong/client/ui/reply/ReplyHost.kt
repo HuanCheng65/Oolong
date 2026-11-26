@@ -244,6 +244,10 @@ fun ReplyComposer.Content(handle: @Composable () -> Unit, fill: Boolean) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val canAttachImages = target?.let { it.postId == null || it.postId == 0L } ?: true
+    // Pictures dropped on the field join the reply's, as many as it has room for
+    editor.onImages = if (canAttachImages) {
+        { uris -> viewModel.addImages(uris.take(MaxImages - viewModel.state.value.images.size).map(Uri::toString)) }
+    } else null
     ReplyComposerContent(
         replyTo = chrome.replyTo,
         editor = editor,
