@@ -111,9 +111,8 @@ abstract class AssistantFunctions : AppFunctionService() {
     }
 
     /**
-     * Searches Tieba's threads and replies for [keyword], as the search page of the app does.
-     * Useful to find people's experience and opinions on a product, game, place or event; to look
-     * in one forum, put the forum's name in the keyword.
+     * Searches Tieba's threads and replies for [keyword]: people's experience and opinions on a
+     * product, game, place or event. Putting a forum's name in the keyword narrows it to that forum.
      *
      * @param keyword The words to search for.
      * @param newestFirst Order by time, newest first, rather than by relevance; false when not given.
@@ -148,7 +147,7 @@ abstract class AssistantFunctions : AppFunctionService() {
      * Reads a thread: its first post and a page of its replies (楼层), each as text. Pictures,
      * videos and voice are named in brackets rather than included.
      *
-     * @param threadId The thread's id, as other functions return it or as in tieba.baidu.com/p/<id>.
+     * @param threadId The thread's id, as in tieba.baidu.com/p/<id>.
      * @param page Which page of replies, from 1; 1 when not given.
      * @param onlyAuthor Only the posts of the thread's author (只看楼主); false when not given.
      * @return The thread with that page of its posts.
@@ -209,7 +208,7 @@ abstract class AssistantFunctions : AppFunctionService() {
 
     /**
      * Opens a page in the app for the user to see: a thread when [threadId] is given, else a
-     * forum when [forumName] is, else a search for [keyword]. Give exactly one of them.
+     * forum when [forumName] is, else a search for [keyword].
      *
      * @param threadId A thread to open.
      * @param forumName A forum (吧) to open.

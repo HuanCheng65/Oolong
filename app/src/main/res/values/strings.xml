@@ -1047,4 +1047,5 @@
     <string name="appwidget_setup_search">输入吧名</string>
     <string name="appwidget_mix_name">热议与常逛</string>
     <string name="appwidget_mix_description">热议话题和你常逛的吧</string>
+    <string name="assistant_display_description">看热议、搜帖子、读帖子，在乌龙里打开</string>
 </resources>

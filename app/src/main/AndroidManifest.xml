@@ -102,6 +102,9 @@
                 <action android:name="android.app.appfunctions.AppFunctionService" />
             </intent-filter>
         </service>
+        <property
+            android:name="android.app.appfunctions.app_metadata"
+            android:resource="@xml/app_metadata" />
 
         <activity
             android:name=".ui.appwidget.WidgetSetupActivity"

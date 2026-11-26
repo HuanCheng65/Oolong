@@ -1070,4 +1070,5 @@
     <string name="appwidget_setup_search">Forum name</string>
     <string name="appwidget_mix_name">Topics and forums</string>
     <string name="appwidget_mix_description">Hot topics and the forums you go to</string>
+    <string name="assistant_display_description">Read hot topics, search and read threads, open them in Oolong</string>
 </resources>

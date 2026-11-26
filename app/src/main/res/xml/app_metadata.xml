@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    What the system's assistant reads about the app before choosing its functions. The library
+    reads `instructions` as plain text, so it is written out here rather than taken from strings,
+    with line breaks as &#10; since plain ones fold into spaces. `description`, the name older
+    readers look for, carries a shorter version.
+-->
+<AppFunctionAppMetadata xmlns:appfn="http://schemas.android.com/apk/androidx.appfunctions"
+    appfn:displayDescription="@string/assistant_display_description"
+    appfn:instructions="乌龙（Oolong）是百度贴吧的第三方客户端，提供贴吧内容的只读访问：热议话题（getHotTopics）、近一天的帖子榜（getTopThreads）、全站搜帖（searchThreads）、按页读取帖子正文与楼层（readThread）、某个吧的热门帖（getForumHotThreads）、用户关注的吧及今日签到情况（getFollowedForums），以及在应用中打开帖子、吧或搜索（openInApp）。&#10;用法：&#10;  - 搜索、榜单与吧热门返回的 threadId 可直接传给 readThread 读取全文；一页回复不够时传 page 继续读。&#10;  - 汇总多人看法时，先用 searchThreads 找到相关帖子，再对其中几帖调用 readThread。&#10;  - 用户要亲自查看时，用 openInApp 打开对应页面。&#10;限制：&#10;  - 只读，不能发帖、回复、点赞、关注或签到。&#10;  - 所有读取合计每分钟最多 30 次，超出会返回 AppFunctionLimitExceededException，一分钟后再试。&#10;  - 用户屏蔽的内容不会出现在结果中；读取被屏蔽的帖子会返回未找到。&#10;  - getFollowedForums 需要用户已在应用中登录。"
+    appfn:description="乌龙（Oolong）是百度贴吧的第三方客户端，提供贴吧内容的只读访问：热议话题、帖子榜、搜帖、读帖、吧热门、关注的吧，以及在应用中打开页面。" />

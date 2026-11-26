@@ -20,7 +20,7 @@ data class AssistantTopic(
 /** A thread (帖子) on Tieba. */
 @AppFunctionSerializable(isDescribedByKDoc = true)
 data class AssistantThread(
-    /** The thread's id, to read it with readThread or open it with openInApp. */
+    /** The thread's id. */
     val threadId: Long,
     /** The thread's title. */
     val title: String,
@@ -43,7 +43,7 @@ data class AssistantThread(
 /** A post that matched a search. */
 @AppFunctionSerializable(isDescribedByKDoc = true)
 data class AssistantSearchResult(
-    /** The id of the thread it is in, to read it with readThread. */
+    /** The id of the thread it is in. */
     val threadId: Long,
     /** The title of the thread it is in. */
     val title: String,
