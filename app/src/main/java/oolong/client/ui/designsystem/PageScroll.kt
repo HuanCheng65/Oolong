@@ -51,7 +51,7 @@ import kotlin.math.abs
  */
 @Stable
 class PageScrollState internal constructor() {
-    internal class Source(val scrolled: () -> Int, val scrollable: ScrollableState?) {
+    internal class Source(val scrolled: () -> Int, val scrollable: ScrollableState?, val toTop: (suspend () -> Unit)?) {
         /** Where the list starts across the page, so the page in view can be told from its neighbours. */
         var start by mutableFloatStateOf(0f)
     }
@@ -122,6 +122,11 @@ class PageScrollState internal constructor() {
 
     /** The content in view: on a page of pages, the page nearest the scaffold's start. */
     internal val inView: Source? get() = sources.minByOrNull { abs(it.start) }
+
+    /** Scrolls the content in view back to its top, as a double tap on the top bar does. */
+    suspend fun scrollToTop() {
+        inView?.toTop?.invoke()
+    }
 
     /**
      * Pixels scrolled under the bar, or null when no list reports, so the edge simply shows. While
@@ -207,12 +212,17 @@ fun rememberPageScrollState(): PageScrollState = remember { PageScrollState() }
 
 /**
  * Reports to the page's [PageScrollState] how far this scrolling content is from its top, as
- * [scrolled] pixels, and the [scrollable] that moves it, which settles a large title left halfway.
+ * [scrolled] pixels, the [scrollable] that moves it, which settles a large title left halfway, and
+ * how it goes back [toTop].
  */
 @Composable
-fun Modifier.pageScroll(scrollable: ScrollableState?, scrolled: () -> Int): Modifier {
+fun Modifier.pageScroll(
+    scrollable: ScrollableState?,
+    toTop: (suspend () -> Unit)? = null,
+    scrolled: () -> Int,
+): Modifier {
     val state = LocalPageScroll.current ?: return this
-    val source = remember(state, scrollable) { PageScrollState.Source(scrolled, scrollable) }
+    val source = remember(state, scrollable) { PageScrollState.Source(scrolled, scrollable, toTop) }
     DisposableEffect(state, source) {
         state.add(source)
         onDispose { state.remove(source) }
@@ -229,7 +239,7 @@ fun Modifier.pageScroll(scrollable: ScrollableState?, scrolled: () -> Int): Modi
 @Composable
 fun Modifier.pageScroll(state: LazyListState): Modifier {
     RegisterWithSharedHeader(state)
-    return pageScroll(state) {
+    return pageScroll(state, toTop = { state.animateScrollToItem(0) }) {
         // Item offsets start at the end of the top padding
         state.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 0 }?.let { -it.offset } ?: Int.MAX_VALUE
     }
@@ -237,13 +247,13 @@ fun Modifier.pageScroll(state: LazyListState): Modifier {
 
 /** [pageScroll] for a lazy grid, as for a lazy list. */
 @Composable
-fun Modifier.pageScroll(state: LazyGridState): Modifier = pageScroll(state) {
+fun Modifier.pageScroll(state: LazyGridState): Modifier = pageScroll(state, toTop = { state.animateScrollToItem(0) }) {
     state.layoutInfo.visibleItemsInfo.firstOrNull { it.index == 0 }?.let { -it.offset.y } ?: Int.MAX_VALUE
 }
 
 /** [pageScroll] for a scrolling column. */
 @Composable
-fun Modifier.pageScroll(state: ScrollState): Modifier = pageScroll(state) { state.value }
+fun Modifier.pageScroll(state: ScrollState): Modifier = pageScroll(state, toTop = { state.animateScrollTo(0) }) { state.value }
 
 /** [verticalScroll] that also reports to the top bar's scroll edge. */
 @Composable

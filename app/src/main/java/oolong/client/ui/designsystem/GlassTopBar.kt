@@ -57,8 +57,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.emitGlobalEvent
+import kotlinx.coroutines.launch
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.core.designsystem.theme.SmoothCornerShape
 import kotlin.math.roundToInt
@@ -201,7 +200,7 @@ fun GlassTopBar(
                         .layoutId(TopBarLayer.Foreground)
                         // Double-tapping the bar scrolls the page to its top: a touch shortcut only, so
                         // screen readers don't take the whole bar for a button that does nothing
-                        .pointerInput(Unit) { detectTapGestures(onDoubleTap = { coroutineScope.emitGlobalEvent(GlobalEvent.ScrollToTop) }) }
+                        .pointerInput(scrollEdge) { detectTapGestures(onDoubleTap = { coroutineScope.launch { scrollEdge?.scrollToTop() } }) }
                         .windowInsetsPadding(
                             statusBar.only(WindowInsetsSides.Top + WindowInsetsSides.Horizontal)
                         )

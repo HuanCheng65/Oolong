@@ -21,8 +21,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.preferredFrameRate
 import androidx.compose.ui.unit.dp
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.onGlobalEvent
 import java.util.WeakHashMap
 
 @Composable
@@ -38,9 +36,6 @@ fun MyLazyColumn(
     userScrollEnabled: Boolean = true,
     content: LazyListScope.() -> Unit,
 ) {
-    onGlobalEvent<GlobalEvent.ScrollToTop> {
-        state.animateScrollToItem(0)
-    }
     LazyColumn(
         // A list laid out from the bottom has nothing to say about its top
         modifier = (if (reverseLayout) modifier else modifier.pageScroll(state))
@@ -70,9 +65,6 @@ fun MyLazyVerticalGrid(
     userScrollEnabled: Boolean = true,
     content: LazyGridScope.() -> Unit,
 ) {
-    onGlobalEvent<GlobalEvent.ScrollToTop> {
-        state.animateScrollToItem(0)
-    }
     LazyVerticalGrid(
         columns = columns,
         modifier = (if (reverseLayout) modifier else modifier.pageScroll(state))

@@ -24,8 +24,10 @@ import androidx.compose.material.ProvideTextStyle
 import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -35,9 +37,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.emitGlobalEvent
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 
 @Composable
@@ -112,6 +113,7 @@ fun TitleCentredToolbar(
     insets: Boolean = true,
     navigationIcon: (@Composable () -> Unit)? = null,
     actions: @Composable RowScope.() -> Unit = {},
+    scrollToTop: (() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     TopAppBarContainer(
@@ -154,6 +156,7 @@ fun TitleCentredToolbar(
         },
         modifier = modifier,
         insets = insets,
+        scrollToTop = scrollToTop,
         content = content
     )
 }
@@ -217,6 +220,8 @@ fun TopAppBarContainer(
     topBar: @Composable ColumnScope.() -> Unit,
     modifier: Modifier = Modifier,
     insets: Boolean = true,
+    // What a double tap on the bar does; by default the page's content in view goes back to its top
+    scrollToTop: (() -> Unit)? = null,
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val statusBarModifier = if (insets) {
@@ -225,6 +230,8 @@ fun TopAppBarContainer(
         Modifier
     }
     val coroutineScope = rememberCoroutineScope()
+    val page = LocalPageScroll.current
+    val onDoubleTap by rememberUpdatedState(scrollToTop ?: { coroutineScope.launch { page?.scrollToTop() } })
     Column(modifier) {
         Spacer(
             modifier = statusBarModifier
@@ -235,7 +242,7 @@ fun TopAppBarContainer(
             modifier = Modifier
                 .fillMaxWidth()
                 // A touch shortcut only, as on the glass bar
-                .pointerInput(Unit) { detectTapGestures(onDoubleTap = { coroutineScope.emitGlobalEvent(GlobalEvent.ScrollToTop) }) },
+                .pointerInput(Unit) { detectTapGestures(onDoubleTap = { onDoubleTap() }) },
             content = topBar
         )
         content?.let {

@@ -321,17 +321,6 @@
     </issue>
 
     <issue
-        id="ComposableNaming"
-        message="Composable functions that return Unit should start with an uppercase letter"
-        errorLine1="inline fun &lt;reified Event : GlobalEvent> onGlobalEvent("
-        errorLine2="                                         ~~~~~~~~~~~~~">
-        <location
-            file="src/main/java/oolong/client/arch/GlobalEvent.kt"
-            line="90"
-            column="42"/>
-    </issue>
-
-    <issue
         id="ConfigurationScreenWidthHeight"
         message="Using Configuration.screenHeightDp instead of LocalWindowInfo.current.containerSize"
         errorLine1="    val maxHeight = LocalConfiguration.current.screenHeightDp.dp * 0.6f"

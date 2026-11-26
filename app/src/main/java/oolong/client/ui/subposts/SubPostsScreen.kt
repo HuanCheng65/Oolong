@@ -31,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,6 +42,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.arch.LoadStatus
 import oolong.client.data.thread.SubPostSort
@@ -102,6 +104,7 @@ fun SubPostsScreen(
     chrome: ReplyChromeState = rememberReplyChromeState(),
     reply: ReplyComposer? = null,
 ) {
+    val coroutineScope = rememberCoroutineScope()
     val deleteDialog = rememberDialogState()
     var deleting by remember { mutableStateOf<SubPost?>(null) }
     val handleEvent: (SubPostsEvent) -> Unit = { event ->
@@ -163,6 +166,8 @@ fun SubPostsScreen(
                                 Icon(imageVector = Symbols.Close, contentDescription = stringResource(id = R.string.btn_close))
                             }
                         },
+                        // The sheet's list isn't a page's, so the bar is handed it
+                        scrollToTop = { coroutineScope.launch { listState.animateScrollToItem(0) } },
                     )
                 },
                 bottomBar = replyBar,
