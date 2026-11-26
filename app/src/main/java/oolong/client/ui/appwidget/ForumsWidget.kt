@@ -67,7 +67,7 @@ class ForumsWidget : GlanceAppWidget() {
     private suspend fun load(context: Context, source: ForumsSource, fresh: Boolean): Loaded {
         val loggedIn = context.widgetEntryPoint.home().account.first().isNotEmpty()
         val content = WidgetData.forums(context, source, fresh)
-        val avatarPx = context.px(AvatarSize)
+        val avatarPx = context.px(ForumCellAvatarSize)
         val avatars = WidgetPictures.loadAll(context, content?.forums.orEmpty().map { it.avatar }, avatarPx, avatarPx, avatarPx * 0.3f)
         return Loaded(loggedIn, content, avatars)
     }
@@ -100,7 +100,7 @@ class ForumsWidget : GlanceAppWidget() {
                     ) {
                         forums.take(columns * rows).chunked(columns).forEach { line ->
                             Row(modifier = GlanceModifier.fillMaxWidth().height(CellHeight)) {
-                                line.forEach { forum -> Cell(forum, avatars.getOrNull(forums.indexOf(forum))) }
+                                line.forEach { forum -> ForumCell(forum, avatars.getOrNull(forums.indexOf(forum))) }
                                 repeat(columns - line.size) { Box(modifier = GlanceModifier.defaultWeight()) {} }
                             }
                         }
@@ -110,28 +110,8 @@ class ForumsWidget : GlanceAppWidget() {
         }
     }
 
-    @Composable
-    private fun androidx.glance.layout.RowScope.Cell(forum: ForumsContent.Item, avatar: Bitmap?) {
-        val context = LocalContext.current
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = GlanceModifier.defaultWeight().fillMaxHeight().clickable(openLink(context, WidgetLinks.forum(forum.name))),
-        ) {
-            ForumAvatar(avatar, AvatarSize, forum.signedIn, mark = 18.dp)
-            Spacer(GlanceModifier.height(4.dp))
-            Text(
-                text = forum.name,
-                style = TextStyle(color = WidgetColors.text, fontSize = 12.sp, textAlign = TextAlign.Center),
-                maxLines = 1,
-                modifier = GlanceModifier.padding(horizontal = 4.dp),
-            )
-        }
-    }
-
     internal companion object {
         val SourceKey = stringPreferencesKey("source")
-        private val AvatarSize = 48.dp
         private val CellWidth = 84.dp
         private val CellHeight = 90.dp
     }
@@ -139,4 +119,26 @@ class ForumsWidget : GlanceAppWidget() {
 
 class ForumsWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = ForumsWidget()
+}
+
+/** The size of a forum's avatar in a grid of forums. */
+internal val ForumCellAvatarSize = 48.dp
+
+@Composable
+internal fun androidx.glance.layout.RowScope.ForumCell(forum: ForumsContent.Item, avatar: Bitmap?) {
+    val context = LocalContext.current
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = GlanceModifier.defaultWeight().fillMaxHeight().clickable(openLink(context, WidgetLinks.forum(forum.name))),
+    ) {
+        ForumAvatar(avatar, ForumCellAvatarSize, forum.signedIn, mark = 18.dp)
+        Spacer(GlanceModifier.height(4.dp))
+        Text(
+            text = forum.name,
+            style = TextStyle(color = WidgetColors.text, fontSize = 12.sp, textAlign = TextAlign.Center),
+            maxLines = 1,
+            modifier = GlanceModifier.padding(horizontal = 4.dp),
+        )
+    }
 }

@@ -1045,4 +1045,6 @@
     <string name="appwidget_source_followed">关注的吧</string>
     <string name="appwidget_source_visited">最近逛的吧</string>
     <string name="appwidget_setup_search">输入吧名</string>
+    <string name="appwidget_mix_name">热议与常逛</string>
+    <string name="appwidget_mix_description">热议话题和你常逛的吧</string>
 </resources>

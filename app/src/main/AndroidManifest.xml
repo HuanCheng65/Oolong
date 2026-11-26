@@ -134,6 +134,18 @@
         </receiver>
 
         <receiver
+            android:name=".ui.appwidget.TopicsAndForumsWidgetReceiver"
+            android:exported="false"
+            android:label="@string/appwidget_mix_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_mix" />
+        </receiver>
+
+        <receiver
             android:name=".ui.appwidget.ForumsWidgetReceiver"
             android:exported="false"
             android:label="@string/appwidget_forums_name">

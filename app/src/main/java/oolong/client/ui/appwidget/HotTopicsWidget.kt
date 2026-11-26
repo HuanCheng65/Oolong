@@ -64,7 +64,7 @@ class HotTopicsWidget : GlanceAppWidget() {
     private suspend fun load(context: Context, fresh: Boolean): Loaded? {
         val content = WidgetData.topics(context, fresh)?.takeIf { it.topics.isNotEmpty() } ?: return null
         val topics = content.topics
-        val thumb = context.px(ThumbSize)
+        val thumb = context.px(TopicThumbSize)
         val thumbs = WidgetPictures.loadAll(context, topics.map { it.image }, thumb, thumb, context.px(8.dp).toFloat())
         val cover = WidgetPictures.load(context, topics.first().image, context.px(200.dp), context.px(200.dp), 0f)
         val hero = WidgetPictures.load(context, topics.first().image, context.px(360.dp), context.px(HeroHeight), 0f)
@@ -96,48 +96,9 @@ class HotTopicsWidget : GlanceAppWidget() {
 
             else -> WidgetSurface {
                 WidgetHeader(context.getString(R.string.hot_section_topics), context.clock(content.loadedAt), openLink(context, "oolong://topics"))
-                val rows = ((size.height - 28.dp - 30.dp) / RowHeight).toInt().coerceAtLeast(1)
-                topics.take(rows).forEachIndexed { index, topic -> TopicRow(index + 1, topic, thumbs.getOrNull(index), RowHeight) }
+                val rows = ((size.height - 28.dp - 30.dp) / TopicRowHeight).toInt().coerceAtLeast(1)
+                topics.take(rows).forEachIndexed { index, topic -> TopicRow(index + 1, topic, thumbs.getOrNull(index), TopicRowHeight) }
             }
-        }
-    }
-
-    @Composable
-    private fun TopicRow(rank: Int, topic: TopicsContent.Item, thumb: Bitmap?, height: androidx.compose.ui.unit.Dp) {
-        val context = LocalContext.current
-        WidgetRow(height, openLink(context, WidgetLinks.topic(topic.id, topic.name))) {
-            RankText(rank)
-            Spacer(GlanceModifier.width(8.dp))
-            WidgetPicture(thumb, ThumbSize, 8.dp)
-            Spacer(GlanceModifier.width(10.dp))
-            Row(verticalAlignment = Alignment.CenterVertically, modifier = GlanceModifier.defaultWeight()) {
-                Text(text = topic.name, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp), maxLines = 1)
-                TopicTag(topic.tag)
-            }
-            Spacer(GlanceModifier.width(8.dp))
-            Text(
-                text = topic.discussCount.getShortNumString(),
-                style = TextStyle(color = WidgetColors.textTertiary, fontSize = 12.sp),
-                maxLines = 1,
-            )
-        }
-    }
-
-    @Composable
-    private fun TopicTag(tag: HotTopic.Tag) {
-        val context = LocalContext.current
-        when (tag) {
-            HotTopic.Tag.New -> {
-                Spacer(GlanceModifier.width(6.dp))
-                WidgetTag(context.getString(R.string.topic_tag_new), WidgetColors.accent, WidgetColors.accentContainer)
-            }
-
-            HotTopic.Tag.Hot -> {
-                Spacer(GlanceModifier.width(6.dp))
-                WidgetTag(context.getString(R.string.topic_tag_hot), WidgetColors.hot, WidgetColors.hotContainer)
-            }
-
-            HotTopic.Tag.None -> {}
         }
     }
 
@@ -189,8 +150,6 @@ class HotTopicsWidget : GlanceAppWidget() {
     }
 
     private companion object {
-        val ThumbSize = 30.dp
-        val RowHeight = 39.dp
         val HeroRowHeight = 44.dp
         val HeroHeight = 180.dp
         val OnPicture = ColorProvider(Color.White)
@@ -200,4 +159,47 @@ class HotTopicsWidget : GlanceAppWidget() {
 
 class HotTopicsWidgetReceiver : GlanceAppWidgetReceiver() {
     override val glanceAppWidget: GlanceAppWidget = HotTopicsWidget()
+}
+
+/** A topic thumbnail's size, and the height of a topic's row in a list. */
+internal val TopicThumbSize = 30.dp
+internal val TopicRowHeight = 39.dp
+
+@Composable
+internal fun TopicRow(rank: Int, topic: TopicsContent.Item, thumb: Bitmap?, height: androidx.compose.ui.unit.Dp) {
+    val context = LocalContext.current
+    WidgetRow(height, openLink(context, WidgetLinks.topic(topic.id, topic.name))) {
+        RankText(rank)
+        Spacer(GlanceModifier.width(8.dp))
+        WidgetPicture(thumb, TopicThumbSize, 8.dp)
+        Spacer(GlanceModifier.width(10.dp))
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = GlanceModifier.defaultWeight()) {
+            Text(text = topic.name, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp), maxLines = 1)
+            TopicTag(topic.tag)
+        }
+        Spacer(GlanceModifier.width(8.dp))
+        Text(
+            text = topic.discussCount.getShortNumString(),
+            style = TextStyle(color = WidgetColors.textTertiary, fontSize = 12.sp),
+            maxLines = 1,
+        )
+    }
+}
+
+@Composable
+private fun TopicTag(tag: HotTopic.Tag) {
+    val context = LocalContext.current
+    when (tag) {
+        HotTopic.Tag.New -> {
+            Spacer(GlanceModifier.width(6.dp))
+            WidgetTag(context.getString(R.string.topic_tag_new), WidgetColors.accent, WidgetColors.accentContainer)
+        }
+
+        HotTopic.Tag.Hot -> {
+            Spacer(GlanceModifier.width(6.dp))
+            WidgetTag(context.getString(R.string.topic_tag_hot), WidgetColors.hot, WidgetColors.hotContainer)
+        }
+
+        HotTopic.Tag.None -> {}
+    }
 }

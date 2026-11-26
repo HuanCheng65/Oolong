@@ -101,7 +101,7 @@ class RefreshWidgetAction : ActionCallback {
             it.toMutablePreferences().apply { this[RefreshKey] = System.currentTimeMillis() }
         }
         val manager = GlanceAppWidgetManager(context)
-        val widgets: List<GlanceAppWidget> = listOf(HotTopicsWidget(), ThreadRankingWidget(), ForumHotWidget(), ForumsWidget())
+        val widgets: List<GlanceAppWidget> = listOf(HotTopicsWidget(), ThreadRankingWidget(), ForumHotWidget(), ForumsWidget(), TopicsAndForumsWidget())
         widgets.firstOrNull { glanceId in manager.getGlanceIds(it.javaClass) }?.update(context, glanceId)
     }
 }
