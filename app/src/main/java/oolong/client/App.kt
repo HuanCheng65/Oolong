@@ -78,7 +78,6 @@ class App : Application(), SingletonImageLoader.Factory {
         ClientUtils.init(this)
         AppIconUtil.setIcon()
         AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
-        updateScreenInfo()
         registerActivityLifecycleCallbacks(ThemeAndVoiceCallbacks)
         registerActivityLifecycleCallbacks(OAIDGetter)
         thread {
@@ -87,21 +86,6 @@ class App : Application(), SingletonImageLoader.Factory {
         thread { AppStorage.sweep(this@App) }
         WidgetPreviews.publishOnce(this, widgetEntryPoint.applicationScope())
         WidgetUpdates.follow(this, widgetEntryPoint.applicationScope())
-    }
-
-    override fun onConfigurationChanged(newConfig: Configuration) {
-        super.onConfigurationChanged(newConfig)
-        updateScreenInfo()
-    }
-
-    /** The screen's size and density, for what reads them outside of Compose. */
-    private fun updateScreenInfo() {
-        val metrics = resources.displayMetrics
-        ScreenInfo.EXACT_SCREEN_HEIGHT = metrics.heightPixels
-        ScreenInfo.EXACT_SCREEN_WIDTH = metrics.widthPixels
-        ScreenInfo.DENSITY = metrics.density
-        ScreenInfo.SCREEN_HEIGHT = (metrics.heightPixels / metrics.density).toInt()
-        ScreenInfo.SCREEN_WIDTH = (metrics.widthPixels / metrics.density).toInt()
     }
 
     /**
@@ -181,23 +165,6 @@ class App : Application(), SingletonImageLoader.Factory {
                 }
             }
         }
-    }
-
-    object ScreenInfo {
-        @JvmField
-        var EXACT_SCREEN_HEIGHT = 0
-
-        @JvmField
-        var EXACT_SCREEN_WIDTH = 0
-
-        @JvmField
-        var SCREEN_HEIGHT = 0
-
-        @JvmField
-        var SCREEN_WIDTH = 0
-
-        @JvmField
-        var DENSITY = 0f
     }
 
     companion object {

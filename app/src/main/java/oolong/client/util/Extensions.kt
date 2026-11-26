@@ -9,6 +9,7 @@ import android.content.Intent
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.content.res.Configuration.SCREENLAYOUT_SIZE_MASK
+import android.content.res.Resources
 import android.os.Build
 import android.view.View
 import android.view.ViewGroup
@@ -19,47 +20,37 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import oolong.client.App
 import oolong.client.ui.designsystem.AppToast
 import oolong.client.util.MD5Util
-import java.io.File
 import kotlin.math.roundToInt
 
 private val Context.scaledDensity: Float
     get() = resources.displayMetrics.scaledDensity
 
+/** The screen's density, as the system's resources have it, which need no context to read. */
+private val density: Float
+    get() = Resources.getSystem().displayMetrics.density
+
 fun Float.dpToPx(): Int =
     dpToPxFloat().roundToInt()
 
 fun Float.dpToPxFloat(): Float =
-    this * App.ScreenInfo.DENSITY + 0.5f
-
-fun Float.spToPx(context: Context = App.INSTANCE): Int =
-    (this * context.scaledDensity + 0.5f).roundToInt()
-
-fun Float.spToPxFloat(context: Context = App.INSTANCE): Float =
-    this * context.scaledDensity + 0.5f
+    this * density + 0.5f
 
 fun Float.pxToDp(): Int =
-    (this / App.ScreenInfo.DENSITY + 0.5f).roundToInt()
+    (this / density + 0.5f).roundToInt()
 
 fun Float.pxToDpFloat(): Float =
-    this / App.ScreenInfo.DENSITY + 0.5f
+    this / density + 0.5f
 
-fun Float.pxToSp(context: Context = App.INSTANCE): Int =
+fun Float.pxToSp(context: Context): Int =
     (this / context.scaledDensity + 0.5f).roundToInt()
 
 fun Int.dpToPx(): Int = this.toFloat().dpToPx()
 
-fun Int.spToPx(): Int = this.toFloat().spToPx()
-
 fun Int.pxToDp(): Int = this.toFloat().pxToDp()
 
-fun Int.pxToSp(context: Context = App.INSTANCE): Int = this.toFloat().pxToSp(context)
-
-fun Float.pxToSpFloat(): Float = this / App.INSTANCE.resources.displayMetrics.scaledDensity + 0.5f
-
-fun Int.pxToSpFloat(): Float = this.toFloat().pxToSpFloat()
+fun Int.pxToSp(context: Context): Int = this.toFloat().pxToSp(context)
 
 fun Int.pxToDpFloat(): Float =
     this.toFloat().pxToDpFloat()

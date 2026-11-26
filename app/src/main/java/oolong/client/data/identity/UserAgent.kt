@@ -1,7 +1,7 @@
 package oolong.client.data.identity
 
+import android.content.res.Resources
 import oolong.client.App
-import oolong.client.App.ScreenInfo
 
 /**
  * Used until WebView's own user agent is read: a current WebView's, which no longer names the
@@ -15,14 +15,11 @@ fun getUserAgent(appendString: String? = null): String {
     return "${App.Config.userAgent ?: defaultUserAgent}$append"
 }
 
-// ScreenInfo is only filled in once an activity starts; requests sent at startup need it earlier
-fun getScreenHeight(): Int =
-    ScreenInfo.EXACT_SCREEN_HEIGHT.takeIf { it > 0 } ?: App.INSTANCE.resources.displayMetrics.heightPixels
+// The system's resources, which hold the screen from the start, before any activity
+fun getScreenHeight(): Int = Resources.getSystem().displayMetrics.heightPixels
 
-fun getScreenWidth(): Int =
-    ScreenInfo.EXACT_SCREEN_WIDTH.takeIf { it > 0 } ?: App.INSTANCE.resources.displayMetrics.widthPixels
+fun getScreenWidth(): Int = Resources.getSystem().displayMetrics.widthPixels
 
-fun getScreenDensity(): Float =
-    ScreenInfo.DENSITY.takeIf { it > 0 } ?: App.INSTANCE.resources.displayMetrics.density
+fun getScreenDensity(): Float = Resources.getSystem().displayMetrics.density
 
 fun Boolean.booleanToString(): String = if (this) "1" else "0"

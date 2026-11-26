@@ -14,7 +14,7 @@ import java.util.Locale
 import java.util.TimeZone
 
 /**
- * Provides what legacy UI code reads from globals ([App.INSTANCE], [App.ScreenInfo])
+ * Provides what legacy UI code reads from globals ([App.INSTANCE])
  * without starting [App] itself, whose `onCreate` opens the database and syncs with the server.
  *
  * Also pins the time zone and locale, which formatted dates in screenshots depend on, and keeps
@@ -39,7 +39,6 @@ class LegacyAppRule : TestWatcher() {
         App::class.java.getDeclaredField("INSTANCE")
             .apply { isAccessible = true }
             .set(null, app)
-        App.ScreenInfo.DENSITY = context.resources.displayMetrics.density
         SingletonImageLoader.setUnsafe(
             ImageLoader.Builder(context)
                 .components {
