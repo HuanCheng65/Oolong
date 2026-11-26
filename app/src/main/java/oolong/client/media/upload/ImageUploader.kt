@@ -10,11 +10,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.runningFold
 import kotlinx.coroutines.withContext
 import okio.ByteString.Companion.toByteString
-import oolong.client.App
 import oolong.client.data.error.getErrorCode
 import oolong.client.data.error.getErrorMessage
-import oolong.client.data.settings.SettingKeys
-import oolong.client.data.settings.Settings
 import oolong.client.media.upload.PicInfo
 import oolong.client.media.upload.PicInfoItem
 import oolong.client.media.upload.UploadPicture
@@ -33,6 +30,8 @@ import java.io.RandomAccessFile
 class ImageUploader(
     private val remote: UploadRemoteDataSource,
     private val forumName: String,
+    /** Which watermark Tieba puts on the pictures: one of the PIC_WATER_TYPE_ values. */
+    private val watermarkType: String,
     private val chunkSize: Int = DEFAULT_CHUNK_SIZE
 ) {
     companion object {
@@ -94,8 +93,7 @@ class ImageUploader(
         val fileMd5 = MD5Util.toMd5(file)
         val isMultipleChunkSize = fileLength % chunkSize == 0L
         val totalChunkNum = fileLength / chunkSize + if (isMultipleChunkSize) 0 else 1
-        val picWatermarkType = Settings.of(App.INSTANCE)[SettingKeys.PicWatermarkType]
-        val watermark = when (picWatermarkType) {
+        val watermark = when (watermarkType) {
             PIC_WATER_TYPE_USER_NAME -> PictureWatermark.USER_NAME
             PIC_WATER_TYPE_FORUM_NAME -> PictureWatermark.FORUM_NAME
             else -> PictureWatermark.NONE

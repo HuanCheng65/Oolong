@@ -7,6 +7,8 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import oolong.client.arch.IoDispatcher
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.media.FileUtil
 import oolong.client.media.upload.ImageUploader
 import oolong.core.network.post.PostRemoteDataSource
@@ -45,6 +47,7 @@ class PostRepository @Inject constructor(
     private val uploads: UploadRemoteDataSource,
     private val posterName: PosterName,
     private val sentReplies: SentReplies,
+    private val settings: Settings,
     @ApplicationContext private val context: Context,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) {
@@ -75,7 +78,7 @@ class PostRepository @Inject constructor(
             val uri = it.toUri()
             if (uri.scheme == "file") uri.path.orEmpty() else FileUtil.getRealPathFromUri(context, uri)
         }
-        ImageUploader(uploads, forumName).uploadImages(paths, original).first().map { image ->
+        ImageUploader(uploads, forumName, settings[SettingKeys.PicWatermarkType]).uploadImages(paths, original).first().map { image ->
             // ImageUploader only returns results that carry picId and picInfo
             val originPic = checkNotNull(image.picInfo).originPic
             "#(pic,${image.picId},${originPic.width},${originPic.height})"

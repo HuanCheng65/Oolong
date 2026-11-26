@@ -3,9 +3,8 @@ package oolong.client.util
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
-import oolong.client.App
 
-fun isNetworkConnected(context: Context = App.INSTANCE): Boolean {
+fun isNetworkConnected(context: Context): Boolean {
     val connectivityManager =
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     val network = connectivityManager.activeNetwork ?: return false

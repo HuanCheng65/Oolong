@@ -8,7 +8,6 @@ import android.os.Build
 import android.os.ext.SdkExtensions.getExtensionVersion
 import android.provider.MediaStore
 import androidx.activity.result.contract.ActivityResultContract
-import oolong.client.App
 import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.Settings
 import oolong.client.ui.picker.ImagePickerActivity
@@ -23,8 +22,8 @@ fun isPhotoPickerAvailable(): Boolean {
     }
 }
 
-fun shouldUsePhotoPicker(): Boolean {
-    return !Settings.of(App.INSTANCE)[SettingKeys.DoNotUsePhotoPicker] && isPhotoPickerAvailable()
+fun shouldUsePhotoPicker(context: Context): Boolean {
+    return !Settings.of(context)[SettingKeys.DoNotUsePhotoPicker] && isPhotoPickerAvailable()
 }
 
 fun Intent.getClipDataUris(): List<Uri> {
@@ -51,7 +50,7 @@ fun Intent.getClipDataUris(): List<Uri> {
 /** Picks up to the given number of pictures, in the system photo picker or the app's own. */
 object PickMediasContract : ActivityResultContract<Int, List<Uri>>() {
     override fun createIntent(context: Context, input: Int): Intent {
-        if (shouldUsePhotoPicker()) {
+        if (shouldUsePhotoPicker(context)) {
             return Intent(MediaStore.ACTION_PICK_IMAGES).apply {
                 type = "image/*"
                 if (input > 1) {

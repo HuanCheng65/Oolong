@@ -93,6 +93,7 @@ fun QuotePostCard(
     keyword: String? = null,
 ) {
     val links = rememberTextLinkActions()
+    val context = LocalContext.current
     val quoteContentString = remember(quoted, links) {
         buildAnnotatedStringWithUser(
             quoted.author.id,
@@ -100,6 +101,7 @@ fun QuotePostCard(
             quoted.author.nameShow,
             quoted.content,
             links,
+            context,
         )
     }
     Column(
@@ -137,6 +139,7 @@ fun MainPostCard(
     keyword: String? = null,
 ) {
     val links = rememberTextLinkActions()
+    val context = LocalContext.current
     val titleString = remember(thread, links) {
         buildAnnotatedStringWithUser(
             thread.author.id,
@@ -144,6 +147,7 @@ fun MainPostCard(
             thread.author.nameShow,
             thread.title,
             links,
+            context,
         )
     }
     Column(
@@ -352,8 +356,9 @@ fun SearchThreadItem(
 @Composable
 private fun MatchedReply(reply: QuotedPost, keyword: String?, modifier: Modifier = Modifier) {
     val links = rememberTextLinkActions()
+    val context = LocalContext.current
     val text = remember(reply, keyword, links) {
-        buildAnnotatedStringWithUser(reply.author.id, reply.author.name, reply.author.nameShow, reply.content.around(keyword), links)
+        buildAnnotatedStringWithUser(reply.author.id, reply.author.name, reply.author.nameShow, reply.content.around(keyword), links, context)
     }
     HighlightText(
         text = text,

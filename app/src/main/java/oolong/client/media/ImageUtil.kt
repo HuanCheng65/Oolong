@@ -36,7 +36,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import oolong.client.App.Companion.INSTANCE
 import oolong.client.R
 import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.Settings
@@ -471,6 +470,7 @@ object ImageUtil {
             imageView.clearColorFilter()
         }
         val radius = getRadiusDp(imageView.context).toFloat()
+        val imageLoadSettings = imageLoadSettings(imageView.context)
         val fromNetwork = skipNetworkCheck ||
             type == LOAD_TYPE_AVATAR ||
             imageLoadSettings == SETTINGS_ALL_ORIGIN ||
@@ -540,15 +540,15 @@ object ImageUtil {
     }
 
     private fun needReverse(context: Context): Boolean {
+        val imageLoadSettings = imageLoadSettings(context)
         return if (imageLoadSettings == SETTINGS_SMART_ORIGIN &&
             NetworkUtil.isWifiConnected(context)
         ) false
         else imageLoadSettings != SETTINGS_ALL_ORIGIN
     }
 
-    @get:ImageLoadSettings
-    private val imageLoadSettings: Int
-        get() = Settings.of(INSTANCE)[SettingKeys.ImageLoadType].toInt()
+    @ImageLoadSettings
+    private fun imageLoadSettings(context: Context): Int = Settings.of(context)[SettingKeys.ImageLoadType].toInt()
 
     fun imageToBase64(inputStream: InputStream?): String? {
         if (inputStream == null) {

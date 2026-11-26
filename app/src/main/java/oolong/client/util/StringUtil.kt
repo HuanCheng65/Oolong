@@ -18,7 +18,6 @@ import androidx.compose.ui.text.TextLinkStyles
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.withLink
 import androidx.compose.ui.text.withStyle
-import oolong.client.App
 import oolong.client.data.emoticon.EmoticonManager.getEmoticonDrawable
 import oolong.client.data.emoticon.EmoticonManager.getEmoticonIdByName
 import oolong.client.data.emoticon.EmoticonSpanV2
@@ -108,7 +107,7 @@ object StringUtil {
         nickname: String?,
         color: Color = Color.Unspecified
     ): AnnotatedString {
-        val showBoth = App.isInitialized && Settings.of(context)[SettingKeys.ShowBothUsernameAndNickname]
+        val showBoth = Settings.of(context)[SettingKeys.ShowBothUsernameAndNickname]
         return buildAnnotatedString {
             if (showBoth && !nickname.isNullOrBlank() && username != nickname && username.isNotBlank()) {
                 append(nickname)
@@ -129,7 +128,7 @@ object StringUtil {
         nickname: String?,
         content: String,
         links: TextLinkActions,
-        context: Context = App.INSTANCE,
+        context: Context,
     ): AnnotatedString {
         return buildAnnotatedString {
             withLink(links.user(userId, TextLinkStyles(SpanStyle(color = currentColors(context).emphasis)))) {

@@ -65,7 +65,6 @@ import androidx.compose.ui.unit.toSize
 import androidx.compose.ui.util.fastForEachIndexed
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
-import oolong.client.App
 import oolong.client.R
 import oolong.client.data.emoticon.EmoticonUtil.emoticonString
 import oolong.client.data.settings.SettingKeys
@@ -117,8 +116,12 @@ import oolong.core.designsystem.theme.SmoothCornerShape
 import oolong.core.designsystem.theme.pressScale
 import kotlin.math.min
 
-private val ThreadImage.url: String
-    get() = ImageUtil.getUrl(App.INSTANCE, true, original, large, animated, small)
+/** The size of [image] to show in a card, as the image loading setting picks it. */
+@Composable
+private fun rememberUrl(image: ThreadImage): String {
+    val context = LocalContext.current
+    return remember(image, context) { ImageUtil.getUrl(context, true, image.original, image.large, image.animated, image.small) }
+}
 
 /** An author's name in a card: medium weight, between the title and the time. */
 @Composable
@@ -551,7 +554,7 @@ private fun ThreadMedia(
                                         .aspectRatio(1f)
                                 ) {
                                     NetworkImage(
-                                        imageUri = remember(media) { media.url },
+                                        imageUri = rememberUrl(media),
                                         contentDescription = null,
                                         modifier = Modifier.fillMaxSize(),
                                         shape = MediaShape,
@@ -597,7 +600,7 @@ private fun SinglePhoto(
         val width = if (wide) maxWidth else maxWidth * TallPhotoWidthFraction
         val height = if (wide) minOf(width / ratio, SinglePhotoMaxHeight) else minOf(width / ratio, width * 4 / 3)
         NetworkImage(
-            imageUri = remember(media) { media.url },
+            imageUri = rememberUrl(media),
             contentDescription = null,
             modifier = Modifier.size(width, height),
             shape = MediaShape,
