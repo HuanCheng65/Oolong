@@ -48,6 +48,7 @@ import oolong.client.ui.appwidget.ThreadRankingWidgetReceiver
 import oolong.client.ui.appwidget.TopicsAndForumsWidgetReceiver
 import oolong.client.ui.appwidget.WidgetPins
 import oolong.client.ui.appwidget.WidgetSetupActivity
+import oolong.client.ui.components.rememberHomeScreenPermission
 import oolong.client.ui.designsystem.BackNavigationIcon
 import oolong.client.ui.designsystem.GlassScaffold
 import oolong.client.ui.designsystem.GlassTopBar
@@ -75,6 +76,7 @@ fun WidgetsPage(navigator: Navigator = LocalNavigator.current) {
     }
     val placed by produceState(emptyList<Placed>(), shows) { value = placedWidgets(context) }
     val canPin = remember { WidgetPins.supported(context) }
+    val homeScreen = rememberHomeScreenPermission()
     GlassScaffold(
         largeTitle = true,
         backgroundColor = Color.Transparent,
@@ -108,7 +110,7 @@ fun WidgetsPage(navigator: Navigator = LocalNavigator.current) {
                                 title = stringResource(kind.label),
                                 summary = stringResource(kind.description),
                                 leadingIcon = { Preview(kind.preview) },
-                                onClick = { add(context, kind) },
+                                onClick = { homeScreen.ensure { add(context, kind) } },
                                 trailingContent = { AddPill() },
                             )
                         }

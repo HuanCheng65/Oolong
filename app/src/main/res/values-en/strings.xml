@@ -1070,6 +1070,9 @@
     <string name="appwidget_no_forums">No forums visited yet</string>
     <string name="appwidget_setup_shows">Shows</string>
     <string name="title_widgets">Home screen widgets</string>
+    <string name="button_go_to_settings">Open settings</string>
+    <string name="title_home_screen_permission">Allow home screen shortcuts</string>
+    <string name="message_home_screen_permission">Turn on Home screen shortcuts in the system\'s app permissions to put widgets and shortcuts on the home screen.</string>
     <string name="widgets_placed">On the home screen</string>
     <string name="widgets_add">Add to home screen</string>
     <string name="widgets_pin_unsupported">This launcher doesn\'t let apps add widgets; touch and hold an empty spot on the home screen to add one</string>

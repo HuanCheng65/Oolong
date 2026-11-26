@@ -105,11 +105,28 @@ object BackgroundSettings {
         if (!context.tryStart(intent)) openAppDetails(context)
     }
 
-    private fun xiaomiAutoStartOp(context: Context): State = runCatching {
+    /**
+     * Whether the app may put shortcuts and widgets on the home screen, where the system says:
+     * Xiaomi's asks for a permission of its own, and without it drops such requests silently.
+     */
+    fun homeScreenShortcuts(context: Context): State =
+        if (vendor != Vendor.Xiaomi) State.Unknown else xiaomiOp(context, XiaomiShortcutsOp)
+
+    /** Opens the app's permissions in Xiaomi's security centre, or its page in the system's settings. */
+    fun openAppPermissions(context: Context) {
+        val editor = Intent("miui.intent.action.APP_PERM_EDITOR")
+            .setPackage("com.miui.securitycenter")
+            .putExtra("extra_pkgname", context.packageName)
+        if (vendor != Vendor.Xiaomi || !context.tryStart(editor)) openAppDetails(context)
+    }
+
+    private fun xiaomiAutoStartOp(context: Context): State = xiaomiOp(context, XiaomiAutoStartOp)
+
+    private fun xiaomiOp(context: Context, op: Int): State = runCatching {
         val appOps = context.getSystemService(AppOpsManager::class.java)
         val mode = AppOpsManager::class.java
             .getMethod("checkOpNoThrow", Int::class.javaPrimitiveType, Int::class.javaPrimitiveType, String::class.java)
-            .invoke(appOps, XiaomiAutoStartOp, Process.myUid(), context.packageName) as Int
+            .invoke(appOps, op, Process.myUid(), context.packageName) as Int
         when (mode) {
             AppOpsManager.MODE_ALLOWED -> State.On
             AppOpsManager.MODE_IGNORED -> State.Off
@@ -129,4 +146,5 @@ object BackgroundSettings {
     }.getOrDefault("")
 
     private const val XiaomiAutoStartOp = 10008
+    private const val XiaomiShortcutsOp = 10017
 }

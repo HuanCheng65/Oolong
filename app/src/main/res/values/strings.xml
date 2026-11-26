@@ -1047,6 +1047,9 @@
     <string name="appwidget_no_forums">还没有逛过的吧</string>
     <string name="appwidget_setup_shows">内容</string>
     <string name="title_widgets">桌面小部件</string>
+    <string name="button_go_to_settings">去设置</string>
+    <string name="title_home_screen_permission">需要「桌面快捷方式」权限</string>
+    <string name="message_home_screen_permission">在系统的应用权限里打开「桌面快捷方式」，才能把小部件和快捷方式放到桌面。</string>
     <string name="widgets_placed">桌面上的</string>
     <string name="widgets_add">添加到桌面</string>
     <string name="widgets_pin_unsupported">当前桌面不支持从这里添加，可在桌面空白处长按添加</string>

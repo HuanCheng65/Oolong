@@ -24,6 +24,7 @@ import oolong.client.navigation.Navigator
 import oolong.client.navigation.ProvideNavigator
 import oolong.client.navigation.ThreadKey
 import oolong.client.navigation.UserProfileKey
+import oolong.client.ui.components.rememberHomeScreenPermission
 import oolong.client.ui.designsystem.ConfirmDialog
 import oolong.client.ui.designsystem.rememberDialogState
 import oolong.client.ui.thread.navigateToThread
@@ -43,6 +44,7 @@ fun ForumRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
+    val homeScreen = rememberHomeScreenPermission()
     val scaffoldState = rememberScaffoldState()
     val unfollowDialog = rememberDialogState()
 
@@ -59,7 +61,7 @@ fun ForumRoute(
             ForumEvent.OpenRule -> forum?.let { navigator.navigate(ForumRuleDetailKey(it.id)) }
             ForumEvent.Share -> shareForum(context, state.forumName)
             ForumEvent.SendToDesktop -> forum?.let {
-                coroutineScope.launch { sendToDesktop(context, it) { message -> context.toastShort(message) } }
+                homeScreen.ensure { coroutineScope.launch { sendToDesktop(context, it) { message -> context.toastShort(message) } } }
             }
             ForumEvent.FollowOrSignIn -> viewModel.followOrSignIn()
             ForumEvent.Unfollow -> unfollowDialog.show()
