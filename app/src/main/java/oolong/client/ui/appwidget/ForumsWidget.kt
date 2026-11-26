@@ -3,6 +3,7 @@ package oolong.client.ui.appwidget
 import android.content.Context
 import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
@@ -93,14 +94,16 @@ class ForumsWidget : GlanceAppWidget() {
 
                 else -> {
                     val columns = (size.width / CellWidth).toInt().coerceIn(2, 5)
-                    val rows = ((size.height - 16.dp) / CellHeight).toInt().coerceAtLeast(1)
+                    // Rows share the height, as many as fit, their avatars shrinking with them
+                    val lines = (forums.size + columns - 1) / columns
+                    val (rows, rowHeight) = fitRows(size.height - 16.dp, CellHeight, CellLeast, lines)
                     Column(
                         verticalAlignment = Alignment.CenterVertically,
                         modifier = GlanceModifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 8.dp),
                     ) {
                         forums.take(columns * rows).chunked(columns).forEach { line ->
-                            Row(modifier = GlanceModifier.fillMaxWidth().height(CellHeight)) {
-                                line.forEach { forum -> ForumCell(forum, avatars.getOrNull(forums.indexOf(forum))) }
+                            Row(modifier = GlanceModifier.fillMaxWidth().height(rowHeight)) {
+                                line.forEach { forum -> ForumCell(forum, avatars.getOrNull(forums.indexOf(forum)), rowHeight) }
                                 repeat(columns - line.size) { Box(modifier = GlanceModifier.defaultWeight()) {} }
                             }
                         }
@@ -113,7 +116,8 @@ class ForumsWidget : GlanceAppWidget() {
     internal companion object {
         val SourceKey = stringPreferencesKey("source")
         private val CellWidth = 84.dp
-        private val CellHeight = 90.dp
+        private val CellHeight = 80.dp
+        private val CellLeast = 62.dp
     }
 }
 
@@ -124,15 +128,20 @@ class ForumsWidgetReceiver : GlanceAppWidgetReceiver() {
 /** The size of a forum's avatar in a grid of forums. */
 internal val ForumCellAvatarSize = 48.dp
 
+/** A forum cell's name with the gap above it, and room around the cell. */
+private val ForumCellNameHeight = 26.dp
+
 @Composable
-internal fun androidx.glance.layout.RowScope.ForumCell(forum: ForumsContent.Item, avatar: Bitmap?) {
+internal fun androidx.glance.layout.RowScope.ForumCell(forum: ForumsContent.Item, avatar: Bitmap?, height: Dp = 80.dp) {
     val context = LocalContext.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalAlignment = Alignment.CenterVertically,
         modifier = GlanceModifier.defaultWeight().fillMaxHeight().clickable(openLink(context, WidgetLinks.forum(forum.name))),
     ) {
-        ForumAvatar(avatar, ForumCellAvatarSize, forum.signedIn, mark = 18.dp)
+        // What the name under it leaves, up to the usual size
+        val avatarSize = minOf(ForumCellAvatarSize, height - ForumCellNameHeight)
+        ForumAvatar(avatar, avatarSize, forum.signedIn, mark = minOf(18.dp, avatarSize * 0.38f))
         Spacer(GlanceModifier.height(4.dp))
         Text(
             text = forum.name,
