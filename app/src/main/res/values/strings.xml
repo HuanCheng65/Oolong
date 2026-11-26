@@ -1032,8 +1032,12 @@
     <string name="appwidget_topics_description">贴吧正在热议的话题</string>
     <string name="appwidget_ranking_description">近一天浏览最多的帖子</string>
     <string name="appwidget_ranking_note">浏览最多 · 近一天</string>
-    <string name="appwidget_forum_name">吧热门</string>
-    <string name="appwidget_forum_description">一个吧的热门帖子</string>
+    <string name="appwidget_forum_name">吧动态</string>
+    <string name="appwidget_forum_description">一个吧的最新、热门或精华帖子</string>
+    <string name="appwidget_sign">签到</string>
+    <string name="appwidget_signing">签到中</string>
+    <string name="appwidget_level">Lv.%1$d</string>
+    <string name="appwidget_replies">%1$s 回复</string>
     <string name="appwidget_forums_name">常逛的吧</string>
     <string name="appwidget_forums_description">关注的吧或最近逛的吧</string>
     <string name="appwidget_forum_title">%1$s吧</string>

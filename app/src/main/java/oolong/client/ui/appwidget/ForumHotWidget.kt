@@ -3,27 +3,38 @@ package oolong.client.ui.appwidget
 import android.appwidget.AppWidgetManager
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.graphics.Bitmap
+import android.text.format.DateFormat
+import android.text.format.DateUtils
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.glance.ColorFilter
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
+import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
+import androidx.glance.appwidget.action.ActionCallback
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.getAppWidgetState
+import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.background
+import androidx.glance.color.ColorProvider
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -36,16 +47,23 @@ import androidx.glance.layout.fillMaxSize
 import androidx.glance.layout.fillMaxWidth
 import androidx.glance.layout.height
 import androidx.glance.layout.padding
-import androidx.glance.layout.size
 import androidx.glance.layout.width
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import oolong.client.R
+import oolong.client.data.error.getErrorMessage
+import oolong.client.util.StringUtil.getShortNumString
 
-/** One forum's hot threads under the forum's name, washed in its avatar's colour as its page is. */
+/**
+ * One forum's threads under its name, washed in its avatar's colour as its page is: by default
+ * the newest, answering "what is going on there", or its hot or featured ones. Its header signs
+ * the user in to the forum, a thing done daily.
+ */
 class ForumHotWidget : GlanceAppWidget() {
     override val sizeMode = WidgetSizes.Forum
 
@@ -54,34 +72,30 @@ class ForumHotWidget : GlanceAppWidget() {
     /** Shown with the forum the user visited last, or asking for one when there is none. */
     override suspend fun providePreview(context: Context, widgetCategory: Int) {
         val name = WidgetData.standIn()?.forumName ?: context.widgetEntryPoint.home().visitedForums.first().firstOrNull()?.name
-        val loaded = name?.let { load(context, it, fresh = true) }
-        provideContent { Content(name, AppWidgetManager.INVALID_APPWIDGET_ID, Shown(loaded, loading = false)) }
+        val loaded = name?.let { load(context, it, ForumShows.Latest, fresh = true) }
+        provideContent { Content(name, AppWidgetManager.INVALID_APPWIDGET_ID, Shown(loaded, loading = false), signing = false) }
     }
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val firstName = getAppWidgetState<Preferences>(context, PreferencesGlanceStateDefinition, id)[ForumNameKey]
-        val initial = firstName?.let { load(context, it, fresh = false) }
+        val state = getAppWidgetState<Preferences>(context, PreferencesGlanceStateDefinition, id)
+        val initial = state[ForumNameKey]?.let { load(context, it, state[ShowsKey].toShows(), fresh = false) }
         val appWidgetId = GlanceAppWidgetManager(context).getAppWidgetId(id)
         provideContent {
             val name = currentState(ForumNameKey)
-            val shown = rememberShown(initial, name, currentState(RefreshKey)) { fresh -> name?.let { load(context, it, fresh) } }
-            Content(name, appWidgetId, shown)
+            val shows = currentState(ShowsKey).toShows()
+            val shown = rememberShown(initial, name, shows, currentState(RefreshKey)) { fresh -> name?.let { load(context, it, shows, fresh) } }
+            Content(name, appWidgetId, shown, signing = currentState(SigningKey) == true)
         }
     }
 
-    private class Loaded(val content: ForumContent, val thumbs: List<Bitmap?>, val avatar: Bitmap?, val wash: Bitmap?)
+    internal class Loaded(val content: ForumContent, val shows: ForumShows, val thumbs: List<Bitmap?>, val avatar: Bitmap?, val wash: Bitmap?)
 
-    private suspend fun load(context: Context, name: String, fresh: Boolean): Loaded? {
-        val content = WidgetData.forum(context, name, fresh) ?: return null
-        val thumb = context.px(ThumbSize)
-        val thumbs = WidgetPictures.loadAll(context, content.threads.map { it.image }, thumb, thumb, context.px(9.dp).toFloat())
-        val avatarPx = context.px(AvatarSize)
-        val avatar = WidgetPictures.load(context, content.avatar, avatarPx, avatarPx, avatarPx * 0.3f)
-        return Loaded(content, thumbs, avatar, WidgetPictures.wash(avatar, context.px(WashHeight)))
-    }
-
+    /**
+     * Draws the widget for [name] showing [shows], as the setup page previews it; [appWidgetId]
+     * is the widget's, or [AppWidgetManager.INVALID_APPWIDGET_ID] for none.
+     */
     @Composable
-    private fun Content(name: String?, appWidgetId: Int, shown: Shown<Loaded>) {
+    internal fun Content(name: String?, appWidgetId: Int, shown: Shown<Loaded>, signing: Boolean) {
         val context = LocalContext.current
         val size = LocalSize.current
         val loaded = shown.value
@@ -96,28 +110,28 @@ class ForumHotWidget : GlanceAppWidget() {
 
             else -> Box(modifier = GlanceModifier.fillMaxSize()) {
                 val (content, thumbs) = loaded.content to loaded.thumbs
-                val (avatar, wash) = loaded.avatar to loaded.wash
+                val narrow = size.width < 200.dp
                 WidgetSurface(padded = false) {}
-                if (wash != null) {
+                if (loaded.wash != null) {
                     Image(
-                        ImageProvider(wash),
+                        ImageProvider(loaded.wash),
                         contentDescription = null,
                         contentScale = ContentScale.FillBounds,
                         modifier = GlanceModifier.fillMaxWidth().height(WashHeight).widgetCorners(),
                     )
                 }
-                Column(modifier = GlanceModifier.fillMaxSize().padding(horizontal = WidgetPadding, vertical = 12.dp)) {
-                    Header(content, avatar)
-                    val narrow = size.width < 200.dp
+                Column(modifier = GlanceModifier.fillMaxSize().padding(horizontal = if (narrow) 14.dp else WidgetPadding, vertical = 12.dp)) {
+                    Header(content, loaded.avatar, signing, narrow)
                     val (rows, rowHeight) = fitRows(
                         size.height - 24.dp - HeaderHeight,
                         if (narrow) NarrowRowHeight else RowHeight,
                         if (narrow) NarrowRowLeast else RowLeast,
                         content.threads.size,
                     )
+                    val latest = loaded.shows == ForumShows.Latest
                     Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
                         content.threads.take(rows).forEachIndexed { index, thread ->
-                            if (narrow) NarrowRow(thread) else ThreadRow(thread, thumbs.getOrNull(index), rowHeight)
+                            if (narrow) NarrowRow(thread, latest) else ThreadRow(thread, latest, thumbs.getOrNull(index), rowHeight)
                         }
                     }
                 }
@@ -126,81 +140,200 @@ class ForumHotWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun Header(content: ForumContent, avatar: Bitmap?) {
+    private fun Header(content: ForumContent, avatar: Bitmap?, signing: Boolean, narrow: Boolean) {
         val context = LocalContext.current
         Row(
             verticalAlignment = Alignment.CenterVertically,
             modifier = GlanceModifier.fillMaxWidth().height(HeaderHeight).clickable(openLink(context, WidgetLinks.forum(content.name))),
         ) {
-            ForumAvatar(avatar, AvatarSize, content.signedIn, mark = 14.dp)
+            WidgetPicture(avatar, if (narrow) NarrowAvatarSize else AvatarSize, radius = (if (narrow) NarrowAvatarSize else AvatarSize) * 0.3f)
             Spacer(GlanceModifier.width(8.dp))
-            Column {
-                Text(
-                    text = context.getString(R.string.appwidget_forum_title, content.name),
-                    style = TextStyle(color = WidgetColors.text, fontSize = 15.sp, fontWeight = FontWeight.Bold),
-                    maxLines = 1,
-                )
-                Text(text = context.getString(R.string.tab_forum_hot), style = TextStyle(color = WidgetColors.textSecondary, fontSize = 11.5.sp), maxLines = 1)
+            Text(
+                text = context.getString(R.string.appwidget_forum_title, content.name),
+                style = TextStyle(color = WidgetColors.text, fontSize = 15.sp, fontWeight = FontWeight.Bold),
+                maxLines = 1,
+                modifier = GlanceModifier.defaultWeight(),
+            )
+            // Only a followed forum can be signed in to; the level shows once it is
+            if (content.liked && content.id != 0L) {
+                Spacer(GlanceModifier.width(6.dp))
+                when {
+                    content.signedIn -> {
+                        if (!narrow && content.level > 0) {
+                            Text(
+                                text = context.getString(R.string.appwidget_level, content.level),
+                                style = TextStyle(color = WidgetColors.textTertiary, fontSize = 12.sp, fontWeight = FontWeight.Medium),
+                                maxLines = 1,
+                            )
+                            Spacer(GlanceModifier.width(6.dp))
+                        }
+                        Pill(if (narrow) "✓" else context.getString(R.string.tip_signed) + " ✓", filled = false)
+                    }
+
+                    signing -> Pill(context.getString(R.string.appwidget_signing), filled = false)
+
+                    else -> Pill(
+                        context.getString(R.string.appwidget_sign),
+                        filled = true,
+                        onClick = actionRunCallback<SignForumAction>(actionParametersOf(ForumIdParam to content.id, ForumNameParam to content.name)),
+                    )
+                }
             }
         }
     }
 
     @Composable
-    private fun ColumnScope.ThreadRow(thread: ForumContent.Item, thumb: Bitmap?, height: Dp) {
+    private fun Pill(text: String, filled: Boolean, onClick: androidx.glance.action.Action? = null) {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = GlanceModifier
+                .height(26.dp)
+                .background(ImageProvider(if (filled) R.drawable.appwidget_chip_filled else R.drawable.appwidget_chip_tonal))
+                .padding(horizontal = 11.dp)
+                .then(onClick?.let { GlanceModifier.clickable(it) } ?: GlanceModifier),
+        ) {
+            Text(
+                text = text,
+                style = TextStyle(color = if (filled) OnAccent else WidgetColors.accent, fontSize = 12.sp, fontWeight = FontWeight.Medium),
+                maxLines = 1,
+            )
+        }
+    }
+
+    @Composable
+    private fun ColumnScope.ThreadRow(thread: ForumContent.Item, latest: Boolean, thumb: Bitmap?, height: Dp) {
         val context = LocalContext.current
         WidgetRow(openLink(context, WidgetLinks.thread(thread.id))) {
             Column(modifier = GlanceModifier.defaultWeight()) {
                 Text(text = thread.title, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp, fontWeight = FontWeight.Medium), maxLines = 1)
-                Replies(thread.replies)
+                Row {
+                    // Among the newest, when comes first, in the accent while it is under an hour old
+                    if (latest && thread.time > 0) {
+                        Text(text = context.threadTime(thread.time), style = TextStyle(color = timeColor(thread.time), fontSize = 12.sp), maxLines = 1)
+                        Text(text = " · ", style = TextStyle(color = WidgetColors.textSecondary, fontSize = 12.sp), maxLines = 1)
+                    }
+                    val replies = context.getString(R.string.appwidget_replies, thread.replies.getShortNumString())
+                    val rest = if (thread.author.isEmpty()) replies else "${thread.author} · $replies"
+                    Text(text = rest, style = TextStyle(color = WidgetColors.textSecondary, fontSize = 12.sp), maxLines = 1)
+                }
             }
             if (thread.image.isNotEmpty()) {
                 Spacer(GlanceModifier.width(12.dp))
-                WidgetPicture(thumb, minOf(ThumbSize, height - 6.dp), 9.dp)
+                WidgetPicture(thumb, minOf(ThumbSize, height - 8.dp), 8.dp)
             }
         }
     }
 
     @Composable
-    private fun ColumnScope.NarrowRow(thread: ForumContent.Item) {
+    private fun ColumnScope.NarrowRow(thread: ForumContent.Item, latest: Boolean) {
         val context = LocalContext.current
         Column(
             verticalAlignment = Alignment.CenterVertically,
             modifier = GlanceModifier.fillMaxWidth().defaultWeight().clickable(openLink(context, WidgetLinks.thread(thread.id))),
         ) {
-            Text(text = thread.title, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp, fontWeight = FontWeight.Medium), maxLines = 2)
-            Replies(thread.replies)
-        }
-    }
-
-    @Composable
-    private fun Replies(count: Int) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Image(
-                ImageProvider(R.drawable.appwidget_replies),
-                contentDescription = null,
-                colorFilter = ColorFilter.tint(WidgetColors.textTertiary),
-                modifier = GlanceModifier.size(13.dp),
-            )
-            Spacer(GlanceModifier.width(4.dp))
-            Text(text = count.toString(), style = TextStyle(color = WidgetColors.textSecondary, fontSize = 12.sp), maxLines = 1)
+            Text(text = thread.title, style = TextStyle(color = WidgetColors.text, fontSize = 13.5.sp, fontWeight = FontWeight.Medium), maxLines = 2)
+            if (latest && thread.time > 0) {
+                Text(text = context.threadTime(thread.time), style = TextStyle(color = timeColor(thread.time), fontSize = 12.sp), maxLines = 1)
+            } else {
+                Text(
+                    text = context.getString(R.string.appwidget_replies, thread.replies.getShortNumString()),
+                    style = TextStyle(color = WidgetColors.textSecondary, fontSize = 12.sp),
+                    maxLines = 1,
+                )
+            }
         }
     }
 
     internal companion object {
         val ForumNameKey = stringPreferencesKey("forum_name")
-        private val ThumbSize = 42.dp
-        private val AvatarSize = 34.dp
-        private val HeaderHeight = 44.dp
+        val ShowsKey = stringPreferencesKey("forum_shows")
+
+        /** Set while the header's sign-in runs, so it says so. */
+        internal val SigningKey = booleanPreferencesKey("forum_signing")
+
+        internal val ForumIdParam = ActionParameters.Key<Long>("forum_id")
+        internal val ForumNameParam = ActionParameters.Key<String>("forum_name")
+
+        private val ThumbSize = 40.dp
+        private val AvatarSize = 30.dp
+        private val NarrowAvatarSize = 26.dp
+        private val HeaderHeight = 36.dp
         private val RowHeight = 48.dp
         private val RowLeast = 42.dp
-        private val NarrowRowHeight = 66.dp
-        private val NarrowRowLeast = 60.dp
+        private val NarrowRowHeight = 62.dp
+        private val NarrowRowLeast = 56.dp
         private val WashHeight = 110.dp
+        private val OnAccent = ColorProvider(day = androidx.compose.ui.graphics.Color.White, night = androidx.compose.ui.graphics.Color.White)
+
+        /** How fresh a thread's time counts as new, shown in the accent. */
+        private const val NewWithinMillis = DateUtils.HOUR_IN_MILLIS
+
+        fun String?.toShows(): ForumShows = ForumShows.entries.firstOrNull { it.name == this } ?: ForumShows.Latest
 
         fun setupIntent(context: Context, appWidgetId: Int): Intent =
             Intent(context, WidgetSetupActivity::class.java)
                 .putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+
+        /** [content] with its pictures and its avatar's wash, ready to draw. */
+        suspend fun load(context: Context, name: String, shows: ForumShows, fresh: Boolean): Loaded? {
+            val content = WidgetData.forum(context, name, shows, fresh) ?: return null
+            val thumb = context.px(ThumbSize)
+            val thumbs = WidgetPictures.loadAll(context, content.threads.map { it.image }, thumb, thumb, context.px(8.dp).toFloat())
+            val avatarPx = context.px(AvatarSize)
+            val avatar = WidgetPictures.load(context, content.avatar, avatarPx, avatarPx, avatarPx * 0.3f)
+            // Softer on a dark surface, where the full wash turns muddy
+            val night = context.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+            val wash = WidgetPictures.wash(avatar, context.px(WashHeight), if (night) 0.18f else 0.30f)
+            return Loaded(content, shows, thumbs, avatar, wash)
+        }
+
+        /**
+         * When a thread was last active: the time of day today, as a widget is not redrawn each
+         * minute and "3 minutes ago" would go stale; the date before.
+         */
+        private fun Context.threadTime(seconds: Long): String {
+            val millis = seconds * 1000
+            return if (DateUtils.isToday(millis)) DateFormat.getTimeFormat(this).format(millis)
+            else DateUtils.getRelativeTimeSpanString(millis, System.currentTimeMillis(), DateUtils.DAY_IN_MILLIS, DateUtils.FORMAT_ABBREV_RELATIVE).toString()
+        }
+
+        private fun timeColor(seconds: Long) =
+            if (System.currentTimeMillis() - seconds * 1000 < NewWithinMillis) WidgetColors.accent else WidgetColors.textSecondary
+    }
+}
+
+/** Signs in to the forum a forum widget shows, from its header, and draws the widget again. */
+class SignForumAction : ActionCallback {
+    override suspend fun onAction(context: Context, glanceId: GlanceId, parameters: ActionParameters) {
+        val id = parameters[ForumHotWidget.ForumIdParam] ?: return
+        val name = parameters[ForumHotWidget.ForumNameParam] ?: return
+        val widget = ForumHotWidget()
+        setSigning(context, glanceId, true)
+        widget.update(context, glanceId)
+        val entry = context.widgetEntryPoint
+        val result = runCatching {
+            val tbs = entry.accounts().current.value?.tbs ?: throw IllegalStateException(context.getString(R.string.text_login_first))
+            entry.sign().sign(id, name, tbs)
+        }
+        // Loaded again, the forum comes back signed in, with its level
+        setSigning(context, glanceId, false)
+        widget.update(context, glanceId)
+        result
+            .onSuccess { entry.followedForums().changed() }
+            .onFailure { e ->
+                val message = if (e is IllegalStateException) e.message.orEmpty() else e.getErrorMessage(context)
+                withContext(Dispatchers.Main) { Toast.makeText(context, message, Toast.LENGTH_SHORT).show() }
+            }
+    }
+
+    private suspend fun setSigning(context: Context, glanceId: GlanceId, signing: Boolean) {
+        updateAppWidgetState(context, PreferencesGlanceStateDefinition, glanceId) {
+            it.toMutablePreferences().apply {
+                if (signing) this[ForumHotWidget.SigningKey] = true else remove(ForumHotWidget.SigningKey)
+                if (!signing) this[RefreshKey] = System.currentTimeMillis()
+            }
+        }
     }
 }
 

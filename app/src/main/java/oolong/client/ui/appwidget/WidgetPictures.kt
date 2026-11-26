@@ -46,14 +46,14 @@ internal object WidgetPictures {
      * A wash for the top of a widget about a forum, in the forum avatar's own colour fading
      * down to nothing, as the forum page's header has. Null when [avatar] has no colour to give.
      */
-    fun wash(avatar: Bitmap?, height: Int): Bitmap? {
+    fun wash(avatar: Bitmap?, height: Int, alpha: Float = 0.30f): Bitmap? {
         val swatch = avatar?.let { Palette.from(it).generate() }?.let { it.vibrantSwatch ?: it.dominantSwatch } ?: return null
         val color = swatch.rgb
         val bitmap = createBitmap(4, height)
         val paint = Paint().apply {
             shader = LinearGradient(
                 0f, 0f, 0f, height.toFloat(),
-                ColorUtils.setAlphaComponent(color, (255 * 0.30f).roundToInt()),
+                ColorUtils.setAlphaComponent(color, (255 * alpha).roundToInt()),
                 ColorUtils.setAlphaComponent(color, 0),
                 Shader.TileMode.CLAMP,
             )

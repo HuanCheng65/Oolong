@@ -10,6 +10,7 @@ import android.graphics.Shader
 import android.graphics.Typeface
 import oolong.client.model.HotTopic
 import oolong.client.ui.appwidget.ForumContent
+import oolong.client.ui.appwidget.ForumShows
 import oolong.client.ui.appwidget.ForumsContent
 import oolong.client.ui.appwidget.RankingContent
 import oolong.client.ui.appwidget.TopicsContent
@@ -55,19 +56,29 @@ internal object WidgetSamples : WidgetData.StandIn {
         ),
     )
 
-    override fun forum(name: String) = ForumContent(
+    override fun forum(name: String, shows: ForumShows) = ForumContent(
         loadedAt = loadedAt,
         name = name,
         avatar = "sample:avatar:$name",
-        signedIn = true,
+        signedIn = false,
+        id = 1,
+        liked = true,
+        level = 9,
         threads = listOf(
-            ForumContent.Item(1, "本周主题：雨天的街道", 170, "sample:forum:1"),
-            ForumContent.Item(2, "老镜头转接新机身的一些体会", 714, "sample:forum:2"),
-            ForumContent.Item(3, "清晨的菜市场，烟火气", 183, "sample:forum:3"),
-            ForumContent.Item(4, "后期调色前后对比", 96, "sample:forum:4"),
-            ForumContent.Item(5, "新人报到，请多指教", 52, ""),
+            ForumContent.Item(1, "本周主题：雨天的街道", 170, "sample:forum:1", "光与影", seconds(9, 38)),
+            ForumContent.Item(2, "老镜头转接新机身的一些体会", 714, "sample:forum:2", "镜头收藏家", seconds(9, 23)),
+            ForumContent.Item(3, "清晨的菜市场，烟火气", 183, "sample:forum:3", "早起的人", seconds(7, 40)),
+            ForumContent.Item(4, "后期调色前后对比", 96, "sample:forum:4", "调色板", seconds(7, 2)),
+            ForumContent.Item(5, "新人报到，请多指教", 52, "", "初来乍到", seconds(6, 15)),
         ),
     )
+
+    /** A time of today, in seconds, so the forum's threads read as active today. */
+    private fun seconds(hour: Int, minute: Int) = java.util.Calendar.getInstance().apply {
+        set(java.util.Calendar.HOUR_OF_DAY, hour)
+        set(java.util.Calendar.MINUTE, minute)
+        set(java.util.Calendar.SECOND, 0)
+    }.timeInMillis / 1000
 
     override fun forums() = ForumsContent(
         loadedAt,

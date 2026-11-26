@@ -1055,8 +1055,12 @@
     <string name="appwidget_topics_description">What Tieba is talking about</string>
     <string name="appwidget_ranking_description">The most read threads of the last day</string>
     <string name="appwidget_ranking_note">Most read · last day</string>
-    <string name="appwidget_forum_name">Forum hot threads</string>
-    <string name="appwidget_forum_description">The hot threads of one forum</string>
+    <string name="appwidget_forum_name">Forum</string>
+    <string name="appwidget_forum_description">One forum\'s latest, hot or featured threads</string>
+    <string name="appwidget_sign">Sign in</string>
+    <string name="appwidget_signing">Signing in</string>
+    <string name="appwidget_level">Lv.%1$d</string>
+    <string name="appwidget_replies">%1$s replies</string>
     <string name="appwidget_forums_name">Your forums</string>
     <string name="appwidget_forums_description">The forums you follow or visited lately</string>
     <string name="appwidget_forum_title">%1$s</string>

@@ -4,5 +4,8 @@
     <color name="colorSplashBg">#000</color>
 
     <!-- A widget's surface, as WidgetColors.surface -->
+    <!-- A widget's accent and the tint behind accent text, as WidgetColors.accent and accentContainer -->
+    <color name="appwidget_accent">#FF5588D7</color>
+    <color name="appwidget_accent_container">#2E5588D7</color>
     <color name="appwidget_surface">#FF1F2227</color>
 </resources>
