@@ -98,7 +98,9 @@ android {
                 storePassword = keystoreProperties.getProperty("keystore.password")
                 keyAlias = keystoreProperties.getProperty("keystore.key.alias")
                 keyPassword = keystoreProperties.getProperty("keystore.key.password")
-                enableV1Signing = true
+                // Android 7.0, the oldest the app runs on, checks v2 and later;
+                // v1 only adds a digest of every file
+                enableV1Signing = false
                 enableV2Signing = true
                 enableV3Signing = true
                 enableV4Signing = true
