@@ -89,6 +89,7 @@ import coil3.memory.MemoryCache
 import coil3.request.ImageRequest
 import com.github.panpf.zoomimage.CoilZoomAsyncImage
 import com.github.panpf.zoomimage.CoilZoomState
+import com.github.panpf.zoomimage.compose.zoom.mouseZoom
 import com.github.panpf.zoomimage.rememberCoilZoomState
 import com.github.panpf.zoomimage.util.IntSizeCompat
 import com.github.panpf.zoomimage.zoom.Edge
@@ -511,11 +512,12 @@ private fun Photo(
         CoilZoomAsyncImage(
             model = request,
             contentDescription = null,
+            // A mouse wheel zooms, as pinching does
             modifier = if (column < container.width) {
                 Modifier.fillMaxHeight().width(with(LocalDensity.current) { column.toDp() })
             } else {
                 Modifier.fillMaxSize()
-            },
+            }.mouseZoom(zoomState.zoomable),
             zoomState = zoomState,
             onTap = { onTap(it) },
             onLongPress = { onLongPress(it) },
