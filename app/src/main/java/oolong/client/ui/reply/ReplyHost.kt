@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
@@ -12,7 +13,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.geometry.Rect
@@ -20,7 +20,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.debounce
@@ -28,10 +27,9 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.arch.GlobalEvent
-import oolong.client.arch.emitGlobalEvent
-import oolong.client.arch.onGlobalEvent
 import oolong.client.data.post.ReplyTarget
 import oolong.client.data.settings.appPreferences
+import oolong.client.media.PickMediasContract
 import oolong.client.ui.editor.EditRequest
 import oolong.client.ui.editor.EditorPlace
 import oolong.client.ui.editor.LocalImageEditor
@@ -58,10 +56,12 @@ class ReplyComposer internal constructor(
     internal var subPostAuthor by mutableStateOf<Pair<String, String>?>(null)
     internal var tbs: String? = null
     internal var showNotice by mutableStateOf(context.appPreferences.postOrReplyWarning)
-    internal val imagePickerId = UUID.randomUUID().toString()
 
     /** Opens the editor on the attached picture at an index. */
     internal var editImage: (Int) -> Unit = {}
+
+    /** Picks up to this many pictures to attach. */
+    internal var pickImages: (Int) -> Unit = {}
 
     /** Where each attached picture's thumbnail is, in the window. */
     internal val thumbnails = mutableStateMapOf<Int, Rect>()
@@ -100,7 +100,7 @@ class ReplyComposer internal constructor(
         chrome.close()
     }
 
-    internal fun onEvent(event: ReplyComposerEvent, coroutine: CoroutineScope) {
+    internal fun onEvent(event: ReplyComposerEvent) {
         val state = viewModel.state.value
         when (event) {
             ReplyComposerEvent.ReplyToThread -> {
@@ -121,9 +121,7 @@ class ReplyComposer internal constructor(
                 viewModel.switchPanel(event.panel)
             }
 
-            ReplyComposerEvent.PickImages -> coroutine.emitGlobalEvent(
-                GlobalEvent.StartSelectImages(imagePickerId, MaxImages - state.images.size)
-            )
+            ReplyComposerEvent.PickImages -> pickImages(MaxImages - state.images.size)
 
             is ReplyComposerEvent.RemoveImage -> viewModel.removeImage(event.index)
             is ReplyComposerEvent.EditImage -> editImage(event.index)
@@ -198,7 +196,10 @@ fun rememberReplyComposer(
             }
         }
     }
-    val coroutineScope = rememberCoroutineScope()
+    val picker = rememberLauncherForActivityResult(PickMediasContract) { uris ->
+        viewModel.addImages(uris.map(Uri::toString))
+    }
+    composer.pickImages = picker::launch
 
     // Keyboard up when the composer opens, down when it closes
     LaunchedEffect(composer) {
@@ -234,9 +235,6 @@ fun rememberReplyComposer(
             }
         }
     }
-    onGlobalEvent<GlobalEvent.SelectedImages>(coroutineScope, filter = { it.id == composer.imagePickerId }) {
-        viewModel.addImages(it.images.map(Uri::toString))
-    }
     return composer
 }
 
@@ -244,7 +242,6 @@ fun rememberReplyComposer(
 @Composable
 fun ReplyComposer.Content(handle: @Composable () -> Unit, fill: Boolean) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     val canAttachImages = target?.let { it.postId == null || it.postId == 0L } ?: true
     ReplyComposerContent(
@@ -256,7 +253,7 @@ fun ReplyComposer.Content(handle: @Composable () -> Unit, fill: Boolean) {
         showNotice = showNotice,
         hasTail = !context.appPreferences.littleTail.isNullOrBlank(),
         canAttachImages = canAttachImages,
-        onEvent = { onEvent(it, coroutineScope) },
+        onEvent = ::onEvent,
         handle = handle,
         onThumbnailPlaced = { index, bounds -> thumbnails[index] = bounds },
     )

@@ -90,9 +90,6 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 import oolong.client.arch.AppContent
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.emitGlobalEvent
-import oolong.client.arch.onGlobalEvent
 import oolong.client.background.notify.JobServiceUtil
 import oolong.client.background.notify.NotifyJobService
 import oolong.client.background.sign.AutoSign
@@ -110,8 +107,6 @@ import oolong.client.data.settings.rememberPreferenceAsMutableState
 import oolong.client.diagnostics.CrashLogs
 import oolong.client.diagnostics.CrashReports
 import oolong.client.diagnostics.UsageStats
-import oolong.client.media.PickMediasRequest
-import oolong.client.media.registerPickMediasLauncher
 import oolong.client.navigation.AppNavDisplay
 import oolong.client.navigation.BackStackNavigator
 import oolong.client.navigation.CrashLogsKey
@@ -128,8 +123,6 @@ import oolong.client.navigation.toDeepLinkKey
 import oolong.client.navigation.transition.PageMorphHost
 import oolong.client.ui.components.CopySheetHost
 import oolong.client.ui.components.CopySheets
-import oolong.client.ui.components.LaunchActivityForResult
-import oolong.client.ui.components.LaunchActivityRequest
 import oolong.client.ui.components.LocalCopySheets
 import oolong.client.ui.components.LocalNow
 import oolong.client.ui.components.rememberMinuteClock
@@ -159,7 +152,6 @@ import oolong.client.ui.settings.theme.redrawOutdatedWallpaper
 import oolong.client.ui.settings.theme.rememberWallpaperDim
 import oolong.client.ui.settings.theme.repairWallpaper
 import oolong.client.util.PermissionUtils
-import oolong.client.util.TiebaUtil
 import oolong.client.util.isIgnoringBatteryOptimizations
 import oolong.client.util.newIntentFilter
 import oolong.client.util.requestIgnoreBatteryOptimizations
@@ -194,17 +186,6 @@ class MainActivity : AppCompatActivity() {
 
     private val notificationCountFlow: MutableSharedFlow<Int> =
         MutableSharedFlow(replay = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
-
-    private val pickMediasLauncher =
-        registerPickMediasLauncher {
-            lifecycleScope.emitGlobalEvent(GlobalEvent.SelectedImages(it.id, it.uris))
-        }
-
-    private val mLaunchActivityForResultLauncher = registerForActivityResult(
-        LaunchActivityForResult()
-    ) {
-        lifecycleScope.emitGlobalEvent(GlobalEvent.ActivityResult(it.requesterId, it.resultCode, it.intent))
-    }
 
     private val devicePostureFlow: StateFlow<DevicePosture> by lazy {
         WindowInfoTracker.getOrCreate(this)
@@ -339,13 +320,6 @@ class MainActivity : AppCompatActivity() {
         window.setBackgroundDrawable(0.toDrawable())
         lifecycleScope.launch {
             ClientUtils.setActiveTimestamp()
-        }
-        // Once per activity: called from Content, these would add a listener on every recomposition
-        lifecycleScope.onGlobalEvent<GlobalEvent.StartSelectImages> {
-            pickMediasLauncher.launch(PickMediasRequest(it.id, it.maxCount))
-        }
-        lifecycleScope.onGlobalEvent<GlobalEvent.StartActivityForResult> {
-            mLaunchActivityForResultLauncher.launch(LaunchActivityRequest(it.requesterId, it.intent))
         }
         // A recreated activity restores its pages, the linked one among them
         if (savedInstanceState == null) intent?.let { checkIntent(it) }

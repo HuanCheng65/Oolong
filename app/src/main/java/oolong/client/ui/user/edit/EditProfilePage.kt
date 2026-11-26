@@ -45,12 +45,10 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil3.compose.AsyncImage
 import kotlinx.collections.immutable.persistentListOf
 import oolong.client.R
 import oolong.client.arch.LoadStatus
 import oolong.client.media.PickMediasContract
-import oolong.client.media.PickMediasRequest
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
 import oolong.client.ui.components.ErrorScreen
@@ -119,14 +117,14 @@ private fun rememberPortraitPicker(avatar: () -> Rect?, onPicked: (File) -> Unit
     val context = LocalContext.current
     val cropped = remember(context) { File(context.cacheDir, "cropped_portrait") }
     val editor = LocalImageEditor.current
-    val pickLauncher = rememberLauncherForActivityResult(PickMediasContract) { (_, uris) ->
+    val pickLauncher = rememberLauncherForActivityResult(PickMediasContract) { uris ->
         val source = uris.firstOrNull() ?: return@rememberLauncherForActivityResult
         val back = { written: Boolean -> avatar()?.takeIf { written }?.let { EditorPlace(it, round = true) } }
         editor?.open(CropRequest(source, cropped, aspect = 1f, round = true), back = back) { written ->
             if (written) onPicked(cropped)
         }
     }
-    return { pickLauncher.launch(PickMediasRequest()) }
+    return { pickLauncher.launch(1) }
 }
 
 /** The editing page: the profile card under a bar with save, or placeholders while it loads. */

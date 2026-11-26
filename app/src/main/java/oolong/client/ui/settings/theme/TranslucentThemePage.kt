@@ -68,7 +68,6 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.media.PickMediasContract
-import oolong.client.media.PickMediasRequest
 import oolong.client.model.Agree
 import oolong.client.model.Post
 import oolong.client.model.PostContent
@@ -500,7 +499,7 @@ private fun ApplyButton(enabled: Boolean, onClick: () -> Unit) {
 private fun rememberWallpaperPicker(output: File, onPicked: () -> Unit): () -> Unit {
     val context = LocalContext.current
     val editor = LocalImageEditor.current
-    val pickLauncher = rememberLauncherForActivityResult(PickMediasContract) { (_, uris) ->
+    val pickLauncher = rememberLauncherForActivityResult(PickMediasContract) { uris ->
         val picked = uris.firstOrNull() ?: return@rememberLauncherForActivityResult
         val metrics = context.resources.displayMetrics
         val request = CropRequest(
@@ -512,5 +511,5 @@ private fun rememberWallpaperPicker(output: File, onPicked: () -> Unit): () -> U
         )
         editor?.open(request) { written -> if (written) onPicked() }
     }
-    return { pickLauncher.launch(PickMediasRequest()) }
+    return { pickLauncher.launch(1) }
 }

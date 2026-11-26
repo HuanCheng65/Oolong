@@ -32,9 +32,9 @@ import oolong.client.ui.designsystem.ContextMenuItem
 import oolong.client.ui.designsystem.rememberSaveableWebViewState
 import oolong.client.ui.designsystem.rememberWebViewNavigator
 import oolong.client.ui.designsystem.theme.Symbols
-import oolong.client.ui.webview.MyWebChromeClient
 import oolong.client.ui.webview.MyWebViewClient
 import oolong.client.ui.webview.WebPageScaffold
+import oolong.client.ui.webview.rememberWebChromeClient
 import oolong.client.util.StringUtil
 import oolong.core.designsystem.theme.Motion
 
@@ -103,7 +103,7 @@ fun LoginPage(
                 }
             }
         },
-        chromeClient = remember { MyWebChromeClient(context, coroutineScope) },
+        chromeClient = rememberWebChromeClient(),
         onClose = { navigator.navigateUp() },
         menuItems = { listOf(ContextMenuItem(Symbols.Refresh, refresh) { webViewNavigator.reload() }) },
         // A session with no login in it, so the current account isn't found logged in already

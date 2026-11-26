@@ -13,14 +13,16 @@ import android.webkit.ValueCallback
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.widget.FrameLayout
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.browser.customtabs.CustomTabColorSchemeParams
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.compositeOver
@@ -34,12 +36,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.hjq.permissions.Permission
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.filter
 import oolong.client.App
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.onGlobalEvent
 import oolong.client.data.link.isInternalHost
 import oolong.client.data.link.isTiebaHost
 import oolong.client.data.link.toTiebaKey
@@ -48,7 +46,6 @@ import oolong.client.data.web.WebSessions
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
 import oolong.client.ui.components.LocalAccount
-import oolong.client.ui.components.launchActivityForResult
 import oolong.client.ui.designsystem.AccompanistWebChromeClient
 import oolong.client.ui.designsystem.AccompanistWebViewClient
 import oolong.client.ui.designsystem.AppDialog
@@ -63,7 +60,6 @@ import oolong.client.util.PermissionUtils.PermissionData
 import oolong.client.util.TiebaUtil
 import oolong.client.util.findActivity
 import java.lang.ref.WeakReference
-import java.util.UUID
 
 @Composable
 fun WebViewPage(
@@ -72,7 +68,6 @@ fun WebViewPage(
 ) {
     val context = LocalContext.current
     val account by rememberUpdatedState(LocalAccount.current)
-    val coroutineScope = rememberCoroutineScope()
     val webViewState = rememberSaveableWebViewState()
     val webViewNavigator = rememberWebViewNavigator()
     val copyLink = stringResource(id = R.string.title_copy_link)
@@ -83,7 +78,7 @@ fun WebViewPage(
         state = webViewState,
         navigator = webViewNavigator,
         client = remember(navigator) { MyWebViewClient(navigator) },
-        chromeClient = remember { MyWebChromeClient(context, coroutineScope) },
+        chromeClient = rememberWebChromeClient(),
         onClose = { navigator.navigateUp() },
         attachSession = { WebSessions.instance.attach(it, account) },
         immersive = true,
@@ -224,9 +219,20 @@ open class MyWebViewClient(
     }
 }
 
+/** A [MyWebChromeClient] whose file chooser opens through this composition's activity result registry. */
+@Composable
+fun rememberWebChromeClient(): MyWebChromeClient {
+    val context = LocalContext.current
+    val client = remember { MyWebChromeClient(context) }
+    val chooser = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        client.onFileChosen(it.resultCode, it.data)
+    }
+    SideEffect { client.chooseFile = chooser::launch }
+    return client
+}
+
 class MyWebChromeClient(
     context: Context,
-    coroutineScope: CoroutineScope,
 ) : AccompanistWebChromeClient() {
     private val contextWeakReference = WeakReference(context)
 
@@ -235,15 +241,11 @@ class MyWebChromeClient(
 
     private var uploadMessage: ValueCallback<Array<Uri>>? = null
 
-    val id: String = UUID.randomUUID().toString()
+    internal var chooseFile: ((Intent) -> Unit)? = null
 
-    init {
-        coroutineScope.onGlobalEvent<GlobalEvent.ActivityResult>(
-            filter = { it.requesterId == id },
-        ) {
-            uploadMessage?.onReceiveValue(FileChooserParams.parseResult(it.resultCode, it.intent))
-            uploadMessage = null
-        }
+    internal fun onFileChosen(resultCode: Int, data: Intent?) {
+        uploadMessage?.onReceiveValue(FileChooserParams.parseResult(resultCode, data))
+        uploadMessage = null
     }
 
     /** Whether a video on the page is full screen, over the whole window. */
@@ -344,10 +346,11 @@ class MyWebChromeClient(
         filePathCallback: ValueCallback<Array<Uri>>?,
         fileChooserParams: FileChooserParams?,
     ): Boolean {
-        if (webView == null || filePathCallback == null || fileChooserParams == null) return false
+        val chooseFile = chooseFile
+        if (webView == null || filePathCallback == null || fileChooserParams == null || chooseFile == null) return false
         uploadMessage?.onReceiveValue(null)
         uploadMessage = filePathCallback
-        launchActivityForResult(id, fileChooserParams.createIntent())
+        chooseFile(fileChooserParams.createIntent())
         return true
     }
 

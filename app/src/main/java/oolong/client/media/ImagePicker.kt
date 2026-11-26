@@ -7,20 +7,10 @@ import android.net.Uri
 import android.os.Build
 import android.os.ext.SdkExtensions.getExtensionVersion
 import android.provider.MediaStore
-import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
-import androidx.appcompat.app.AppCompatActivity
 import oolong.client.App
 import oolong.client.data.settings.appPreferences
 import oolong.client.ui.picker.ImagePickerActivity
-
-fun AppCompatActivity.registerPickMediasLauncher(callback: (PickMediasResult) -> Unit): ActivityResultLauncher<PickMediasRequest> {
-    return registerForActivityResult(
-        PickMediasContract
-    ) {
-        callback(it)
-    }
-}
 
 fun isPhotoPickerAvailable(): Boolean {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -57,42 +47,22 @@ fun Intent.getClipDataUris(): List<Uri> {
     return resultSet.toList()
 }
 
-/** A request to pick up to [maxItems] pictures; [id] tells the requester's result apart. */
-data class PickMediasRequest(
-    val id: String = "",
-    val maxItems: Int = 1,
-)
-
-data class PickMediasResult(
-    val id: String,
-    val uris: List<Uri>
-)
-
-object PickMediasContract : ActivityResultContract<PickMediasRequest, PickMediasResult>() {
-    private var curRequestId: String? = null
-
-    val hasCurrentRequest: Boolean
-        get() = curRequestId != null
-
-    override fun createIntent(context: Context, input: PickMediasRequest): Intent {
-        curRequestId = input.id
+/** Picks up to the given number of pictures, in the system photo picker or the app's own. */
+object PickMediasContract : ActivityResultContract<Int, List<Uri>>() {
+    override fun createIntent(context: Context, input: Int): Intent {
         if (shouldUsePhotoPicker()) {
             return Intent(MediaStore.ACTION_PICK_IMAGES).apply {
                 type = "image/*"
-                if (input.maxItems > 1) {
-                    putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, input.maxItems)
+                if (input > 1) {
+                    putExtra(MediaStore.EXTRA_PICK_IMAGES_MAX, input)
                 }
             }
         }
-        return ImagePickerActivity.intent(context, input.maxItems)
+        return ImagePickerActivity.intent(context, input)
     }
 
-    override fun parseResult(resultCode: Int, intent: Intent?): PickMediasResult {
-        val id = curRequestId + ""
-        curRequestId = null
-        if (resultCode != Activity.RESULT_OK || intent == null) {
-            return PickMediasResult(id, emptyList())
-        }
-        return PickMediasResult(id, intent.getClipDataUris())
+    override fun parseResult(resultCode: Int, intent: Intent?): List<Uri> {
+        if (resultCode != Activity.RESULT_OK || intent == null) return emptyList()
+        return intent.getClipDataUris()
     }
 }
