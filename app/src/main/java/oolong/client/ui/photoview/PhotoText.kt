@@ -24,12 +24,14 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -552,7 +554,7 @@ internal fun PhotoTextBar(state: PhotoTextState, modifier: Modifier = Modifier) 
 internal fun SelectionToolbar(state: PhotoTextState, display: () -> Rect, modifier: Modifier = Modifier) {
     val context = LocalContext.current
     val density = LocalDensity.current
-    val top = WindowInsets.statusBars.getTop(density)
+    val top = WindowInsets.statusBars.union(WindowInsets.captionBar).getTop(density)
     val bottom = WindowInsets.navigationBars.getBottom(density)
     var size by remember { mutableStateOf(IntSize.Zero) }
 

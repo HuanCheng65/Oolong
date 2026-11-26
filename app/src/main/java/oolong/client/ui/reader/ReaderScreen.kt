@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -393,7 +394,7 @@ private fun ReaderContent(
             }
         },
     ) { _ ->
-        val insets = WindowInsets.statusBars.union(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
+        val insets = WindowInsets.statusBars.union(WindowInsets.captionBar).union(WindowInsets.displayCutout.only(WindowInsetsSides.Top))
         val bottom = WindowInsets.navigationBars.asPaddingValues().calculateBottomPadding()
         val top = insets.asPaddingValues().calculateTopPadding()
         BoxWithConstraints(

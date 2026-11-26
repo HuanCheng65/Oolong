@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -192,7 +193,7 @@ fun ReplyChrome(
         val maxHeightPx = constraints.maxHeight.toFloat()
         val bars = WindowInsets.navigationBars.union(WindowInsets.displayCutout)
         val navBottom = bars.getBottom(density)
-        val statusTop = WindowInsets.statusBars.getTop(density)
+        val statusTop = WindowInsets.statusBars.union(WindowInsets.captionBar).getTop(density)
         val imeBottom = WindowInsets.ime.getBottom(density)
         val imeTarget = WindowInsets.imeAnimationTarget.getBottom(density)
         val rememberedImeHeight = rememberImeHeight(imeBottom, imeTarget)

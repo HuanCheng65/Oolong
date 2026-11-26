@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.add
 import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -286,7 +287,7 @@ fun MainSearchField(
     val plain = currentGlassTier() == GlassTier.Solid
     val buttonInteraction = remember { MutableInteractionSource() }
     val bottomInsets = WindowInsets.ime.union(WindowInsets.navigationBars)
-    val topInsets = WindowInsets.statusBars.union(WindowInsets.displayCutout)
+    val topInsets = WindowInsets.statusBars.union(WindowInsets.captionBar).union(WindowInsets.displayCutout)
     val sideInsets = WindowInsets.navigationBars.union(WindowInsets.displayCutout).only(WindowInsetsSides.Horizontal)
     Box(
         modifier = Modifier

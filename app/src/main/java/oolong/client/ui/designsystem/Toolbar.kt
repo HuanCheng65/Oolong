@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsTopHeight
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -222,7 +224,7 @@ fun TopAppBarContainer(
     content: (@Composable ColumnScope.() -> Unit)? = null,
 ) {
     val statusBarModifier = if (insets) {
-        Modifier.windowInsetsTopHeight(WindowInsets.statusBars)
+        Modifier.windowInsetsTopHeight(WindowInsets.statusBars.union(WindowInsets.captionBar))
     } else {
         Modifier
     }

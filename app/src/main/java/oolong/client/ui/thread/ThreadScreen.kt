@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -85,7 +86,7 @@ fun ThreadScreen(
     }
 
     Box(modifier = modifier) {
-        val statusBarTop = WindowInsets.statusBars.union(WindowInsets.displayCutout).getTop(LocalDensity.current)
+        val statusBarTop = WindowInsets.statusBars.union(WindowInsets.captionBar).union(WindowInsets.displayCutout).getTop(LocalDensity.current)
         var contentTop by remember { mutableIntStateOf(0) }
         // A thread that can't scroll the bar's height away would leave an empty band where the bar was
         val tooShortToHide by remember(listState) {

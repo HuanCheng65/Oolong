@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -144,7 +145,7 @@ fun GlassTopBar(
     val largeTitle = LocalLargeTitle.current
     val scrollEdge = LocalPageScroll.current
     val largeTitleProgress = largeTitle?.let { rememberScrollProgress(0f..it.height.toFloat(), snapping = true) }
-    val statusBar = WindowInsets.statusBars.union(WindowInsets.displayCutout)
+    val statusBar = WindowInsets.statusBars.union(WindowInsets.captionBar).union(WindowInsets.displayCutout)
     // A classic bar is a band, its buttons bare on it
     val classic = LocalChromeStyle.current == ChromeStyle.Classic
     val besideRail = LocalNavigationRailShown.current
@@ -308,7 +309,7 @@ fun GlassStatusBar(modifier: Modifier = Modifier) {
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .windowInsetsTopHeight(WindowInsets.statusBars)
+            .windowInsetsTopHeight(WindowInsets.statusBars.union(WindowInsets.captionBar))
             .topBarGlass()
     )
 }

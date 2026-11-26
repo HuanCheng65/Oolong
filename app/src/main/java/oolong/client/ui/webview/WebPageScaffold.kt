@@ -34,12 +34,14 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.captionBar
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -259,7 +261,7 @@ internal fun WebPageScaffold(
         val night = colors.isNightMode
         // Immersive, the page starts below the bar and pushes it up as it scrolls, up to the status
         // bar and never under it, where a header the page keeps at its top would be hidden
-        val statusBar = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val statusBar = WindowInsets.statusBars.union(WindowInsets.captionBar).asPaddingValues().calculateTopPadding()
         val inset = with(LocalDensity.current) { (paddingValues.calculateTopPadding() - statusBar).roundToPx().coerceAtLeast(0) }
         SideEffect { insetPx = inset }
         LaunchedEffect(state.webView, inset) { (state.webView as? InsetWebView)?.topInset = inset }
