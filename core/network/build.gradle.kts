@@ -12,9 +12,8 @@ ktlint {
 }
 
 wire {
-    kotlin {
-        android = true
-    }
+    // Messages are plain Kotlin classes: none is passed in a Bundle, so none need be Parcelable
+    kotlin {}
 }
 
 android {
