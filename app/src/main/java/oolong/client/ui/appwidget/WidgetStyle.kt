@@ -118,12 +118,16 @@ internal fun WidgetMessage(message: String, onClick: Action) {
     }
 }
 
-/** A row of a widget's list, [height] tall, opening [onClick]. */
+/**
+ * A row of a widget's list, opening [onClick]. The rows share their list's height: how many there
+ * are is fitted to the size the system picked, and what the widget has over that size spreads
+ * over them, so they neither leave a gap under them nor run past the bottom.
+ */
 @Composable
-internal fun WidgetRow(height: Dp, onClick: Action, content: @Composable RowScope.() -> Unit) {
+internal fun ColumnScope.WidgetRow(onClick: Action, content: @Composable RowScope.() -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = GlanceModifier.fillMaxWidth().height(height).clickable(onClick),
+        modifier = GlanceModifier.fillMaxWidth().defaultWeight().clickable(onClick),
         content = content,
     )
 }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.datastore.preferences.core.longPreferencesKey
@@ -20,6 +21,7 @@ import androidx.glance.LocalContext
 import androidx.glance.action.ActionParameters
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.ActionCallback
 import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.cornerRadius
@@ -141,7 +143,42 @@ internal fun <T : Any> rememberShown(initial: T?, vararg keys: Any?, load: suspe
  */
 internal fun fitRows(room: Dp, ideal: Dp, least: Dp, most: Int): Pair<Int, Dp> {
     if (room <= 0.dp || most <= 0) return 0 to ideal
-    var rows = (room / ideal).roundToInt().coerceIn(1, most)
+    // A column of a widget holds ten children at most; the rows go in one of their own
+    var rows = (room / ideal).roundToInt().coerceIn(1, minOf(most, MaxColumnChildren))
     while (rows > 1 && room / rows < least) rows--
     return rows to minOf(room / rows, ideal * 1.5f)
+}
+
+/** How many children a widget's column or row may hold; any past these are dropped. */
+private const val MaxColumnChildren = 10
+
+/**
+ * The sizes each widget is laid out for. The system shows the largest that fits the widget's
+ * real size, so a widget never depends on the size its launcher reports, which some launchers
+ * (HyperOS's among them) get wrong until the widget is resized. Most lists only change with
+ * height, so their sizes are all narrow and step through heights; the system takes sixteen at
+ * most.
+ */
+internal object WidgetSizes {
+    private fun of(width: Int, vararg heights: Int) = heights.map { DpSize(width.dp, it.dp) }
+
+    private fun responsive(sizes: List<DpSize>): SizeMode.Responsive {
+        check(sizes.size <= 16) { "a widget takes sixteen sizes at most" }
+        return SizeMode.Responsive(sizes.toSet())
+    }
+
+    /** One column of rows, whatever the width. */
+    val List = responsive(of(100, 100, 124, 148, 172, 196, 220, 250, 280, 310, 340, 380, 430, 490))
+
+    /** The hot topics: one cover when narrow; a list, led by a large first topic once tall. */
+    val Topics = responsive(of(100, 100) + of(200, 100, 124, 148, 172, 196, 220, 250, 300, 340, 380, 430, 490))
+
+    /** A forum's threads: two lines each when narrow, one with its picture when wide. */
+    val Forum = responsive(of(100, 100, 160, 220, 290, 360) + of(200, 100, 130, 160, 190, 220, 250, 290, 340, 400, 470))
+
+    /** The hot topics over a row of forums, at least three cells tall. */
+    val Mix = responsive(of(100, 200, 230, 260, 290, 320, 350, 390, 430, 480, 540))
+
+    /** A grid of forums: where another column or row fits. */
+    val Grid = responsive(listOf(100, 228, 304, 380).flatMap { of(it, 100, 140, 216, 296) })
 }

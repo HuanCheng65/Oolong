@@ -15,7 +15,6 @@ import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.currentState
@@ -42,7 +41,7 @@ import oolong.client.R
  * signed in to today.
  */
 class ForumsWidget : GlanceAppWidget() {
-    override val sizeMode = SizeMode.Exact
+    override val sizeMode = WidgetSizes.Grid
 
     override val previewSizeMode = WidgetPreviews.Size
 
@@ -102,7 +101,7 @@ class ForumsWidget : GlanceAppWidget() {
                         modifier = GlanceModifier.fillMaxSize().padding(horizontal = 8.dp, vertical = 8.dp),
                     ) {
                         forums.take(columns * rows).chunked(columns).forEach { line ->
-                            Row(modifier = GlanceModifier.fillMaxWidth().height(rowHeight)) {
+                            Row(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
                                 line.forEach { forum -> ForumCell(forum, avatars.getOrNull(forums.indexOf(forum)), rowHeight) }
                                 repeat(columns - line.size) { Box(modifier = GlanceModifier.defaultWeight()) {} }
                             }
@@ -115,7 +114,7 @@ class ForumsWidget : GlanceAppWidget() {
 
     internal companion object {
         val SourceKey = stringPreferencesKey("source")
-        private val CellWidth = 84.dp
+        private val CellWidth = 76.dp
         private val CellHeight = 80.dp
         private val CellLeast = 62.dp
     }

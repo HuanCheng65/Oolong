@@ -10,11 +10,11 @@ import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.background
 import androidx.glance.currentState
 import androidx.glance.layout.Box
+import androidx.glance.layout.Column
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
 import androidx.glance.layout.fillMaxWidth
@@ -29,7 +29,7 @@ import oolong.client.R
  * goes, in one widget. The forums are the followed ones, or the visited ones when logged out.
  */
 class TopicsAndForumsWidget : GlanceAppWidget() {
-    override val sizeMode = SizeMode.Exact
+    override val sizeMode = WidgetSizes.Mix
 
     override val previewSizeMode = WidgetPreviews.TallSize
 
@@ -80,7 +80,9 @@ class TopicsAndForumsWidget : GlanceAppWidget() {
             val forumsHeight = if (loaded.forums.isEmpty()) 0.dp else ForumsRowHeight + 17.dp
             val room = listRoom(size.height) - forumsHeight
             val (rows, rowHeight) = fitRows(room, TopicRowHeight, TopicRowLeast, loaded.topics.topics.size)
-            loaded.topics.topics.take(rows).forEachIndexed { index, topic -> TopicRow(index + 1, topic, loaded.thumbs.getOrNull(index), rowHeight) }
+            Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                loaded.topics.topics.take(rows).forEachIndexed { index, topic -> TopicRow(index + 1, topic, loaded.thumbs.getOrNull(index), rowHeight) }
+            }
             if (loaded.forums.isNotEmpty()) {
                 Spacer(GlanceModifier.height(6.dp))
                 Box(modifier = GlanceModifier.fillMaxWidth().height(1.dp).background(WidgetColors.divider)) {}

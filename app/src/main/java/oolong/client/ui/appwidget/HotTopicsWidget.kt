@@ -15,12 +15,12 @@ import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
 import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.ColumnScope
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -42,7 +42,7 @@ import oolong.client.util.StringUtil.getShortNumString
  * on a tall one the first topic's cover heading the list.
  */
 class HotTopicsWidget : GlanceAppWidget() {
-    override val sizeMode = SizeMode.Exact
+    override val sizeMode = WidgetSizes.Topics
 
     override val previewSizeMode = WidgetPreviews.Size
 
@@ -89,7 +89,7 @@ class HotTopicsWidget : GlanceAppWidget() {
             size.height >= 300.dp -> WidgetSurface(padded = false) {
                 Hero(topics.first(), hero, context.clock(content.loadedAt))
                 val (rows, rowHeight) = fitRows(size.height - HeroHeight - 12.dp, HeroRowHeight, TopicRowLeast, topics.size - 1)
-                Column(modifier = GlanceModifier.padding(horizontal = WidgetPadding, vertical = 6.dp)) {
+                Column(modifier = GlanceModifier.defaultWeight().padding(horizontal = WidgetPadding, vertical = 6.dp)) {
                     topics.drop(1).take(rows).forEachIndexed { index, topic -> TopicRow(index + 2, topic, thumbs.getOrNull(index + 1), rowHeight) }
                 }
             }
@@ -97,7 +97,9 @@ class HotTopicsWidget : GlanceAppWidget() {
             else -> WidgetSurface {
                 WidgetHeader(context.getString(R.string.hot_section_topics), context.clock(content.loadedAt), openLink(context, "oolong://topics"))
                 val (rows, rowHeight) = fitRows(listRoom(size.height), TopicRowHeight, TopicRowLeast, topics.size)
-                topics.take(rows).forEachIndexed { index, topic -> TopicRow(index + 1, topic, thumbs.getOrNull(index), rowHeight) }
+                Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                    topics.take(rows).forEachIndexed { index, topic -> TopicRow(index + 1, topic, thumbs.getOrNull(index), rowHeight) }
+                }
             }
         }
     }
@@ -167,9 +169,9 @@ internal val TopicRowHeight = 34.dp
 internal val TopicRowLeast = 26.dp
 
 @Composable
-internal fun TopicRow(rank: Int, topic: TopicsContent.Item, thumb: Bitmap?, height: androidx.compose.ui.unit.Dp) {
+internal fun ColumnScope.TopicRow(rank: Int, topic: TopicsContent.Item, thumb: Bitmap?, height: androidx.compose.ui.unit.Dp) {
     val context = LocalContext.current
-    WidgetRow(height, openLink(context, WidgetLinks.topic(topic.id, topic.name))) {
+    WidgetRow(openLink(context, WidgetLinks.topic(topic.id, topic.name))) {
         RankText(rank)
         Spacer(GlanceModifier.width(8.dp))
         // A shorter row takes a smaller cover, so rows never touch

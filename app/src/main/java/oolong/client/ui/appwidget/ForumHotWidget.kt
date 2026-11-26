@@ -21,7 +21,6 @@ import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
-import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.provideContent
 import androidx.glance.appwidget.state.getAppWidgetState
@@ -29,6 +28,7 @@ import androidx.glance.currentState
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
 import androidx.glance.layout.Column
+import androidx.glance.layout.ColumnScope
 import androidx.glance.layout.ContentScale
 import androidx.glance.layout.Row
 import androidx.glance.layout.Spacer
@@ -47,7 +47,7 @@ import oolong.client.R
 
 /** One forum's hot threads under the forum's name, washed in its avatar's colour as its page is. */
 class ForumHotWidget : GlanceAppWidget() {
-    override val sizeMode = SizeMode.Exact
+    override val sizeMode = WidgetSizes.Forum
 
     override val previewSizeMode = WidgetPreviews.Size
 
@@ -115,8 +115,10 @@ class ForumHotWidget : GlanceAppWidget() {
                         if (narrow) NarrowRowLeast else RowLeast,
                         content.threads.size,
                     )
-                    content.threads.take(rows).forEachIndexed { index, thread ->
-                        if (narrow) NarrowRow(thread, rowHeight) else ThreadRow(thread, thumbs.getOrNull(index), rowHeight)
+                    Column(modifier = GlanceModifier.fillMaxWidth().defaultWeight()) {
+                        content.threads.take(rows).forEachIndexed { index, thread ->
+                            if (narrow) NarrowRow(thread) else ThreadRow(thread, thumbs.getOrNull(index), rowHeight)
+                        }
                     }
                 }
             }
@@ -144,9 +146,9 @@ class ForumHotWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun ThreadRow(thread: ForumContent.Item, thumb: Bitmap?, height: Dp) {
+    private fun ColumnScope.ThreadRow(thread: ForumContent.Item, thumb: Bitmap?, height: Dp) {
         val context = LocalContext.current
-        WidgetRow(height, openLink(context, WidgetLinks.thread(thread.id))) {
+        WidgetRow(openLink(context, WidgetLinks.thread(thread.id))) {
             Column(modifier = GlanceModifier.defaultWeight()) {
                 Text(text = thread.title, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp, fontWeight = FontWeight.Medium), maxLines = 1)
                 Replies(thread.replies)
@@ -159,11 +161,11 @@ class ForumHotWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun NarrowRow(thread: ForumContent.Item, height: Dp) {
+    private fun ColumnScope.NarrowRow(thread: ForumContent.Item) {
         val context = LocalContext.current
         Column(
             verticalAlignment = Alignment.CenterVertically,
-            modifier = GlanceModifier.fillMaxWidth().height(height).clickable(openLink(context, WidgetLinks.thread(thread.id))),
+            modifier = GlanceModifier.fillMaxWidth().defaultWeight().clickable(openLink(context, WidgetLinks.thread(thread.id))),
         ) {
             Text(text = thread.title, style = TextStyle(color = WidgetColors.text, fontSize = 14.sp, fontWeight = FontWeight.Medium), maxLines = 2)
             Replies(thread.replies)
