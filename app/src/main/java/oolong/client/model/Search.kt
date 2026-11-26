@@ -12,6 +12,8 @@ data class SearchedForum(
     val nameShow: String,
     val avatar: String,
     val slogan: String,
+    /** How many follow the forum; 0 where the search leaves it out. */
+    val memberCount: Long = 0,
 )
 
 /** A user found by a search. */

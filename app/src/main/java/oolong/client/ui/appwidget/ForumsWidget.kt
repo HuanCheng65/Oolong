@@ -60,11 +60,11 @@ class ForumsWidget : GlanceAppWidget() {
         }
     }
 
-    private fun String?.toSource() = this?.let { runCatching { ForumsSource.valueOf(it) }.getOrNull() } ?: ForumsSource.Followed
+    internal fun String?.toSource() = this?.let { runCatching { ForumsSource.valueOf(it) }.getOrNull() } ?: ForumsSource.Followed
 
-    private class Loaded(val loggedIn: Boolean, val content: ForumsContent?, val avatars: List<Bitmap?>)
+    internal class Loaded(val loggedIn: Boolean, val content: ForumsContent?, val avatars: List<Bitmap?>)
 
-    private suspend fun load(context: Context, source: ForumsSource, fresh: Boolean): Loaded {
+    internal suspend fun load(context: Context, source: ForumsSource, fresh: Boolean): Loaded {
         val loggedIn = context.widgetEntryPoint.home().account.first().isNotEmpty()
         val content = WidgetData.forums(context, source, fresh)
         val avatarPx = context.px(ForumCellAvatarSize)
@@ -73,7 +73,7 @@ class ForumsWidget : GlanceAppWidget() {
     }
 
     @Composable
-    private fun Content(source: ForumsSource, shown: Shown<Loaded>) {
+    internal fun Content(source: ForumsSource, shown: Shown<Loaded>) {
         val context = LocalContext.current
         val size = LocalSize.current
         val loaded = shown.value

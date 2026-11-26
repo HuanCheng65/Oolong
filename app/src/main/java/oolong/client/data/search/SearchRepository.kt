@@ -113,7 +113,18 @@ private fun SearchForumsResponse.Forum.toForum(): SearchedForum? {
         nameShow = forumNameShow?.takeIf { it.isNotEmpty() } ?: name,
         avatar = avatar.orEmpty(),
         slogan = slogan.orEmpty(),
+        memberCount = concernNum?.let(::countOf) ?: 0,
     )
+}
+
+/** A count as the web search gives it, whole or in ten thousands ("1729W"); 0 when unreadable. */
+private fun countOf(text: String): Long {
+    val count = text.trim()
+    return if (count.endsWith("W", ignoreCase = true)) {
+        count.dropLast(1).toDoubleOrNull()?.times(10_000)?.toLong() ?: 0
+    } else {
+        count.toLongOrNull() ?: 0
+    }
 }
 
 private fun SearchUsersResponse.User.toUser(): SearchedUser? {

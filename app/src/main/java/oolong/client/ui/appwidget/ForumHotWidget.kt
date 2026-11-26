@@ -261,7 +261,7 @@ class ForumHotWidget : GlanceAppWidget() {
         private val RowHeight = 48.dp
         private val RowLeast = 42.dp
         private val NarrowRowHeight = 62.dp
-        private val NarrowRowLeast = 56.dp
+        private val NarrowRowLeast = 50.dp
         private val WashHeight = 110.dp
         private val OnAccent = ColorProvider(day = androidx.compose.ui.graphics.Color.White, night = androidx.compose.ui.graphics.Color.White)
 
