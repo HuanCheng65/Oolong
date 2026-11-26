@@ -1,0 +1,58 @@
+{
+  "zh": {
+    "新增": [
+      "桌面小部件\n热议话题、帖子榜、吧动态、常逛的吧，以及热议与常逛。吧动态可选最新、热门或精华，并能直接签到；在「设置 → 通用 → 桌面小部件」中编辑或添加",
+      "签到进度\n一键签到时，首页的签到按钮显示进度，签好的吧随即打勾",
+      "系统助手\n支持 App Functions 的系统助手可以查看热议话题和帖子榜、搜索和阅读帖子、查看关注的吧；屏蔽的内容同样不会出现",
+      "拖放图片\n长按图片后拖动，可把原图拖到其他应用；拖到回复框的图片会加入回复",
+      "键盘与鼠标\n右键打开长按菜单，指针悬停时有反馈；支持返回、搜索、刷新、逐条浏览、翻页和发送回复的快捷键，按 Meta + / 查看全部；滚轮缩放图片",
+      "新窗口\n平板或分屏时，可从帖子的菜单在新窗口中打开帖子；桌面模式下以浮动窗口打开",
+      "错误记录\n「设置 → 通用 → 问题排查」新增「错误记录」，遇到奇怪的错误时可查看详情并发送"
+    ],
+    "改进": [
+      "长按菜单\n帖子的长按菜单与 ⋮ 菜单一致，常用操作排成一排；预览占据更多空间，平板上菜单放在预览旁边",
+      "触感\n拖动越过松手即生效的位置时，有一下轻微的震动",
+      "正文行距\n帖子正文的行距统一为字号的 1.45 倍，各种手机上一致",
+      "帖子时间\n吧内按发帖时间排序时，帖子显示发帖时间，与排列顺序一致",
+      "置顶帖\n展开和收起置顶帖使用同一个按钮",
+      "搜索\n通过回复搜到的帖子，显示其中含关键词的回复；下拉刷新时保留已有结果",
+      "设置\n「其他」更名为「通用」"
+    ],
+    "修复": [
+      "搜索 c++ 或括号等符号时，应用崩溃",
+      "一键签到后，首页的已签标记要刷新才出现",
+      "在 HyperOS 上，未开启「桌面快捷方式」权限时，发送到桌面没有任何提示",
+      "平板分栏时，双击顶栏会让旁边一栏也回到顶部",
+      "平板上按住侧边导航时，旁边页面的文字跳动",
+      "展开的折叠屏或平板横屏时，图片说明偏到左侧"
+    ]
+  },
+  "en": {
+    "New": [
+      "Home screen widgets\nHot topics, the thread ranking, a forum, your forums, and hot topics with your forums. The forum widget shows the latest, hot or featured threads and signs you in right from it; edit or add them in Settings → General → Home screen widgets",
+      "Signing progress\nWhile signing in to all forums, the sign-in button on Home shows the progress, and each forum is ticked as it is signed",
+      "System assistant\nAssistants that support App Functions can see hot topics and the thread ranking, search and read threads, and list your forums; what you blocked stays out",
+      "Dragging pictures\nTouch and hold a picture, then drag it to another app to give it the original; pictures dropped on the reply field join the reply",
+      "Keyboard and mouse\nRight-click opens the long-press menu, and what the pointer is over shows it; shortcuts go back, search, refresh, move between items, page and send a reply, with Meta + / listing them all; the mouse wheel zooms pictures",
+      "New windows\nOn tablets or in split screen, open a thread in a new window from its menu; in desktop mode it opens as a floating window",
+      "Error records\nSettings → General → Troubleshooting has Error records, with the details of an odd error to look at and send"
+    ],
+    "Improved": [
+      "Long-press menus\nA thread's long-press menu is the same as its ⋮ menu, with common actions in one row; the preview gets more room, and on tablets the menu sits beside it",
+      "Haptics\nDragging past the point where letting go takes effect gives a light tick",
+      "Line spacing\nPost text is spaced at 1.45 times the font size, the same on every phone",
+      "Thread times\nIn a forum sorted by post time, threads show when they were posted, matching their order",
+      "Pinned threads\nOne button opens and folds the pinned threads",
+      "Search\nA thread found by a reply in it shows that reply with the keyword; pulling to refresh keeps the results until new ones come",
+      "Settings\nOther is now General"
+    ],
+    "Fixed": [
+      "Searching for c++ or a bracket crashed the app",
+      "After signing in to all forums, Home showed the ticks only after a refresh",
+      "On HyperOS, sending a forum to the home screen without the Home screen shortcuts permission failed without a word",
+      "In two panes on a tablet, a double tap on the top bar also scrolled the other pane to the top",
+      "On tablets, holding an item on the side navigation made the text of the page beside it jump",
+      "On an unfolded phone or a tablet held sideways, a picture's caption sat against the left edge"
+    ]
+  }
+}
