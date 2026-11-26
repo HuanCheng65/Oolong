@@ -26,7 +26,6 @@ import oolong.client.data.identity.ClientUtils
 import oolong.client.data.identity.OAIDGetter
 import oolong.client.data.legacy.LegacyImport
 import oolong.client.data.settings.AppIconUtil
-import oolong.client.data.settings.SharedPreferencesUtil
 import oolong.client.data.storage.AppStorage
 import oolong.client.diagnostics.CrashLogs
 import oolong.client.media.image.newAppImageLoader
@@ -216,10 +215,6 @@ class App : Application(), SingletonImageLoader.Factory {
 
         val isSystemNight: Boolean
             get() = nightMode == Configuration.UI_MODE_NIGHT_YES
-
-        val isFirstRun: Boolean
-            get() = SharedPreferencesUtil.get(SharedPreferencesUtil.SP_APP_DATA)
-                .getBoolean("first", true)
 
         private val nightMode: Int
             get() = INSTANCE.resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK

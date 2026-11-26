@@ -6,7 +6,7 @@ import android.os.Process
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.edit
 import oolong.client.App
-import oolong.client.data.settings.SharedPreferencesUtil
+import oolong.client.data.settings.AppDataPreferences
 
 /**
  * Install-level state that `c/s/login` and `c/s/sync` report.
@@ -17,7 +17,7 @@ object InstallState {
     private const val KEY_LAST_PUSH_SWITCH_TIME = "last_push_system_switch_time"
 
     private val prefs
-        get() = App.INSTANCE.getSharedPreferences(SharedPreferencesUtil.SP_APP_DATA, Context.MODE_PRIVATE)
+        get() = App.INSTANCE.getSharedPreferences(AppDataPreferences, Context.MODE_PRIVATE)
 
     /** `first_login`: `"1"` until an account has logged in on this device, as [hasAccounts] also tells. */
     fun firstLogin(hasAccounts: Boolean): String =

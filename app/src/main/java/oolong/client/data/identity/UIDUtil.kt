@@ -1,12 +1,13 @@
 package oolong.client.data.identity
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.provider.Settings
 import android.text.TextUtils
 import androidx.core.content.edit
 import oolong.client.App
 import oolong.client.App.Companion.INSTANCE
-import oolong.client.data.settings.SharedPreferencesUtil
+import oolong.client.data.settings.AppDataPreferences
 import oolong.client.util.Base32
 import oolong.client.util.toMD5
 import java.nio.charset.StandardCharsets
@@ -72,11 +73,11 @@ object UIDUtil {
     @get:SuppressLint("ApplySharedPref")
     val uUID: String
         get() {
-            var uuid = SharedPreferencesUtil.get(INSTANCE, SharedPreferencesUtil.SP_APP_DATA)
+            var uuid = INSTANCE.getSharedPreferences(AppDataPreferences, Context.MODE_PRIVATE)
                 .getString("uuid", null)
             if (uuid == null) {
                 uuid = UUID.randomUUID().toString()
-                SharedPreferencesUtil.get(INSTANCE, SharedPreferencesUtil.SP_APP_DATA)
+                INSTANCE.getSharedPreferences(AppDataPreferences, Context.MODE_PRIVATE)
                     .edit { putString("uuid", uuid) }
             }
             return uuid

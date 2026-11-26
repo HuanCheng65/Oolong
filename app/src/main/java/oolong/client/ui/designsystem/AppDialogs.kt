@@ -51,7 +51,6 @@ import androidx.core.content.edit
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.first
 import oolong.client.R
-import oolong.client.data.settings.SharedPreferencesUtil
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.core.designsystem.theme.Corners
 import oolong.core.designsystem.theme.LocalReduceMotion
@@ -125,7 +124,7 @@ object AppDialogs {
         permissions(context).edit { putInt(dialog.key, if (granted) PERMISSION_ALLOWED else PERMISSION_DENIED) }
     }
 
-    private fun permissions(context: Context) = SharedPreferencesUtil.get(context, SharedPreferencesUtil.SP_PERMISSION)
+    private fun permissions(context: Context) = context.getSharedPreferences("permission", Context.MODE_PRIVATE)
 
     private const val PERMISSION_UNSET = 0
     private const val PERMISSION_ALLOWED = 1
