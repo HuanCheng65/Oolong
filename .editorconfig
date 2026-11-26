@@ -29,3 +29,5 @@ ktlint_standard_argument-list-wrapping = disabled
 ktlint_standard_no-wildcard-imports = disabled
 ktlint_standard_backing-property-naming = disabled
 ktlint_standard_annotation = disabled
+# Imports nothing in the file uses
+ktlint_standard_no-unused-imports = enabled

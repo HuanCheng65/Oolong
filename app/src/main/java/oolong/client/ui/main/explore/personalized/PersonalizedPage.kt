@@ -48,7 +48,6 @@ import oolong.client.R
 import oolong.client.arch.LoadStatus
 import oolong.client.model.DislikeOption
 import oolong.client.model.ThreadSummary
-import oolong.client.ui.components.BlockTip
 import oolong.client.ui.components.BlockableContent
 import oolong.client.ui.components.ErrorScreen
 import oolong.client.ui.components.FeedCard

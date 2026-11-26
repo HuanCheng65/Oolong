@@ -52,7 +52,6 @@ import oolong.core.designsystem.theme.LocalReduceMotion
 import oolong.core.designsystem.theme.Motion
 import oolong.core.designsystem.theme.SmoothCornerShape
 import oolong.core.designsystem.theme.TextStyles
-import kotlin.math.roundToInt
 
 /** The login card once the account is in, handed over from the login page as it goes. */
 @Immutable

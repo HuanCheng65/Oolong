@@ -1,50 +1,31 @@
 package oolong.client.ui.subposts
 
 import android.content.Context
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material.DropdownMenuItem
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import oolong.client.R
 import oolong.client.data.thread.SubPostSort
 import oolong.client.model.Post
 import oolong.client.model.PostContent
 import oolong.client.model.SubPost
 import oolong.client.model.wordText
-import oolong.client.ui.components.BlockTip
 import oolong.client.ui.components.BlockableContent
-import oolong.client.ui.components.Card
-import oolong.client.ui.components.PostBody
-import oolong.client.ui.components.UserHeader
-import oolong.client.ui.designsystem.Avatar
 import oolong.client.ui.designsystem.ContextMenuItem
-import oolong.client.ui.designsystem.Sizes
-import oolong.client.ui.designsystem.UserHeader
 import oolong.client.ui.designsystem.theme.Symbols
 import oolong.client.ui.settings.block.BlockMenuLabels
 import oolong.client.ui.settings.block.BlockShortcuts
 import oolong.client.ui.settings.block.LocalBlockShortcuts
 import oolong.client.ui.settings.block.blockMenuItems
 import oolong.client.ui.settings.block.blockMenuLabels
-import oolong.client.ui.thread.PostMenuLabels
 import oolong.client.ui.thread.SubPostBranch
 import oolong.client.ui.thread.SubPostLine
 import oolong.client.ui.thread.SubPostStyle
-import oolong.client.ui.thread.UserNameText
-import oolong.client.ui.thread.bawuName
 import oolong.client.ui.thread.floorIndent
 import oolong.client.ui.thread.floorRuleColor
-import oolong.client.ui.thread.postMenuLabels
 import oolong.client.ui.thread.rememberSubPostStyle
 import oolong.client.ui.thread.replyPhotoViewData
-import oolong.client.util.StringUtil
 
 /** Everything the user can do on the sub-post page. */
 sealed interface SubPostsEvent {

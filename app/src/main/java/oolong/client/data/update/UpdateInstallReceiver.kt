@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.pm.PackageInstaller
 import android.os.Build
 import android.util.Log
-import android.widget.Toast
 import oolong.client.R
 import oolong.client.util.toastShort
 

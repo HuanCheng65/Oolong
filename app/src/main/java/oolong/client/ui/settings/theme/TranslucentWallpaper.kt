@@ -20,7 +20,6 @@ import coil3.request.transformations
 import coil3.size.Precision
 import coil3.size.Scale
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 import oolong.client.data.settings.SettingKeys

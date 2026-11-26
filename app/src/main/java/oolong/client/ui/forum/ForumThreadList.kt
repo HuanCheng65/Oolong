@@ -47,7 +47,6 @@ import oolong.client.arch.PagerState
 import oolong.client.model.ForumSort
 import oolong.client.model.ForumTab
 import oolong.client.model.ThreadSummary
-import oolong.client.ui.components.BlockTip
 import oolong.client.ui.components.BlockableContent
 import oolong.client.ui.components.FeedCard
 import oolong.client.ui.components.LoadMoreEffect

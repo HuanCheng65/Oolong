@@ -2,7 +2,6 @@ package oolong.client.navigation
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.only
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -27,7 +26,6 @@ import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.SceneStrategy
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.flow.first
 import oolong.client.LocalNotificationCountFlow
 import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.rememberSettings

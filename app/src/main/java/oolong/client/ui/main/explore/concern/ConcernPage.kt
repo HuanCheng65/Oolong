@@ -1,6 +1,5 @@
 package oolong.client.ui.main.explore.concern
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,20 +8,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import oolong.client.R
 import oolong.client.arch.LoadStatus
 import oolong.client.arch.PagerState
-import oolong.client.ui.components.BlockTip
 import oolong.client.ui.components.BlockableContent
 import oolong.client.ui.components.ErrorScreen
 import oolong.client.ui.components.FeedCard
@@ -35,7 +30,6 @@ import oolong.client.ui.designsystem.MyLazyColumn
 import oolong.client.ui.designsystem.PullRefresh
 import oolong.client.ui.designsystem.VerticalDivider
 import oolong.client.ui.designsystem.states.StateScreen
-import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.main.OnTabReselected
 import oolong.client.ui.main.explore.FeedThread
 import oolong.client.ui.main.explore.FeedThreadEvents

@@ -5,7 +5,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
-import kotlinx.coroutines.flow.first
 import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.settingAsState
 

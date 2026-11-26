@@ -12,13 +12,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.style.TextOverflow
@@ -36,7 +33,6 @@ import oolong.client.navigation.SubPostsKey
 import oolong.client.navigation.ThreadKey
 import oolong.client.navigation.UserProfileKey
 import oolong.client.ui.components.AuthorName
-import oolong.client.ui.components.BlockTip
 import oolong.client.ui.components.BlockableContent
 import oolong.client.ui.components.EmoticonText
 import oolong.client.ui.components.ErrorScreen

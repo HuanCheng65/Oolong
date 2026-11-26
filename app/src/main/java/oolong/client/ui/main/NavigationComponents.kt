@@ -64,7 +64,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -101,7 +100,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.ui.designsystem.Avatar
 import oolong.client.ui.designsystem.ChromeStyle
 import oolong.client.ui.designsystem.ContextMenuItem
 import oolong.client.ui.designsystem.LocalChromeStyle

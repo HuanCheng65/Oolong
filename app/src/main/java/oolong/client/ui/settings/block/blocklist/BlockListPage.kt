@@ -3,7 +3,6 @@ package oolong.client.ui.settings.block.blocklist
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -69,7 +68,6 @@ import oolong.client.ui.designsystem.GlassTopBarTitle
 import oolong.client.ui.designsystem.IconButton
 import oolong.client.ui.designsystem.MyLazyColumn
 import oolong.client.ui.designsystem.SegmentedControl
-import oolong.client.ui.designsystem.TextButton
 import oolong.client.ui.designsystem.maskTo
 import oolong.client.ui.designsystem.motionItem
 import oolong.client.ui.designsystem.rememberDialogState

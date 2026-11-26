@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -62,7 +61,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.collections.immutable.persistentListOf
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import oolong.client.R
@@ -89,7 +87,6 @@ import oolong.client.ui.designsystem.PullRefresh
 import oolong.client.ui.designsystem.Refocus
 import oolong.client.ui.designsystem.SegmentedControl
 import oolong.client.ui.designsystem.ToggleIcon
-import oolong.client.ui.designsystem.VerticalDivider
 import oolong.client.ui.designsystem.WavyLoader
 import oolong.client.ui.designsystem.floatingGlass
 import oolong.client.ui.designsystem.matchedGeometryAnchor

@@ -2,9 +2,7 @@ package oolong.client.ui.editor
 
 import android.os.SystemClock
 import androidx.activity.compose.BackHandler
-import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.animateValueAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable

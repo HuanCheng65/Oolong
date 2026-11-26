@@ -1,13 +1,10 @@
 package oolong.client.ui.search.thread
 
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.collections.immutable.ImmutableMap
@@ -24,7 +21,6 @@ import oolong.client.ui.components.loadMoreFooter
 import oolong.client.ui.designsystem.EndPull
 import oolong.client.ui.designsystem.PullRefresh
 import oolong.client.ui.designsystem.states.StateScreen
-import oolong.client.ui.designsystem.theme.ExtendedTheme
 
 /** Threads and replies a search found, which pull down to search again and load more at their end. */
 @OptIn(ExperimentalMaterialApi::class)

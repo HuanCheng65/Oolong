@@ -9,11 +9,9 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
-import kotlinx.collections.immutable.ImmutableSet
 import kotlinx.collections.immutable.PersistentMap
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.persistentMapOf
-import kotlinx.collections.immutable.persistentSetOf
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.collections.immutable.toImmutableMap
 import kotlinx.collections.immutable.toImmutableSet
@@ -56,7 +54,6 @@ import oolong.client.data.block.BlockPlace
 import oolong.client.data.block.BlockRuleSource
 import oolong.client.data.block.BlockRules
 import oolong.client.data.block.BlockVerdict
-import oolong.client.data.block.Blockable
 import oolong.client.data.block.check
 import oolong.client.data.history.ThreadHistory
 import oolong.client.data.post.SentReplies

@@ -7,7 +7,6 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -31,9 +30,7 @@ import oolong.client.arch.query.withLatestEntities
 import oolong.client.data.block.BlockMemo
 import oolong.client.data.block.BlockPlace
 import oolong.client.data.block.BlockRuleSource
-import oolong.client.data.block.BlockRules
 import oolong.client.data.block.BlockVerdict
-import oolong.client.data.block.Blockable
 import oolong.client.data.block.check
 import oolong.client.data.post.SentReplies
 import oolong.client.data.thread.FloorCursor
