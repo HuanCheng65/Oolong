@@ -35,8 +35,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.launch
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.emitGlobalEvent
 import oolong.client.data.settings.rememberPreferenceAsState
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
@@ -96,11 +94,7 @@ fun MainPage(
     val coroutineScope = rememberCoroutineScope()
     val themeColors = ExtendedTheme.colors
     val showBottomNavigation = !LocalNavigationRailShown.current
-    val onReselected: (Int) -> Unit = {
-        coroutineScope.emitGlobalEvent(
-            GlobalEvent.Refresh(navigationItems[it].id)
-        )
-    }
+    val onReselected: (Int) -> Unit = { tabs.reselect(navigationItems[it].id) }
     val search = rememberMainSearchState()
     val searchViewModel: SearchViewModel = hiltViewModel()
     val searchUiState by searchViewModel.state.collectAsStateWithLifecycle()

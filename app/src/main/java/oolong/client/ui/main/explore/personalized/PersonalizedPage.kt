@@ -45,9 +45,7 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.ImmutableMap
 import kotlinx.collections.immutable.ImmutableSet
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
 import oolong.client.arch.LoadStatus
-import oolong.client.arch.onGlobalEvent
 import oolong.client.model.DislikeOption
 import oolong.client.model.ThreadSummary
 import oolong.client.ui.components.BlockTip
@@ -63,6 +61,7 @@ import oolong.client.ui.designsystem.PullRefresh
 import oolong.client.ui.designsystem.VerticalDivider
 import oolong.client.ui.designsystem.states.StateScreen
 import oolong.client.ui.designsystem.theme.ExtendedTheme
+import oolong.client.ui.main.OnTabReselected
 import oolong.client.ui.main.explore.FeedThreadEvents
 import oolong.client.ui.main.explore.ThreadPeeker
 import oolong.client.ui.main.explore.rememberFeedThreadEvents
@@ -78,7 +77,7 @@ fun PersonalizedPage(
     viewModel: PersonalizedViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(Unit) { viewModel.open() }
-    onGlobalEvent<GlobalEvent.Refresh>(filter = { it.key == "personalized" }) { viewModel.refresh() }
+    OnTabReselected("personalized") { viewModel.refresh() }
     val state by viewModel.state.collectAsStateWithLifecycle()
     PersonalizedScreen(
         state = state,

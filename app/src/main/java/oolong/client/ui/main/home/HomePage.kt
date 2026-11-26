@@ -84,9 +84,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
 import oolong.client.arch.LoadStatus
-import oolong.client.arch.onGlobalEvent
 import oolong.client.data.settings.appPreferences
 import oolong.client.data.settings.dataStore
 import oolong.client.media.ImageUtil
@@ -126,6 +124,7 @@ import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.LocalTextScale
 import oolong.client.ui.designsystem.theme.Symbols
 import oolong.client.ui.designsystem.theme.TextScale
+import oolong.client.ui.main.OnTabReselected
 import oolong.client.util.TiebaUtil
 import oolong.core.designsystem.theme.Corners
 import oolong.core.designsystem.theme.LocalReduceMotion
@@ -477,7 +476,7 @@ fun HomePage(
     val context = LocalContext.current
     val navigator = LocalNavigator.current
 
-    onGlobalEvent<GlobalEvent.Refresh>(filter = { it.key == "home" }) { viewModel.refresh() }
+    OnTabReselected("home") { viewModel.refresh() }
     // Back from elsewhere, the followed forums load again if they have gone stale
     LifecycleResumeEffect(viewModel) {
         viewModel.freshen()

@@ -15,8 +15,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.onGlobalEvent
 import oolong.client.model.NotificationType
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
@@ -30,6 +28,7 @@ import oolong.client.ui.designsystem.LazyLoadHorizontalPager
 import oolong.client.ui.designsystem.TabText
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.main.MainTabs
+import oolong.client.ui.main.OnTabReselected
 import oolong.client.ui.main.notifications.list.NotificationsListPage
 import oolong.client.ui.main.notifications.list.NotificationsViewModel
 
@@ -99,7 +98,7 @@ fun NotificationsTab(
         initialPage = initialTab,
     ) { pages.size }
     // Tapping the tab again refreshes the list in view
-    onGlobalEvent<GlobalEvent.Refresh>(filter = { it.key == MainTabs.NOTIFICATIONS }) {
+    OnTabReselected(MainTabs.NOTIFICATIONS) {
         viewModel.refresh(NotificationTypes[pagerState.currentPage])
     }
     GlassScaffold(

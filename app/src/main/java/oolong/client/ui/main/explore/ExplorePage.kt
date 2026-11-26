@@ -26,9 +26,6 @@ import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.launch
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.emitGlobalEvent
-import oolong.client.arch.onGlobalEvent
 import oolong.client.navigation.LocalNavigator
 import oolong.client.ui.components.LocalAccount
 import oolong.client.ui.designsystem.GlassScaffold
@@ -38,6 +35,9 @@ import oolong.client.ui.designsystem.GlassTopBar
 import oolong.client.ui.designsystem.LazyLoadHorizontalPager
 import oolong.client.ui.designsystem.TabText
 import oolong.client.ui.designsystem.theme.ExtendedTheme
+import oolong.client.ui.main.LocalMainTabs
+import oolong.client.ui.main.MainTabs
+import oolong.client.ui.main.OnTabReselected
 import oolong.client.ui.main.explore.concern.ConcernPage
 import oolong.client.ui.main.explore.hot.HotPage
 import oolong.client.ui.main.explore.personalized.PersonalizedPage
@@ -56,6 +56,7 @@ private fun ExplorePageTab(
     pages: ImmutableList<ExplorePageItem>
 ) {
     val coroutineScope = rememberCoroutineScope()
+    val tabs = LocalMainTabs.current
 
     GlassTabRow(
         selectedTabIndex = pagerState.currentPage,
@@ -69,12 +70,10 @@ private fun ExplorePageTab(
                 selectedContentColor = ExtendedTheme.colors.text,
                 unselectedContentColor = ExtendedTheme.colors.textSecondary,
                 onClick = {
-                    coroutineScope.launch {
-                        if (pagerState.currentPage == index) {
-                            emitGlobalEvent(GlobalEvent.Refresh(item.id))
-                        } else {
-                            pagerState.animateScrollToPage(index)
-                        }
+                    if (pagerState.currentPage == index) {
+                        tabs.reselect(item.id)
+                    } else {
+                        coroutineScope.launch { pagerState.animateScrollToPage(index) }
                     }
                 },
             )
@@ -110,13 +109,8 @@ fun ExplorePage() {
         ).toImmutableList()
     }
     val pagerState = rememberPagerState(initialPage = if (account != null) 1 else 0) { pages.size }
-    val coroutineScope = rememberCoroutineScope()
-
-    onGlobalEvent<GlobalEvent.Refresh>(
-        filter = { it.key == "explore" }
-    ) {
-        coroutineScope.emitGlobalEvent(GlobalEvent.Refresh(pages[pagerState.currentPage].id))
-    }
+    val tabs = LocalMainTabs.current
+    OnTabReselected(MainTabs.EXPLORE) { tabs.reselect(pages[pagerState.currentPage].id) }
 
     GlassScaffold(
         backgroundColor = Color.Transparent,

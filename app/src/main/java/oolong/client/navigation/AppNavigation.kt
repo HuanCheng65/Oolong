@@ -31,12 +31,9 @@ import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.SceneStrategy
 import kotlinx.collections.immutable.ImmutableList
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import oolong.client.LocalNotificationCountFlow
-import oolong.client.arch.GlobalEvent
-import oolong.client.arch.emitGlobalEvent
 import oolong.client.data.settings.dataStore
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.transition.FramedSinglePaneSceneStrategy
@@ -386,11 +383,10 @@ private class RailJump {
  */
 @Composable
 private fun MainRail(backStack: NavBackStack<NavKey>, tabs: MainTabs, jump: RailJump, showLabels: Boolean) {
-    val coroutineScope = rememberCoroutineScope()
     val items = rememberMainTabItems(tabs)
     val selectedIndex = items.indexOfFirst { it.id == tabs.selected }.coerceAtLeast(0)
     // Chrome, its labels growing only so far with the text size, as the bars' do
-    CapTextScale { MainRailContent(backStack, tabs, jump, showLabels, coroutineScope, items, selectedIndex) }
+    CapTextScale { MainRailContent(backStack, tabs, jump, showLabels, items, selectedIndex) }
 }
 
 @Composable
@@ -399,7 +395,6 @@ private fun MainRailContent(
     tabs: MainTabs,
     jump: RailJump,
     showLabels: Boolean,
-    coroutineScope: CoroutineScope,
     items: ImmutableList<NavigationItem>,
     selectedIndex: Int,
 ) {
@@ -408,7 +403,7 @@ private fun MainRailContent(
         onSelect = { index ->
             val item = items[index]
             if (backStack.size == 1 && index == selectedIndex) {
-                coroutineScope.emitGlobalEvent(GlobalEvent.Refresh(item.id))
+                tabs.reselect(item.id)
             } else {
                 jump.pending = backStack.size > 1
                 while (backStack.size > 1) backStack.removeAt(backStack.lastIndex)

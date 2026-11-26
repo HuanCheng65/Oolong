@@ -4,11 +4,13 @@ import androidx.compose.animation.graphics.ExperimentalAnimationGraphicsApi
 import androidx.compose.animation.graphics.res.animatedVectorResource
 import androidx.compose.animation.graphics.vector.AnimatedImageVector
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.setValue
@@ -18,6 +20,10 @@ import androidx.compose.ui.unit.dp
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.filter
 import oolong.client.R
 import oolong.client.data.account.AccountActions
 import oolong.client.data.settings.appPreferences
@@ -42,6 +48,16 @@ class MainTabs(selected: String = HOME, messageCount: Int = 0) {
     var selected by mutableStateOf(selected)
     var messageCount by mutableIntStateOf(messageCount)
 
+    private val reselections = MutableSharedFlow<String>(extraBufferCapacity = 1, onBufferOverflow = BufferOverflow.DROP_OLDEST)
+
+    /** Tab [id], a main one or one inside a main page, was chosen again while shown. */
+    fun reselect(id: String) {
+        reselections.tryEmit(id)
+    }
+
+    /** The tabs chosen again while shown, each of which refreshes. */
+    val reselected: Flow<String> = reselections
+
     companion object {
         const val HOME = "home"
         const val EXPLORE = "explore"
@@ -56,6 +72,16 @@ class MainTabs(selected: String = HOME, messageCount: Int = 0) {
 }
 
 val LocalMainTabs = compositionLocalOf { MainTabs() }
+
+/** Calls [onReselected] each time tab [id] is chosen again while shown. */
+@Composable
+fun OnTabReselected(id: String, onReselected: () -> Unit) {
+    val tabs = LocalMainTabs.current
+    val current by rememberUpdatedState(onReselected)
+    LaunchedEffect(tabs, id) {
+        tabs.reselected.filter { it == id }.collect { current() }
+    }
+}
 
 /** The main tabs as the navigation shows them; explore only while it is not hidden. */
 @OptIn(ExperimentalAnimationGraphicsApi::class)

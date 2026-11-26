@@ -52,9 +52,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.toImmutableList
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
 import oolong.client.arch.LoadStatus
-import oolong.client.arch.onGlobalEvent
 import oolong.client.model.ForumMeasure
 import oolong.client.model.ForumSummary
 import oolong.client.model.RankReason
@@ -85,6 +83,7 @@ import oolong.client.ui.designsystem.states.DefaultLoadingScreen
 import oolong.client.ui.designsystem.states.StateScreen
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.Symbols
+import oolong.client.ui.main.OnTabReselected
 import oolong.client.ui.main.explore.FeedThreadEvents
 import oolong.client.ui.main.explore.rememberFeedThreadEvents
 import oolong.client.ui.topic.TopicTag
@@ -102,7 +101,7 @@ fun HotPage(
     viewModel: HotViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(Unit) { viewModel.open() }
-    onGlobalEvent<GlobalEvent.Refresh>(filter = { it.key == "hot" }) { viewModel.refresh() }
+    OnTabReselected("hot") { viewModel.refresh() }
     val navigator = LocalNavigator.current
     val state by viewModel.state.collectAsStateWithLifecycle()
     HotScreen(

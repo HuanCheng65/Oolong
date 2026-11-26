@@ -20,10 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import oolong.client.R
-import oolong.client.arch.GlobalEvent
 import oolong.client.arch.LoadStatus
 import oolong.client.arch.PagerState
-import oolong.client.arch.onGlobalEvent
 import oolong.client.ui.components.BlockTip
 import oolong.client.ui.components.BlockableContent
 import oolong.client.ui.components.ErrorScreen
@@ -38,6 +36,7 @@ import oolong.client.ui.designsystem.PullRefresh
 import oolong.client.ui.designsystem.VerticalDivider
 import oolong.client.ui.designsystem.states.StateScreen
 import oolong.client.ui.designsystem.theme.ExtendedTheme
+import oolong.client.ui.main.OnTabReselected
 import oolong.client.ui.main.explore.FeedThread
 import oolong.client.ui.main.explore.FeedThreadEvents
 import oolong.client.ui.main.explore.rememberFeedThreadEvents
@@ -48,7 +47,7 @@ fun ConcernPage(
     viewModel: ConcernViewModel = hiltViewModel(),
 ) {
     LaunchedEffect(Unit) { viewModel.open() }
-    onGlobalEvent<GlobalEvent.Refresh>(filter = { it.key == "concern" }) { viewModel.refresh() }
+    OnTabReselected("concern") { viewModel.refresh() }
     val state by viewModel.state.collectAsStateWithLifecycle()
     ConcernScreen(
         list = state,
