@@ -12,11 +12,11 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import oolong.client.BuildConfig
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.dataStore
 import oolong.client.data.update.UpdateChannel
 import oolong.client.data.update.UpdateHost
-import oolong.client.data.update.UpdateRepository
 import oolong.client.util.Roms
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -85,7 +85,7 @@ object UsageStats {
             preferences.edit { putString(LastDay, date(today)) }
             return
         }
-        val channel = context.dataStore.data.first()[UpdateRepository.ChannelKey] ?: UpdateChannel.default.key
+        val channel = Settings.of(context)[SettingKeys.UpdateChannel]
         val beat = heartbeat(
             device = device(context, channel),
             today = today,

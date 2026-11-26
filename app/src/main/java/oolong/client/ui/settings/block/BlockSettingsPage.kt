@@ -10,7 +10,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -19,12 +18,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.collections.immutable.persistentListOf
 import oolong.client.R
 import oolong.client.data.block.DefaultLowLevel
-import oolong.client.data.block.HideBlockedContentKey
-import oolong.client.data.block.LowLevelKey
 import oolong.client.data.settings.SettingKeys
-import oolong.client.data.settings.dataStore
-import oolong.client.data.settings.putBoolean
-import oolong.client.data.settings.putString
+import oolong.client.data.settings.rememberSettings
 import oolong.client.navigation.BlockListKey
 import oolong.client.navigation.BlockSettingsKey
 import oolong.client.navigation.LocalNavigator
@@ -99,11 +94,11 @@ object BlockSettings : SettingsPage<BlockState>(R.string.title_block_settings, B
         group(R.string.settings_blocked_content) {
             // Its options say what it is; search finds it by the group's title
             custom(null) { modifier ->
-                val context = LocalContext.current
+                val settings = rememberSettings()
                 SegmentedControl(
                     options = persistentListOf(stringResource(id = R.string.settings_blocked_fold), stringResource(id = R.string.settings_blocked_hide)),
                     selected = if (stored(SettingKeys.HideBlockedContent)) 1 else 0,
-                    onSelect = { context.dataStore.putBoolean(HideBlockedContentKey, it == 1) },
+                    onSelect = { settings[SettingKeys.HideBlockedContent] = it == 1 },
                     modifier = modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 10.dp),
                 )
             }
@@ -131,7 +126,7 @@ fun BlockSettingsPage(navigator: Navigator = LocalNavigator.current) {
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun LowLevelPref(modifier: Modifier) {
-    val context = LocalContext.current
+    val settings = rememberSettings()
     val level = stored(SettingKeys.BlockLowLevelBelow).toIntOrNull() ?: DefaultLowLevel
     TextPref(
         title = stringResource(id = R.string.settings_block_low_level_below),
@@ -144,7 +139,7 @@ private fun LowLevelPref(modifier: Modifier) {
                 text = stringResource(id = R.string.rule_level, level),
                 down = stringResource(id = R.string.rule_level_down),
                 up = stringResource(id = R.string.rule_level_up),
-                onChange = { context.dataStore.putString(LowLevelKey, it.toString()) },
+                onChange = { settings[SettingKeys.BlockLowLevelBelow] = it.toString() },
             )
         },
     )

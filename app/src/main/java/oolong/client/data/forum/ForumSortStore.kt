@@ -1,12 +1,8 @@
 package oolong.client.data.forum
 
-import android.content.Context
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.flow.first
-import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.Setting
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.model.ForumSort
 import javax.inject.Inject
 
@@ -22,16 +18,14 @@ interface ForumSortStore {
  * offers 0 (reply time) and 1 (post time) as the default.
  */
 class DataStoreForumSortStore @Inject constructor(
-    @ApplicationContext private val context: Context,
+    private val settings: Settings,
 ) : ForumSortStore {
-    override suspend fun sortType(forumName: String): Int {
-        val default = context.appPreferences.defaultSortType?.toIntOrNull() ?: ForumSort.REPLY_TIME
-        return context.dataStore.data.first()[key(forumName)] ?: default
-    }
+    override suspend fun sortType(forumName: String): Int = settings[setting(forumName)]
 
     override suspend fun setSortType(forumName: String, sortType: Int) {
-        context.dataStore.edit { it[key(forumName)] = sortType }
+        settings[setting(forumName)] = sortType
     }
 
-    private fun key(forumName: String) = intPreferencesKey("${forumName}_sort_type")
+    private fun setting(forumName: String) =
+        Setting.int("${forumName}_sort_type", settings[SettingKeys.DefaultSortType].toIntOrNull() ?: ForumSort.REPLY_TIME)
 }

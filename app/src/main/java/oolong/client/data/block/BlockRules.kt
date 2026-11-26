@@ -1,9 +1,5 @@
 package oolong.client.data.block
 
-import android.content.Context
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -14,7 +10,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.shareIn
 import kotlinx.coroutines.launch
 import oolong.client.arch.ApplicationScope
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.database.BlockDao
 import oolong.client.model.BlockRule
 import oolong.client.model.BlockRule.Condition
@@ -442,7 +439,7 @@ interface BlockRuleSource {
 @Singleton
 class DatabaseBlockRuleSource @Inject constructor(
     private val dao: BlockDao,
-    @ApplicationContext context: Context,
+    settings: Settings,
     @ApplicationScope private val scope: CoroutineScope,
 ) : BlockRuleSource {
     private val hits = HitCounter()
@@ -450,12 +447,12 @@ class DatabaseBlockRuleSource @Inject constructor(
     override val rules: Flow<BlockRules> = combine(
         // Hit counts change as content is blocked; matching doesn't look at them
         dao.all().map { entities -> entities.map { it.toBlockRule().copy(hits = 0, lastHitAt = null) } }.distinctUntilChanged(),
-        context.dataStore.data.map { prefs ->
-            BlockOptions(
-                hideByDefault = prefs[booleanPreferencesKey(HideBlockedContentKey)] ?: false,
-                lowLevel = (prefs[stringPreferencesKey(LowLevelKey)]?.toIntOrNull() ?: DefaultLowLevel)
-                    .takeIf { prefs[booleanPreferencesKey(LowLevelEnabledKey)] == true },
-            )
+        combine(
+            settings.flow(SettingKeys.HideBlockedContent),
+            settings.flow(SettingKeys.BlockLowLevel),
+            settings.flow(SettingKeys.BlockLowLevelBelow),
+        ) { hideByDefault, lowLevelOn, below ->
+            BlockOptions(hideByDefault, lowLevel = (below.toIntOrNull() ?: DefaultLowLevel).takeIf { lowLevelOn })
         },
     ) { rules, options -> blockRulesOf(rules, options, onHit = hits::record) }
         .shareIn(scope, SharingStarted.Eagerly, replay = 1)
@@ -501,7 +498,4 @@ class DatabaseBlockRuleSource @Inject constructor(
     }
 }
 
-const val HideBlockedContentKey = "hideBlockedContent"
-const val LowLevelEnabledKey = "blockLowLevel"
-const val LowLevelKey = "blockLowLevelBelow"
 const val DefaultLowLevel = 3

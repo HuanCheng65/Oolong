@@ -8,11 +8,6 @@ import android.content.pm.PackageInstaller
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.core.content.FileProvider
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.intPreferencesKey
-import androidx.datastore.preferences.core.longPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.hilt.EntryPoint
 import dagger.hilt.InstallIn
 import dagger.hilt.android.EntryPointAccessors
@@ -38,7 +33,9 @@ import okhttp3.Request
 import oolong.client.BuildConfig
 import oolong.client.arch.ApplicationScope
 import oolong.client.arch.IoDispatcher
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.Setting
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import java.io.File
 import java.io.IOException
 import java.security.MessageDigest
@@ -91,6 +88,8 @@ enum class UpdateChannel(val key: String) {
     companion object {
         /** A pre-release build (named 1.0.0-alpha.1 and the like) is on beta until the user says otherwise. */
         val default: UpdateChannel get() = if (InstalledIsPreRelease) Beta else Stable
+
+        fun of(key: String): UpdateChannel = entries.firstOrNull { it.key == key } ?: default
     }
 }
 
@@ -129,6 +128,7 @@ class UpdateVerificationException(message: String) : IOException(message)
 @Singleton
 class UpdateRepository @Inject constructor(
     @ApplicationContext private val context: Context,
+    private val settings: Settings,
     @IoDispatcher private val io: CoroutineDispatcher,
     @ApplicationScope private val scope: CoroutineScope,
 ) {
@@ -167,36 +167,33 @@ class UpdateRepository @Inject constructor(
     }
     private var downloadJob: Job? = null
 
-    private val prefs = context.dataStore
-    val autoCheck: Flow<Boolean> = prefs.data.map { it[AutoCheckKey] ?: true }
-    val channel: Flow<UpdateChannel> = prefs.data.map { prefs ->
-        UpdateChannel.entries.firstOrNull { it.key == prefs[ChannelKey] } ?: UpdateChannel.default
-    }
+    val autoCheck: Flow<Boolean> = settings.flow(SettingKeys.UpdateAutoCheck)
+    val channel: Flow<UpdateChannel> = settings.flow(SettingKeys.UpdateChannel).map(UpdateChannel::of)
 
     /** A newer release the user hasn't skipped, for the About page's row and the launch hint. */
-    val available: Flow<Release?> = combine(check, prefs.data) { check, prefs ->
+    val available: Flow<Release?> = combine(check, settings.flow(Skipped)) { check, skipped ->
         (check as? UpdateCheck.Done)?.latest
-            ?.takeIf { it.isNewer && (it.required || it.versionCode != prefs[SkippedKey]) }
+            ?.takeIf { it.isNewer && (it.required || it.versionCode != skipped) }
     }
 
     /** Whether the launch hint for [release] has been shown, which happens once per release. */
-    suspend fun hinted(release: Release): Boolean = prefs.data.first()[HintedKey] == release.versionCode
+    suspend fun hinted(release: Release): Boolean = settings[Hinted] == release.versionCode
 
     suspend fun markHinted(release: Release) {
-        prefs.edit { it[HintedKey] = release.versionCode }
+        settings[Hinted] = release.versionCode
     }
 
     suspend fun setAutoCheck(enabled: Boolean) {
-        prefs.edit { it[AutoCheckKey] = enabled }
+        settings[SettingKeys.UpdateAutoCheck] = enabled
     }
 
     suspend fun setChannel(channel: UpdateChannel) {
-        prefs.edit { it[ChannelKey] = channel.key }
+        settings[SettingKeys.UpdateChannel] = channel.key
         checkNow()
     }
 
     suspend fun skip(release: Release) {
-        prefs.edit { it[SkippedKey] = release.versionCode }
+        settings[Skipped] = release.versionCode
     }
 
     /** Checks unless a check is running. */
@@ -206,7 +203,7 @@ class UpdateRepository @Inject constructor(
             _check.value = UpdateCheck.Checking
             _check.value = try {
                 UpdateCheck.Done(fetch(channel.first())).also {
-                    prefs.edit { it[LastCheckKey] = System.currentTimeMillis() }
+                    settings[LastCheck] = System.currentTimeMillis()
                 }
             } catch (e: Exception) {
                 UpdateCheck.Failed(e)
@@ -218,7 +215,7 @@ class UpdateRepository @Inject constructor(
     fun checkIfDue() {
         scope.launch {
             if (!autoCheck.first()) return@launch
-            val last = prefs.data.first()[LastCheckKey] ?: 0L
+            val last = settings[LastCheck]
             if (System.currentTimeMillis() - last >= 1.days.inWholeMilliseconds) checkNow()
         }
     }
@@ -326,7 +323,7 @@ class UpdateRepository @Inject constructor(
         val file = download.file
         scope.launch(io) {
             // For the notice once the app is replaced: this update is the app's own doing
-            prefs.edit { it[PendingUpdateKey] = download.release.versionName }
+            settings.save(PendingUpdate, download.release.versionName)
             val installer = context.packageManager.packageInstaller
             val params = PackageInstaller.SessionParams(PackageInstaller.SessionParams.MODE_FULL_INSTALL).apply {
                 setAppPackageName(context.packageName)
@@ -369,13 +366,13 @@ class UpdateRepository @Inject constructor(
     /** The install session ended without replacing the app: it failed or was turned down. */
     fun installEnded() {
         _installing.value = false
-        scope.launch { prefs.edit { it.remove(PendingUpdateKey) } }
+        settings.remove(PendingUpdate)
     }
 
     /** The version the app updated itself to, once, if this start follows an update it installed. */
     suspend fun takeUpdated(): String? {
-        val version = prefs.data.first()[PendingUpdateKey] ?: return null
-        prefs.edit { it.remove(PendingUpdateKey) }
+        val version = settings[PendingUpdate] ?: return null
+        settings.remove(PendingUpdate)
         return version
     }
 
@@ -401,14 +398,15 @@ class UpdateRepository @Inject constructor(
             PackageManager.GET_SIGNATURES
         }
 
-        private val AutoCheckKey = booleanPreferencesKey("update_auto_check")
+        // What the checks keep track of, rather than settings the user makes
 
-        // Read by UsageStats too, which sends the channel along
-        internal val ChannelKey = stringPreferencesKey("update_channel")
-        private val SkippedKey = intPreferencesKey("update_skipped_version")
-        private val HintedKey = intPreferencesKey("update_hinted_version")
-        private val LastCheckKey = longPreferencesKey("update_last_check")
-        private val PendingUpdateKey = stringPreferencesKey("update_pending_version")
+        /** The release the user skipped, -1 for none. */
+        private val Skipped = Setting.int("update_skipped_version", -1)
+        private val Hinted = Setting.int("update_hinted_version", -1)
+        private val LastCheck = Setting.long("update_last_check", 0L)
+
+        /** The version an install was started for, to tell on the next launch whether it went through. */
+        private val PendingUpdate = Setting.optionalString("update_pending_version")
     }
 }
 

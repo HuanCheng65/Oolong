@@ -4,7 +4,6 @@ import android.content.Context
 import android.os.Build
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
-import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -15,7 +14,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
@@ -33,7 +31,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.GenericShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.DropdownMenuItem
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.LocalContentColor
@@ -42,7 +39,6 @@ import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
@@ -68,7 +64,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.graphics.toColorInt
-import androidx.datastore.preferences.core.stringPreferencesKey
 import coil3.compose.AsyncImage
 import com.godaddy.android.colorpicker.HsvColor
 import com.godaddy.android.colorpicker.harmony.ColorHarmonyMode
@@ -78,29 +73,25 @@ import oolong.client.R
 import oolong.client.data.settings.Appearance
 import oolong.client.data.settings.ColorStyle
 import oolong.client.data.settings.MonetStyle
+import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.ThemeSettings
 import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.settingAsState
 import oolong.client.navigation.AppThemeKey
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
 import oolong.client.navigation.ProvideNavigator
 import oolong.client.navigation.TranslucentThemeKey
-import oolong.client.ui.designsystem.BackNavigationIcon
 import oolong.client.ui.designsystem.ContextMenuItem
 import oolong.client.ui.designsystem.Dialog
 import oolong.client.ui.designsystem.DialogNegativeButton
 import oolong.client.ui.designsystem.DialogPositiveButton
 import oolong.client.ui.designsystem.DialogState
-import oolong.client.ui.designsystem.GlassScaffold
-import oolong.client.ui.designsystem.GlassTopBar
-import oolong.client.ui.designsystem.GlassTopBarTitle
 import oolong.client.ui.designsystem.IconButton
 import oolong.client.ui.designsystem.Switch
 import oolong.client.ui.designsystem.clickMenu
 import oolong.client.ui.designsystem.maskTo
 import oolong.client.ui.designsystem.menuAnchor
-import oolong.client.ui.designsystem.pageScroll
 import oolong.client.ui.designsystem.rememberDialogState
 import oolong.client.ui.designsystem.rememberMenuTriggerState
 import oolong.client.ui.designsystem.theme.ExtendedColors
@@ -119,7 +110,6 @@ import oolong.client.ui.designsystem.theme.toHexString
 import oolong.client.ui.settings.components.SettingsPage
 import oolong.client.ui.settings.components.SettingsScope
 import oolong.client.ui.settings.components.SettingsScreen
-import oolong.client.ui.settings.components.prefs.GroupHeader
 import oolong.client.ui.settings.components.prefs.PrefsChevron
 import oolong.client.ui.settings.components.prefs.PrefsChoiceValue
 import oolong.client.ui.settings.components.prefs.widgets.TextPref
@@ -147,9 +137,7 @@ object ThemeSettingsPage : SettingsPage<ThemeState>(R.string.title_theme, AppThe
     override fun rememberState(): ThemeState {
         val context = LocalContext.current
         val settings by remember { ThemeUtil.settingsState }
-        val wallpaperPath by remember {
-            context.dataStore.data.map { it[stringPreferencesKey(ThemeUtil.KEY_TRANSLUCENT_THEME_BACKGROUND_PATH)] }
-        }.collectAsState(initial = null)
+        val wallpaperPath by settingAsState(SettingKeys.TranslucentThemeBackgroundPath)
         return ThemeState(
             settings = settings,
             picks = rememberColorPicks(),

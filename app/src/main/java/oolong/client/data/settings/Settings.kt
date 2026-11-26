@@ -8,6 +8,7 @@ import androidx.datastore.preferences.core.edit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,22 +63,33 @@ class Settings internal constructor(private val store: DataStore<Preferences>) {
     fun <T> flow(setting: Setting<T>): Flow<T> = values.map { it[setting.key] ?: setting.default }.distinctUntilChanged()
 
     /** Sets [setting]; null, for a setting that may be unset, removes it. */
-    operator fun <T> set(setting: Setting<T>, value: T) = write(setting.key) { if (value == null) it.remove(setting.key) else it[setting.key] = value }
+    operator fun <T> set(setting: Setting<T>, value: T) {
+        write(setting.key) { if (value == null) it.remove(setting.key) else it[setting.key] = value }
+    }
+
+    /** Sets [setting] as [set] does, and waits till it is in the store, for a write the process may not outlive. */
+    suspend fun <T> save(setting: Setting<T>, value: T) {
+        write(setting.key) { if (value == null) it.remove(setting.key) else it[setting.key] = value }.join()
+    }
 
     /** Removes [setting], so that it reads as its default again. */
-    fun remove(setting: Setting<*>) = write(listOf(setting.key)) { it.remove(setting.key) }
+    fun remove(setting: Setting<*>) {
+        write(setting.key) { it.remove(setting.key) }
+    }
 
     /** Changes the settings under [keys] together, for settings that go as a group. */
-    fun edit(vararg keys: Preferences.Key<*>, change: (MutablePreferences) -> Unit) = write(keys.toList(), change)
+    fun edit(vararg keys: Preferences.Key<*>, change: (MutablePreferences) -> Unit) {
+        write(keys.toList(), change)
+    }
 
     private fun write(key: Preferences.Key<*>, change: (MutablePreferences) -> Unit) = write(listOf(key), change)
 
-    private fun write(keys: List<Preferences.Key<*>>, change: (MutablePreferences) -> Unit) {
+    private fun write(keys: List<Preferences.Key<*>>, change: (MutablePreferences) -> Unit): Job {
         synchronized(pending) {
             keys.forEach { pending[it] = (pending[it] ?: 0) + 1 }
             values.value = values.value.toMutablePreferences().apply(change)
         }
-        scope.launch(writes) {
+        return scope.launch(writes) {
             try {
                 store.edit(change)
             } finally {

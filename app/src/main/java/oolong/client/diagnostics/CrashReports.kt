@@ -3,9 +3,8 @@ package oolong.client.diagnostics
 import android.content.Context
 import android.os.Build
 import androidx.core.content.edit
-import androidx.datastore.preferences.core.stringPreferencesKey
-import kotlinx.coroutines.flow.first
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.data.update.UpdateHost
 import org.json.JSONObject
 import java.net.HttpURLConnection
@@ -25,7 +24,7 @@ object CrashReports {
     const val ModeKey = "crash_report_mode"
 
     suspend fun mode(context: Context): Mode {
-        val value = context.dataStore.data.first()[stringPreferencesKey(ModeKey)]
+        val value = Settings.of(context)[SettingKeys.CrashReportMode]
         return Mode.entries.firstOrNull { it.value == value } ?: Mode.Ask
     }
 

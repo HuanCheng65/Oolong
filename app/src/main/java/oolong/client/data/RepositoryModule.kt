@@ -1,7 +1,6 @@
 package oolong.client.data
 
 import android.content.Context
-import androidx.datastore.preferences.core.stringPreferencesKey
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -37,8 +36,8 @@ import oolong.client.data.history.DatabaseThreadHistory
 import oolong.client.data.history.HistoryOwner
 import oolong.client.data.history.ThreadHistory
 import oolong.client.data.post.PosterName
-import oolong.client.data.settings.appPreferences
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.Settings
 import oolong.client.data.thread.EmoticonRegistry
 import oolong.client.data.thread.SubPostSort
 import oolong.client.data.thread.SubPostSortStore
@@ -75,33 +74,31 @@ abstract class RepositoryModule {
         fun provideWebSessions(): WebSessions = WebSessions.instance
 
         @Provides
-        fun provideVideoThreadFilter(@ApplicationContext context: Context): VideoThreadFilter =
-            VideoThreadFilter { context.appPreferences.blockVideo }
+        fun provideVideoThreadFilter(settings: Settings): VideoThreadFilter =
+            VideoThreadFilter { settings[SettingKeys.BlockVideo] }
 
         @Provides
-        fun provideSubPostSortStore(@ApplicationContext context: Context): SubPostSortStore = object : SubPostSortStore {
+        fun provideSubPostSortStore(settings: Settings): SubPostSortStore = object : SubPostSortStore {
             override var sort: SubPostSort
-                get() = SubPostSort.of(context.appPreferences.subPostSort)
+                get() = SubPostSort.of(settings[SettingKeys.SubPostSort])
                 set(value) {
-                    context.appPreferences.subPostSort = value.value
+                    settings[SettingKeys.SubPostSort] = value.value
                 }
-            override val changes: Flow<SubPostSort> = context.dataStore.data
-                .map { SubPostSort.of(it[stringPreferencesKey("subPostSort")]) }
-                .distinctUntilChanged()
+            override val changes: Flow<SubPostSort> = settings.flow(SettingKeys.SubPostSort).map(SubPostSort::of).distinctUntilChanged()
         }
 
         @Provides
-        fun provideConcernFeedStore(@ApplicationContext context: Context): ConcernFeedStore = object : ConcernFeedStore {
+        fun provideConcernFeedStore(settings: Settings): ConcernFeedStore = object : ConcernFeedStore {
             override var lastRequestUnix: Long
-                get() = context.appPreferences.userLikeLastRequestUnix
+                get() = settings[SettingKeys.UserLikeLastRequestUnix]
                 set(value) {
-                    context.appPreferences.userLikeLastRequestUnix = value
+                    settings[SettingKeys.UserLikeLastRequestUnix] = value
                 }
         }
 
         @Provides
-        fun provideFeedAutoRefresh(@ApplicationContext context: Context): FeedAutoRefresh =
-            FeedAutoRefresh { context.appPreferences.feedAutoRefresh }
+        fun provideFeedAutoRefresh(settings: Settings): FeedAutoRefresh =
+            FeedAutoRefresh { settings[SettingKeys.FeedAutoRefresh] }
 
         @Provides
         @Singleton

@@ -18,17 +18,15 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
-import androidx.datastore.preferences.core.booleanPreferencesKey
-import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.lifecycle.compose.LifecycleResumeEffect
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
-import kotlinx.coroutines.flow.map
 import oolong.client.R
 import oolong.client.background.sign.AutoSign
 import oolong.client.data.settings.BackgroundSettings
 import oolong.client.data.settings.SettingKeys
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.rememberSettings
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
 import oolong.client.navigation.OKSignSettingsKey
@@ -95,20 +93,18 @@ object OKSignSettings : SettingsPage<OKSignState>(R.string.title_oksign, OKSignS
     @Composable
     override fun Effects(state: OKSignState) {
         val context = LocalContext.current
-        val dataStore = context.dataStore
+        val settings = rememberSettings()
         // Reschedule the daily sign-in as soon as it is turned on or off or its time changes
-        LaunchedEffect(dataStore) {
-            dataStore.data
-                .map { it[booleanPreferencesKey("auto_sign")] to it[stringPreferencesKey("auto_sign_time")] }
+        LaunchedEffect(settings) {
+            settings.flow(SettingKeys.AutoSign)
+                .combine(settings.flow(SettingKeys.AutoSignTime)) { on, time -> on to time }
                 .distinctUntilChanged()
                 .drop(1)
                 .collect { AutoSign.schedule(context) }
         }
         // Turning signing in automatically on is when its results start to need notifications
-        LaunchedEffect(dataStore) {
-            dataStore.data
-                .map { it[booleanPreferencesKey("auto_sign")] == true }
-                .distinctUntilChanged()
+        LaunchedEffect(settings) {
+            settings.flow(SettingKeys.AutoSign)
                 .drop(1)
                 .collect { on ->
                     if (on && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && !RunConditions.read(context).notifications) {

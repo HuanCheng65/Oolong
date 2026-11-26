@@ -1,5 +1,6 @@
 package oolong.client.data.settings
 
+import oolong.client.data.block.DefaultLowLevel
 import oolong.client.diagnostics.CrashReports
 import oolong.client.ui.designsystem.theme.ThemeUtil
 import oolong.client.ui.designsystem.theme.ThemeUtil.TRANSLUCENT_THEME_LIGHT
@@ -164,5 +165,10 @@ object SettingKeys {
     val BlockLowLevel = Setting.boolean("blockLowLevel", false)
 
     /** The level below which posters are blocked, while [BlockLowLevel] is on; a number as text. */
-    val BlockLowLevelBelow = Setting.string("blockLowLevelBelow", "3")
+    val BlockLowLevelBelow = Setting.string("blockLowLevelBelow", DefaultLowLevel.toString())
+
+    val UpdateAutoCheck = Setting.boolean("update_auto_check", true)
+
+    /** The key of the [oolong.client.data.update.UpdateChannel] updates come from; UsageStats sends it along. */
+    val UpdateChannel = Setting.string("update_channel", oolong.client.data.update.UpdateChannel.default.key)
 }

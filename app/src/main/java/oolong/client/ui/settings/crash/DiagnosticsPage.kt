@@ -40,9 +40,9 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import oolong.client.BuildConfig
 import oolong.client.R
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.settingAsState
 import oolong.client.data.update.UpdateChannel
-import oolong.client.data.update.UpdateRepository
 import oolong.client.diagnostics.RecentResponses
 import oolong.client.diagnostics.UsageStats
 import oolong.client.navigation.LocalNavigator
@@ -75,10 +75,8 @@ fun DiagnosticsPage(
 ) {
     val context = LocalContext.current
     val resources = LocalResources.current
-    val channel by produceState<String?>(initialValue = null) {
-        value = context.dataStore.data.first()[UpdateRepository.ChannelKey] ?: UpdateChannel.default.key
-    }
-    val device = remember(channel) { channel?.let { UsageStats.device(context, it) } }
+    val channel by settingAsState(SettingKeys.UpdateChannel)
+    val device = remember(channel) { UsageStats.device(context, channel) }
     val last by produceState<Pair<Long, String>?>(initialValue = null) {
         value = withContext(Dispatchers.IO) { UsageStats.lastSent(context) }
     }
@@ -97,7 +95,7 @@ fun DiagnosticsPage(
             )
         },
     ) { padding ->
-        val info = device ?: return@GlassScaffold
+        val info = device
         val channelName = stringResource(if (info.channel == UpdateChannel.Stable.key) R.string.update_channel_stable else R.string.update_channel_beta)
         val rom = info.rom.ifEmpty { stringResource(id = R.string.diagnostics_rom_other) }
         val form = stringResource(

@@ -11,18 +11,14 @@ import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.edit
-import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.lifecycle.viewmodel.navigation3.rememberViewModelStoreNavEntryDecorator
 import androidx.navigation3.runtime.NavBackStack
 import androidx.navigation3.runtime.NavKey
@@ -32,9 +28,9 @@ import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.scene.SceneStrategy
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 import oolong.client.LocalNotificationCountFlow
-import oolong.client.data.settings.dataStore
+import oolong.client.data.settings.SettingKeys
+import oolong.client.data.settings.rememberSettings
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.transition.FramedSinglePaneSceneStrategy
 import oolong.client.navigation.transition.LeadingChrome
@@ -107,7 +103,6 @@ import oolong.client.ui.user.UserProfilePage
 import oolong.client.ui.user.edit.EditProfilePage
 import oolong.client.ui.user.follows.UserFollowsPage
 import oolong.client.ui.webview.WebViewPage
-import oolong.core.designsystem.theme.Motion
 
 /** Whether the entry being composed is the top of the back stack, as opposed to one below a sheet or dialog. */
 val LocalIsTopEntry = compositionLocalOf { true }
@@ -347,30 +342,18 @@ fun AppNavDisplay(
 /** The pane layout, its list width kept across launches once the divider has been moved. */
 @Composable
 private fun rememberListDetailState(): ListDetailStateHolder {
-    val dataStore = LocalContext.current.dataStore
-    val coroutineScope = rememberCoroutineScope()
-    val holder = remember(dataStore) {
+    val settings = rememberSettings()
+    return remember(settings) {
         val state = ListDetailState()
+        settings[SettingKeys.ListPaneWidth]?.let { state.listWidth = it.dp }
         ListDetailStateHolder(
             state = state,
-            strategy = ListDetailSceneStrategy(state) { width ->
-                coroutineScope.launch {
-                    dataStore.edit {
-                        if (width == null) it.remove(ListPaneWidthKey) else it[ListPaneWidthKey] = width.value
-                    }
-                }
-            },
+            strategy = ListDetailSceneStrategy(state) { width -> settings[SettingKeys.ListPaneWidth] = width?.value },
         )
     }
-    LaunchedEffect(holder) {
-        dataStore.data.first()[ListPaneWidthKey]?.let { holder.state.listWidth = it.dp }
-    }
-    return holder
 }
 
 private class ListDetailStateHolder(val state: ListDetailState, val strategy: ListDetailSceneStrategy<NavKey>)
-
-private val ListPaneWidthKey = floatPreferencesKey("list_pane_width")
 
 /** Set by the rail just before it clears the stack, so the panes switch across instead of stepping back. */
 private class RailJump {
