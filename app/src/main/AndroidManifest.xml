@@ -135,6 +135,11 @@
             </intent-filter>
         </activity>
 
+        <!-- Keeps the setup of a forum widget placed from inside the app -->
+        <receiver
+            android:name=".ui.appwidget.WidgetPinnedReceiver"
+            android:exported="false" />
+
         <receiver
             android:name=".ui.appwidget.WidgetRefreshReceiver"
             android:exported="false">

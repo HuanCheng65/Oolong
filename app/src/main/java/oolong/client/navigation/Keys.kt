@@ -191,6 +191,9 @@ data class CrashLogKey(val id: String) : Key
 data object ErrorRecordsKey : Key
 
 @Serializable
+data object WidgetsKey : Key
+
+@Serializable
 data class ErrorRecordKey(val id: String) : Key
 
 @Serializable

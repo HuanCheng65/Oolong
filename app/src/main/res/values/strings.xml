@@ -1046,6 +1046,10 @@
     <string name="appwidget_login">登录后显示你的吧</string>
     <string name="appwidget_no_forums">还没有逛过的吧</string>
     <string name="appwidget_setup_shows">内容</string>
+    <string name="title_widgets">桌面小部件</string>
+    <string name="widgets_placed">桌面上的</string>
+    <string name="widgets_add">添加到桌面</string>
+    <string name="widgets_pin_unsupported">当前桌面不支持从这里添加，可在桌面空白处长按添加</string>
     <string name="appwidget_setup_forum">吧</string>
     <string name="appwidget_setup_forums">显示哪些吧</string>
     <string name="appwidget_setup_add">添加</string>

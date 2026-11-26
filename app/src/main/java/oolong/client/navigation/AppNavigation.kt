@@ -92,6 +92,7 @@ import oolong.client.ui.settings.storage.StoragePage
 import oolong.client.ui.settings.theme.AppThemePage
 import oolong.client.ui.settings.theme.TranslucentThemePage
 import oolong.client.ui.settings.update.UpdatePage
+import oolong.client.ui.settings.widgets.WidgetsPage
 import oolong.client.ui.subposts.SubPostsPage
 import oolong.client.ui.subposts.SubPostsSheetPage
 import oolong.client.ui.thread.ThreadPage
@@ -153,6 +154,7 @@ private fun KeyContent(key: Key) {
         CrashLogsKey -> CrashLogsPage()
         is CrashLogKey -> CrashLogPage(key)
         ErrorRecordsKey -> ErrorRecordsPage()
+        WidgetsKey -> WidgetsPage()
         is ErrorRecordKey -> ErrorRecordPage(key)
         DiagnosticsKey -> DiagnosticsPage()
         ControlCatalogKey -> ControlCatalogPage()

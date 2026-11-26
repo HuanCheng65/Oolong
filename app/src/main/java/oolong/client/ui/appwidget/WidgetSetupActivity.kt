@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.view.WindowCompat
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.emptyPreferences
 import androidx.glance.appwidget.ExperimentalGlanceRemoteViewsApi
 import androidx.glance.appwidget.GlanceAppWidgetManager
 import androidx.glance.appwidget.GlanceRemoteViews
@@ -122,11 +123,14 @@ class WidgetSetupActivity : AppCompatActivity() {
         intent.getIntExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APPWIDGET_ID)
     }
 
+    /** Setting up a forum widget before it is placed, from the app's widget settings: there is no widget yet. */
+    private val pinning by lazy { intent.getBooleanExtra(EXTRA_PIN, false) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         // Backing out leaves the widget unplaced, as the system expects of a setup
         setResult(Activity.RESULT_CANCELED, resultIntent())
-        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {
+        if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID && !pinning) {
             finish()
             return
         }
@@ -143,12 +147,21 @@ class WidgetSetupActivity : AppCompatActivity() {
     private fun resultIntent() = Intent().putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId)
 
     private suspend fun state(): Preferences {
+        if (pinning) return emptyPreferences()
         val glanceId = GlanceAppWidgetManager(this).getGlanceIdBy(appWidgetId)
         return getAppWidgetState(this, PreferencesGlanceStateDefinition, glanceId)
     }
 
     /** Keeps [values] for the widget, draws it again and closes. */
     private fun save(vararg values: Pair<Preferences.Key<String>, String>, forums: Boolean) {
+        if (pinning) {
+            // The launcher asks the user where to put it; the setup is kept once it is placed
+            val forum = values.firstOrNull { it.first == ForumHotWidget.ForumNameKey }?.second ?: return
+            val shows = values.firstOrNull { it.first == ForumHotWidget.ShowsKey }?.second.toShows()
+            WidgetPins.pinForum(this, forum, shows)
+            finish()
+            return
+        }
         lifecycleScope.launch {
             val glanceId = GlanceAppWidgetManager(this@WidgetSetupActivity).getGlanceIdBy(appWidgetId)
             updateAppWidgetState(this@WidgetSetupActivity, PreferencesGlanceStateDefinition, glanceId) {
@@ -526,15 +539,18 @@ class WidgetSetupActivity : AppCompatActivity() {
         }
     }
 
-    private companion object {
-        const val SearchDelayMillis = 300L
+    companion object {
+        /** Set up a forum widget to be placed, rather than one already on the home screen. */
+        const val EXTRA_PIN = "oolong.client.extra.WIDGET_PIN"
+
+        private const val SearchDelayMillis = 300L
 
         /** Where the forum group starts in the forum widget's list: after the preview, sizes and shows. */
-        const val SearchFieldIndex = 4
-        val StageHeight = 220.dp
+        private const val SearchFieldIndex = 4
+        private val StageHeight = 220.dp
 
         /** A widget four cells by two, and two by two, about as large as on a phone. */
-        val WideSize = DpSize(330.dp, 170.dp)
-        val NarrowSize = DpSize(165.dp, 170.dp)
+        private val WideSize = DpSize(330.dp, 170.dp)
+        private val NarrowSize = DpSize(165.dp, 170.dp)
     }
 }
