@@ -8,6 +8,8 @@ import oolong.core.network.identity.SessionProvider
 import oolong.core.network.protos.AppPosInfo
 import oolong.core.network.protos.CommonRequest
 import java.util.Calendar
+import java.util.UUID
+import java.util.concurrent.atomic.AtomicLong
 import kotlin.random.Random
 
 /**
@@ -22,6 +24,9 @@ class CommonParams(
 ) {
     private val processStartTime = clock()
 
+    /** The last `client_logid` handed out. */
+    private val lastLogId = AtomicLong(0)
+
     /** The day the process started, not the day of each request. */
     private val eventDay = eventDay(processStartTime)
 
@@ -32,6 +37,25 @@ class CommonParams(
 
     fun userAgent(profile: TiebaProfile): String =
         "${device.webViewUserAgent} tieba/${profile.version}"
+
+    /**
+     * Headers that differ on every request of the app's own stacks: a random trace id, and a log
+     * id that counts the process's requests on from the time of its first. The in-app web pages
+     * send neither.
+     */
+    fun requestHeaders(profile: TiebaProfile): List<Pair<String, String>> {
+        if (profile.stack == TiebaStack.WEB_VIEW) return emptyList()
+        return listOf(
+            "client_logid" to nextLogId().toString(),
+            "X-Bd-Traceid" to traceId(),
+        )
+    }
+
+    /** One counter for the process: the time of the first request, then one more for each. */
+    private fun nextLogId(): Long = lastLogId.updateAndGet { last -> if (last == 0L) clock() else last + 1 }
+
+    /** A random UUID in lower case without its dashes. */
+    private fun traceId(): String = UUID.randomUUID().toString().lowercase().replace("-", "")
 
     fun headers(profile: TiebaProfile): List<Pair<String, String>> = when (profile.stack) {
         TiebaStack.MESSAGE_TASK -> messageTaskHeaders(profile)
@@ -72,8 +96,6 @@ class CommonParams(
         add("Charset" to "UTF-8")
         add("User-Agent" to userAgent(profile))
         session?.let { add("client_user_token" to it.uid) }
-        add("net" to device.networkType.toString())
-        add("client_logid" to processStartTime.toString())
         add("cuid" to device.cuid)
         add("cuid_galaxy2" to device.cuid)
         add("c3_aid" to device.c3Aid)
@@ -97,7 +119,6 @@ class CommonParams(
         add("User-Agent" to userAgent(profile))
         add("cookie" to "ka=open;" + install.baiduId?.let { "BAIDUID=$it" }.orEmpty())
         sessionProvider.currentSession()?.let { add("client_user_token" to it.uid) }
-        add("client_logid" to processStartTime.toString())
         add("cuid" to device.cuid)
         add("cuid_galaxy2" to device.cuid)
         add("c3_aid" to device.c3Aid)
