@@ -13,10 +13,10 @@ message AgreeMeRequest {
 message AgreeMeRequestData {
   CommonRequest common = 1;
   /** The last item's id for the next page; 0 for the first. */
-  uint64 id = 2;
-  int32 rn = 3;
-  int32 scr_w = 4;
-  int32 scr_h = 5;
-  int32 scr_dip = 6;
-  int32 q_type = 7;
+  optional uint64 id = 2;
+  optional int32 q_type = 7;
+  optional int32 rn = 3;
+  optional int32 scr_dip = 6;
+  optional int32 scr_h = 5;
+  optional int32 scr_w = 4;
 }

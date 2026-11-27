@@ -73,7 +73,7 @@ class SearchRemoteDataSourceTest {
             request.headers["Referer"],
         )
         assertEquals("com.baidu.tieba", request.headers["X-Requested-With"])
-        commonParams.headers(TiebaProfile.WEB_12_52).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
+        commonParams.headers(TiebaProfile.WEB).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
         assertEquals(52L, first.exactMatch?.forumId)
         assertEquals(listOf("a", "b"), first.fuzzyForums.map { it.forumName })
         assertNull(second.exactMatch)
@@ -112,7 +112,7 @@ class SearchRemoteDataSourceTest {
         assertEquals("2", url.queryParameter("ct"))
         assertEquals("20", url.queryParameter("rn"))
         assertNull(url.queryParameter("is_use_zonghe"))
-        assertEquals("12.52.1.0", url.queryParameter("cv"))
+        assertEquals("22.10.1.0", url.queryParameter("cv"))
         assertEquals(true, request.headers["Referer"]?.contains("forumName=%E6%B5%8B%E8%AF%95&forumId=52"))
     }
 

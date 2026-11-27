@@ -97,10 +97,10 @@ class PostRemoteDataSourceTest {
         val params = fields.filter { it.first != "sign" }
         assertEquals(FormSignature.sign(params), fields.single { it.first == "sign" }.second)
         assertEquals(null, fields.singleOrNull { it.first == "sig" })
-        assertEquals(commonParams.form(TiebaProfile.PROTO_12_52).toSet(), params.withoutStatistics().toSet())
+        assertEquals(commonParams.form(TiebaProfile.PROTO).toSet(), params.withoutStatistics().toSet())
 
         val sent = AddPostRequest.ADAPTER.decode(parts.last().second).data_!!
-        assertEquals(commonParams.protobuf(TiebaProfile.PROTO_12_52, includeTbs = true), sent.common)
+        assertEquals(commonParams.protobuf(TiebaProfile.PROTO, includeTbs = true), sent.common)
         assertEquals("tbs-value", sent.common?.tbs)
         assertEquals("", sent.tbs)
         assertEquals("", sent.bot_conf)

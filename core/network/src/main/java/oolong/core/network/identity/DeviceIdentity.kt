@@ -19,7 +19,7 @@ interface DeviceIdentity {
     /** IMEI, or 15 zeros when it can't be read (always the case since Android 10). */
     val imei: String
 
-    /** OAID as returned by the system, empty when unsupported. */
+    /** The OAID in its `A10-` form (base32 of it, then a check), empty when unsupported. */
     val oaid: String
 
     val model: String

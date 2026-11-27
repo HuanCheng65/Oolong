@@ -9,8 +9,8 @@ message AddPollPostRequest {
 }
 
 message AddPollPostRequestData {
-  uint64 thread_id = 1;
+  optional uint64 forum_id = 4;
   // The chosen options' ids, joined with commas
-  string options = 2;
-  uint64 forum_id = 4;
+  optional string options = 2;
+  optional uint64 thread_id = 1;
 }

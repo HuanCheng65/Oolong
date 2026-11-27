@@ -89,7 +89,7 @@ class SignRemoteDataSourceTest {
 
         val request = server.takeRequest()
         assertEquals("/c/c/forum/sign", request.target)
-        commonParams.headers(TiebaProfile.FORM_12_52).forEach { (name, value) ->
+        commonParams.headers(TiebaProfile.FORM).forEach { (name, value) ->
             assertEquals(value, request.headers[name], name)
         }
         assertEquals(null, request.headers["client_type"])

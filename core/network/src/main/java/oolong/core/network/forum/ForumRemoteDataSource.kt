@@ -30,7 +30,7 @@ class ForumRemoteDataSource(
     private val commonParams: CommonParams,
     private val device: DeviceIdentity,
 ) {
-    private val profile = TiebaProfile.PROTO_12_52
+    private val profile = TiebaProfile.PROTO
     private val service = network.service<ForumService>(profile)
 
     suspend fun forumRuleDetail(forumId: Long): ForumRuleDetailResponseData {

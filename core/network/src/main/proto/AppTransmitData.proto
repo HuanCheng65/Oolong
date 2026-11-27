@@ -3,7 +3,7 @@ syntax = "proto3";
 option java_package = "oolong.core.network.protos";
 
 message AppTransmitData {
-  string wise_sample_id = 1;
-  string yy_hdid = 2;
-  string yy_version = 3;
+  optional string wise_sample_id = 1;
+  optional string yy_hdid = 2;
+  optional string yy_version = 3;
 }

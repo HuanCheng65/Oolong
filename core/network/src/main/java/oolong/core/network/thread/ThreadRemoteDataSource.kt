@@ -22,11 +22,11 @@ class ThreadRemoteDataSource(
     private val device: DeviceIdentity,
 ) {
     /** Replies inside posts are only sent with their pictures to a newer client. */
-    private val pageProfile = TiebaProfile.PROTO_22_10
-    private val formProfile = TiebaProfile.FORM_12_52
+    private val pageProfile = TiebaProfile.PROTO
+    private val formProfile = TiebaProfile.FORM
     private val pageService = network.service<ThreadService>(pageProfile)
 
-    private val floorProfile = TiebaProfile.PROTO_22_10
+    private val floorProfile = TiebaProfile.PROTO
     private val floorService = network.service<ThreadService>(floorProfile)
     private val formService = network.service<ThreadService>(formProfile)
 

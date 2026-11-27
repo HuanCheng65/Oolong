@@ -21,7 +21,7 @@ class PostRemoteDataSource(
     private val commonParams: CommonParams,
     private val sessionProvider: SessionProvider,
 ) {
-    private val profile = TiebaProfile.PROTO_12_52
+    private val profile = TiebaProfile.PROTO
     private val service = network.service<PostService>(profile)
 
     /**

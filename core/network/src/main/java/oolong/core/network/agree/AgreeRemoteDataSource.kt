@@ -19,7 +19,7 @@ class AgreeRemoteDataSource(
     network: TiebaNetwork,
     private val commonParams: CommonParams,
 ) {
-    private val profile = TiebaProfile.FORM_12_52
+    private val profile = TiebaProfile.FORM
     private val service = network.service<AgreeService>(profile)
 
     /**

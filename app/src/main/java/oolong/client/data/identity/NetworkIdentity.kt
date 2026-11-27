@@ -51,7 +51,7 @@ private class AppDeviceIdentity(private val context: Context) : DeviceIdentity {
     override val cuid: String get() = CuidUtils.getNewCuid()
     override val c3Aid: String get() = UIDUtil.getAid()
     override val imei: String get() = MobileInfoUtil.getIMEI(context)
-    override val oaid: String get() = App.Config.oaid
+    override val oaid: String get() = UIDUtil.getOAID()
     override val model: String get() = Build.MODEL
     override val brand: String get() = Build.BRAND
     override val osVersion: String get() = Build.VERSION.RELEASE

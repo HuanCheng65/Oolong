@@ -5,8 +5,8 @@ package tieba.pbPage;
 option java_package = "oolong.core.network.protos.pbPage";
 
 message AdParam {
+  optional int32 is_req_ad = 4;
   optional int32 load_count = 1;
-  int32 refresh_count = 2;
-  string yoga_lib_version = 3;
-  int32 is_req_ad = 4;
+  optional int32 refresh_count = 2;
+  optional string yoga_lib_version = 3;
 }

@@ -20,11 +20,11 @@ class UserRemoteDataSource(
     private val commonParams: CommonParams,
     private val device: DeviceIdentity,
 ) {
-    private val protoProfile = TiebaProfile.PROTO_12_52
-    private val formProfile = TiebaProfile.FORM_12_52
+    private val protoProfile = TiebaProfile.PROTO
+    private val formProfile = TiebaProfile.FORM
     private val service = network.service<UserService>(protoProfile)
     private val formService = network.service<UserFormService>(formProfile)
-    private val webProfile = TiebaProfile.WEB_12_52
+    private val webProfile = TiebaProfile.WEB
     private val blackListService = network.service<BlackListService>(webProfile)
     private val likesService = network.service<LikesService>(webProfile)
 
@@ -172,8 +172,6 @@ class UserRemoteDataSource(
             "intro" to intro,
             "sex" to sex.toString(),
             "nick_name" to nickName,
-            "cam" to "",
-            "need_cam_decrypt" to "1",
             "need_keep_nickname_flag" to "0",
         )
         formService.modifyProfile(signedFormBody(params, withSig = false))

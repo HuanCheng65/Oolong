@@ -12,31 +12,31 @@ import "AppTransmitData.proto";
 import "Toast.proto";
 
 message PersonalizedRequestData {
-  string ad_context_list = 30;
-  string ad_ext_params = 37;
+  optional string ad_context_list = 30;
+  optional string ad_ext_params = 37;
+  optional string ad_external_info = 45;
   AppPosInfo app_pos = 36;
-  CommonRequest common = 1;
-  string invoke_source = 29;
-  uint32 load_type = 4;
-  uint32 need_forumlist = 22;
-  uint32 need_tags = 3;
-  int32 new_install = 27;
-  uint32 new_net_type = 23;
-  uint32 page_thread_count = 5;
-  uint32 pn = 6;
-  int32 pre_ad_thread_count = 26;
-  int32 q_type = 11;
-  int32 request_times = 28;
-  double scr_dip = 10;
-  int32 scr_h = 9;
-  int32 scr_w = 8;
-  uint32 sug_count = 7;
-  uint32 tag_code = 2;
   AppTransmitData app_transmit_data = 38;
-  int32 is_newfeed = 40;
-  uint32 is_new_user = 44;
-  string ad_external_info = 45;
-  uint32 cache_column_style = 46;
+  optional uint32 cache_column_style = 46;
+  CommonRequest common = 1;
+  optional string invoke_source = 29;
+  optional uint32 is_new_user = 44;
+  optional int32 is_newfeed = 40;
+  optional uint32 load_type = 4;
+  optional uint32 need_forumlist = 22;
+  optional uint32 need_tags = 3;
+  optional int32 new_install = 27;
+  optional uint32 new_net_type = 23;
+  optional uint32 page_thread_count = 5;
+  optional uint32 pn = 6;
+  optional int32 pre_ad_thread_count = 26;
+  optional int32 q_type = 11;
+  optional int32 request_times = 28;
+  optional double scr_dip = 10;
+  optional int32 scr_h = 9;
+  optional int32 scr_w = 8;
+  optional uint32 sug_count = 7;
+  optional uint32 tag_code = 2;
 }
 
 message PersonalizedRequest {

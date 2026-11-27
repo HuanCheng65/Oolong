@@ -82,7 +82,7 @@ class UploadRemoteDataSourceTest {
         assertEquals("吧名", map["small_flow_fname"])
         assertNull(map["user_name"])
         assertEquals("bduss-value", map["BDUSS"])
-        assertEquals("12.52.1.0", map["_client_version"])
+        assertEquals("22.10.1.0", map["_client_version"])
         assertEquals("123", response.picId)
         assertEquals("https://example.com/p.jpg", response.picInfo?.originPic?.picUrl)
     }
@@ -112,7 +112,7 @@ class UploadRemoteDataSourceTest {
         val fields = parts.fields()
         assertSignedWithoutSig(fields)
         assertEquals(
-            server.commonParams.form(TiebaProfile.FORM_12_52).map { it.first }.sorted(),
+            server.commonParams.form(TiebaProfile.FORM).map { it.first }.sorted(),
             fields.map { it.first }.filter { it != "sign" },
         )
     }

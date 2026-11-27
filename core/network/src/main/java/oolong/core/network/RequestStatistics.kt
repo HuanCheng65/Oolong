@@ -7,6 +7,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.asResponseBody
 import okio.Buffer
 import okio.ForwardingSource
+import okio.GzipSource
 import okio.buffer
 import oolong.core.network.form.MultipartFormBody
 import oolong.core.network.form.signedParams
@@ -74,6 +75,9 @@ class RequestStatistics(private val clock: () -> Long = System::currentTimeMilli
         val body = response.body
         var read = 0L
         var done = false
+        // The size is what came over the network: a gzip answer is counted before it is inflated
+        val gzip = response.header("Content-Encoding").equals("gzip", ignoreCase = true) &&
+            request.header("Accept-Encoding") != null
         val counting = object : ForwardingSource(body.source()) {
             override fun read(sink: Buffer, byteCount: Long): Long {
                 val count = super.read(sink, byteCount)
@@ -92,6 +96,13 @@ class RequestStatistics(private val clock: () -> Long = System::currentTimeMilli
                 done = true
                 record(clock() - started, read, networkType(), request.method == "POST")
             }
+        }
+        if (gzip) {
+            return response.newBuilder()
+                .removeHeader("Content-Encoding")
+                .removeHeader("Content-Length")
+                .body(GzipSource(counting).buffer().asResponseBody(body.contentType(), -1))
+                .build()
         }
         return response.newBuilder()
             .body(counting.buffer().asResponseBody(body.contentType(), body.contentLength()))

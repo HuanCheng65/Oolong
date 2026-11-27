@@ -12,8 +12,8 @@ import "Error.proto";
 
 message HotThreadListRequestData {
   CommonRequest common = 1;
-  string tabId = 2;
-  string tabCode = 3;
+  optional string tabCode = 3;
+  optional string tabId = 2;
 }
 
 message HotThreadListRequest {

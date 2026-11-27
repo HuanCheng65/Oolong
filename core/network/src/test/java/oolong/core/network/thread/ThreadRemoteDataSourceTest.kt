@@ -45,7 +45,7 @@ class ThreadRemoteDataSourceTest {
     private fun sentPageRequest(): PbPageRequestData {
         val request = server.takeRequest()
         assertEquals("/c/f/pb/page?cmd=302001&format=protobuf", request.target)
-        commonParams.headers(TiebaProfile.PROTO_22_10).forEach { (name, value) ->
+        commonParams.headers(TiebaProfile.PROTO).forEach { (name, value) ->
             assertEquals(value, request.headers[name], name)
         }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
@@ -59,7 +59,8 @@ class ThreadRemoteDataSourceTest {
         dataSource.page(threadId = 9_000, page = 2, forumId = 52)
 
         val expected = PbPageRequestData(
-            common = commonParams.protobuf(TiebaProfile.PROTO_22_10),
+            last = 0,
+            common = commonParams.protobuf(TiebaProfile.PROTO),
             kz = 9_000,
             pid = 0,
             pn = 2,
@@ -153,13 +154,14 @@ class ThreadRemoteDataSourceTest {
 
         val request = server.takeRequest()
         assertEquals("/c/f/pb/floor?cmd=302002&format=protobuf", request.target)
-        commonParams.headers(TiebaProfile.PROTO_22_10).forEach { (name, value) ->
+        commonParams.headers(TiebaProfile.PROTO).forEach { (name, value) ->
             assertEquals(value, request.headers[name], name)
         }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
         val message = assertProtobufParts(parts, loggedIn = false)
         val expected = PbFloorRequestData(
-            common = commonParams.protobuf(TiebaProfile.PROTO_22_10),
+            preview_spids = "",
+            common = commonParams.protobuf(TiebaProfile.PROTO),
             forum_id = 52,
             kz = 9_000,
             pid = 77,
@@ -189,7 +191,7 @@ class ThreadRemoteDataSourceTest {
         assertEquals("""[{"pid":"77","status":1,"tid":"9000"}]""", form.value("data"))
         assertEquals("stoken-value", form.value("stoken"))
         assertNull(form.value("tbs"))
-        val expected = commonParams.form(TiebaProfile.FORM_12_52) + ("data" to form.value("data")!!)
+        val expected = commonParams.form(TiebaProfile.FORM) + ("data" to form.value("data")!!)
         assertEquals(expected.sortedBy { it.first }, form.filter { it.first != "sign" }.withoutStatistics())
     }
 

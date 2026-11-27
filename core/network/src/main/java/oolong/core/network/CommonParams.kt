@@ -3,6 +3,7 @@ package oolong.core.network
 import okio.ByteString.Companion.encodeUtf8
 import oolong.core.network.identity.DeviceIdentity
 import oolong.core.network.identity.InstallIdentity
+import oolong.core.network.identity.PrivacyEncoding
 import oolong.core.network.identity.Session
 import oolong.core.network.identity.SessionProvider
 import oolong.core.network.protos.AppPosInfo
@@ -91,29 +92,31 @@ class CommonParams(
     }
 
     /**
-     * Headers of the message task stack. `client_type` is a form parameter there, not a header,
-     * and the cookie carries the full set of device identifiers, joined with ";" and no spaces.
+     * Headers of the message task stack, in the order it writes them. `client_type` is a form
+     * parameter there, not a header. The cookie carries the device identifiers, the brand and the
+     * `cuid` in [PrivacyEncoding], joined with ";" and closed with one.
      */
     private fun messageTaskHeaders(profile: TiebaProfile): List<Pair<String, String>> = buildList {
         val session = sessionProvider.currentSession()
-        add("Charset" to "UTF-8")
-        add("User-Agent" to userAgent(profile))
-        session?.let { add("client_user_token" to it.uid) }
-        add("cuid" to device.cuid)
-        add("cuid_galaxy2" to device.cuid)
-        add("c3_aid" to device.c3Aid)
-        add("cuid_gid" to "")
         val cookie = listOfNotNull(
-            "ka=open",
-            "need_cookie_decrypt=0",
-            "TBBRAND=${device.model}",
-            "DNARBBT=",
-            "CUID=${device.cuid}",
-            install.baiduId?.let { "BAIDUID=$it" },
             session?.zid?.let { "BAIDUZID=$it" },
-            "BAIDUCUID=${device.cuid.encodeUtf8().base64()}",
+            "DNARBBT=${PrivacyEncoding.encode(device.model)}",
+            "CUID=${device.cuid}",
+            "ka=open",
+            "BAIDUCUID=${PrivacyEncoding.encode(device.cuid)}",
+            "need_cookie_decrypt=1",
+            install.baiduId?.let { "BAIDUID=$it" },
         )
-        add("cookie" to cookie.joinToString(";"))
+        add("Cookie" to cookie.joinToString("") { "$it;" })
+        add("cuid" to device.cuid)
+        add("c3_aid" to device.c3Aid)
+        add("User-Agent" to userAgent(profile))
+        add("Connection" to "Keep-Alive")
+        add("cuid_gid" to "")
+        add("Charset" to "UTF-8")
+        add("cuid_galaxy2" to device.cuid)
+        add("Accept-Encoding" to "gzip")
+        session?.let { add("client_user_token" to it.uid) }
         if (profile.protocol == TiebaProtocol.PROTOBUF) add("x_bd_data_type" to "protobuf")
     }
 
@@ -164,13 +167,16 @@ class CommonParams(
             add("is_teenager" to "0")
             add("start_type" to "1")
             add("start_scheme" to "")
-            add("_phone_imei" to device.imei)
-            add("oaid" to device.oaid)
-            add("model" to device.model)
-            add("brand" to device.brand)
-            add("android_id" to device.androidId)
-            add("mac" to MAC)
-            add("need_decrypt" to "0")
+            add("os_version" to device.osVersion)
+            add("iemi" to PrivacyEncoding.encode(device.imei))
+            add("cam" to "")
+            add("di_diordna" to PrivacyEncoding.encode(device.androidId))
+            add("ledom" to PrivacyEncoding.encode(device.model))
+            add("diao" to device.oaid)
+            add("dnarb" to PrivacyEncoding.encode(device.brand))
+            add("need_decrypt" to "1")
+            add("need_cam_decrypt" to "1")
+            add("ad_context" to "")
             add("timestamp" to clock().toString())
             install.baiduId?.let { add("baiduid" to it) }
             install.sampleId?.let { add("sample_id" to it) }
@@ -190,52 +196,55 @@ class CommonParams(
      */
     fun protobuf(profile: TiebaProfile, includeTbs: Boolean = false): CommonRequest {
         val session = sessionProvider.currentSession()
-        val now = clock()
         return CommonRequest(
+            BDUSS = session?.bduss,
             _client_type = 2,
             _client_version = profile.version,
-            _client_id = install.clientId ?: fallbackClientId,
-            _phone_imei = device.imei,
-            from = CHANNEL,
-            cuid = device.cuid,
-            _timestamp = now,
-            model = device.model,
-            BDUSS = session?.bduss,
-            tbs = session?.tbs?.takeIf { includeTbs },
-            net_type = device.networkType,
-            pversion = "1.0.3",
-            _os_version = device.osVersion,
-            brand = device.brand,
-            lego_lib_version = "3.0.0",
+            _timestamp = clock(),
+            active_timestamp = install.activeTimestamp,
+            ad_context = "",
             applist = "",
-            stoken = session?.stoken,
-            z_id = session?.zid,
+            c3_aid = device.c3Aid,
+            cam = "",
+            cmode = 1,
+            cuid = device.cuid,
             cuid_galaxy2 = device.cuid,
             cuid_gid = "",
-            oaid = device.oaid,
-            c3_aid = device.c3Aid,
-            sample_id = install.sampleId,
-            scr_w = device.screenWidth,
-            scr_h = device.screenHeight,
-            scr_dip = device.screenDensity.toDouble(),
-            q_type = 0,
-            is_teenager = 0,
-            sdk_ver = profile.sdkVersion,
-            framework_ver = profile.frameworkVersion,
-            swan_game_ver = profile.swanGameVersion,
-            active_timestamp = install.activeTimestamp,
-            first_install_time = install.firstInstallTime,
-            last_update_time = install.lastUpdateTime,
+            device_score = device.deviceScore.toString(),
+            di_diordna = PrivacyEncoding.encode(device.androidId),
+            diao = device.oaid,
+            dnarb = PrivacyEncoding.encode(device.brand),
             event_day = eventDay,
-            android_id = device.androidId,
-            cmode = 1,
+            extra = "",
+            first_install_time = install.firstInstallTime,
+            framework_ver = profile.frameworkVersion,
+            from = CHANNEL,
+            iemi = PrivacyEncoding.encode(device.imei),
+            is_teenager = 0,
+            last_update_time = install.lastUpdateTime,
+            ledom = PrivacyEncoding.encode(device.model),
+            lego_lib_version = "3.0.0",
+            naws_game_ver = profile.swanGameVersion,
+            need_cam_decrypt = 1,
+            need_decrypt = 1,
+            net_type = device.networkType,
+            noisrev_so = PrivacyEncoding.encode(device.osVersion),
+            package_version = profile.packageVersion,
+            personalized_rec_switch = 1,
+            pversion = "1.0.3",
+            q_type = 0,
+            sample_id = install.sampleId,
+            scr_dip = device.screenDensity.toDouble(),
+            scr_h = device.screenHeight,
+            scr_w = device.screenWidth,
+            sdk_ver = profile.sdkVersion,
             start_scheme = "",
             start_type = 1,
-            extra = "",
+            stoken = session?.stoken,
+            support_image = SUPPORTED_IMAGES,
+            tbs = session?.tbs?.takeIf { includeTbs },
             user_agent = userAgent(profile),
-            personalized_rec_switch = 1,
-            device_score = device.deviceScore.toString(),
-            mac = MAC,
+            z_id = session?.zid,
         )
     }
 
@@ -263,6 +272,9 @@ class CommonParams(
 
     private companion object {
         const val CHANNEL = "1020031h"
+
+        /** The picture formats the client takes, as it spells them. */
+        const val SUPPORTED_IMAGES = "jepgwebp"
 
         /** What Android has returned for the MAC address since Android 6. */
         const val MAC = "02:00:00:00:00:00"

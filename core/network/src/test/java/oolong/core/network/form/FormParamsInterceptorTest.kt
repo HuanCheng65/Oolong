@@ -30,7 +30,7 @@ class FormParamsInterceptorTest {
     private fun send(builder: Request.Builder.() -> Unit): Request {
         lateinit var sent: Request
         OkHttpClient.Builder()
-            .addInterceptor(FormParamsInterceptor(TiebaProfile.FORM_12_52, commonParams))
+            .addInterceptor(FormParamsInterceptor(TiebaProfile.FORM, commonParams))
             .addInterceptor { chain ->
                 sent = chain.request()
                 Response.Builder().request(sent).protocol(Protocol.HTTP_1_1).code(200).message("OK")
@@ -53,7 +53,7 @@ class FormParamsInterceptorTest {
 
         assertSigned(form, withSig = false)
         assertEquals("吧名", form.value("kw"))
-        assertEquals("12.52.1.0", form.value("_client_version"))
+        assertEquals("22.10.1.0", form.value("_client_version"))
         assertEquals("bduss-value", form.value("BDUSS"))
     }
 

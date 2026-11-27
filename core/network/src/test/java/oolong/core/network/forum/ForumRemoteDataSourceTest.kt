@@ -75,7 +75,7 @@ class ForumRemoteDataSourceTest {
     private fun sentData(target: String): okio.ByteString {
         val request = server.takeRequest()
         assertEquals(target, request.target)
-        commonParams.headers(TiebaProfile.PROTO_12_52).forEach { (name, value) ->
+        commonParams.headers(TiebaProfile.PROTO).forEach { (name, value) ->
             assertEquals(value, request.headers[name], name)
         }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
@@ -100,7 +100,7 @@ class ForumRemoteDataSourceTest {
                 call_from = 0,
                 category_id = 0,
                 cid = 7,
-                common = commonParams.protobuf(TiebaProfile.PROTO_12_52),
+                common = commonParams.protobuf(TiebaProfile.PROTO),
                 ctime = 0,
                 data_size = 0,
                 hot_thread_id = 0,
@@ -141,7 +141,7 @@ class ForumRemoteDataSourceTest {
         assertEquals("吧名", sent.forum_name)
         assertEquals(3, sent.sort_type)
         assertEquals(fakeSession.uid.toLong(), sent.user_id)
-        assertEquals(commonParams.protobuf(TiebaProfile.PROTO_12_52), sent.common)
+        assertEquals(commonParams.protobuf(TiebaProfile.PROTO), sent.common)
     }
 
     @Test
@@ -154,7 +154,7 @@ class ForumRemoteDataSourceTest {
         val sent = GeneralTabListRequest.ADAPTER.decode(sentData("/c/f/frs/generalTabList?cmd=309622&format=protobuf")).data_!!
         assertEquals(
             GeneralTabListRequestData(
-                common = commonParams.protobuf(TiebaProfile.PROTO_12_52),
+                common = commonParams.protobuf(TiebaProfile.PROTO),
                 tab_id = 5237271,
                 forum_id = 52,
                 pn = 2,
@@ -191,15 +191,15 @@ class ForumRemoteDataSourceTest {
         val request = server.takeRequest()
         assertEquals("POST", request.method)
         assertEquals("/c/f/forum/forumRuleDetail?cmd=309690&format=protobuf", request.target)
-        commonParams.headers(TiebaProfile.PROTO_12_52).forEach { (name, value) ->
+        commonParams.headers(TiebaProfile.PROTO).forEach { (name, value) ->
             assertEquals(value, request.headers[name], name)
         }
-        assertEquals("chunked", request.headers["Transfer-Encoding"])
+        assertEquals(request.body!!.size.toString(), request.headers["Content-Length"])
 
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
         val sent = ForumRuleDetailRequest.ADAPTER.decode(assertProtobufParts(parts))
         assertEquals(52, sent.data_?.forum_id)
-        assertEquals(commonParams.protobuf(TiebaProfile.PROTO_12_52), sent.data_?.common)
+        assertEquals(commonParams.protobuf(TiebaProfile.PROTO), sent.data_?.common)
     }
 
     @Test
@@ -213,7 +213,7 @@ class ForumRemoteDataSourceTest {
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
         val sent = GetForumDetailRequest.ADAPTER.decode(assertProtobufParts(parts))
         assertEquals(52, sent.data_?.forum_id)
-        assertEquals(commonParams.protobuf(TiebaProfile.PROTO_12_52), sent.data_?.common)
+        assertEquals(commonParams.protobuf(TiebaProfile.PROTO), sent.data_?.common)
         assertEquals("测试", info.forum_name)
     }
 

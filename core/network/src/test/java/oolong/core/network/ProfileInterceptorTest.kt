@@ -24,7 +24,7 @@ class ProfileInterceptorTest {
     private fun send(request: Request): Request {
         lateinit var sent: Request
         val client = OkHttpClient.Builder()
-            .addInterceptor(ProfileInterceptor(TiebaProfile.PROTO_12_52, commonParams))
+            .addInterceptor(ProfileInterceptor(TiebaProfile.PROTO, commonParams))
             .addInterceptor { chain ->
                 sent = chain.request()
                 Response.Builder()
@@ -45,7 +45,7 @@ class ProfileInterceptorTest {
         val sent = send(Request.Builder().url("https://tiebac.baidu.com/c/f/forum/forumRuleDetail").build())
 
         assertEquals(
-            commonParams.headers(TiebaProfile.PROTO_12_52),
+            commonParams.headers(TiebaProfile.PROTO),
             sent.headers.toList().filter { it.first != "client_logid" && it.first != "X-Bd-Traceid" },
         )
     }
@@ -68,7 +68,7 @@ class ProfileInterceptorTest {
     @Test
     fun `sends no per-request headers from the in-app web pages`() {
         val client = OkHttpClient.Builder()
-            .addInterceptor(ProfileInterceptor(TiebaProfile.WEB_12_52, commonParams))
+            .addInterceptor(ProfileInterceptor(TiebaProfile.WEB, commonParams))
             .addInterceptor { chain ->
                 assertNull(chain.request().header("X-Bd-Traceid"))
                 assertNull(chain.request().header("client_logid"))

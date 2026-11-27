@@ -8,5 +8,5 @@ import "CommonRequest.proto";
 
 message GetHistoryForumRequestData {
   CommonRequest common = 1;
-  string history = 2;
+  optional string history = 2;
 }

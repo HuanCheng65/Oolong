@@ -17,8 +17,8 @@ class SearchRemoteDataSource(
     private val device: DeviceIdentity,
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
-    private val protoProfile = TiebaProfile.PROTO_12_52
-    private val webProfile = TiebaProfile.WEB_12_52
+    private val protoProfile = TiebaProfile.PROTO
+    private val webProfile = TiebaProfile.WEB
     private val sugService = network.service<SearchSugService>(protoProfile)
     private val webService = network.service<SearchWebService>(webProfile)
 

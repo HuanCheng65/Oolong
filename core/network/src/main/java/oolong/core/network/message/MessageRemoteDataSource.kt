@@ -15,9 +15,9 @@ class MessageRemoteDataSource(
     private val commonParams: CommonParams,
     private val device: DeviceIdentity,
 ) {
-    private val profile = TiebaProfile.MESSAGE_FORM_12_52
+    private val profile = TiebaProfile.MESSAGE_FORM
     private val service = network.service<MessageService>(profile)
-    private val protoProfile = TiebaProfile.PROTO_12_52
+    private val protoProfile = TiebaProfile.PROTO
     private val protoService = network.service<MessageProtoService>(protoProfile)
 
     /** Unread message counts. The request has no parameters of its own. */

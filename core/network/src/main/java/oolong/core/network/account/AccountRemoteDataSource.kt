@@ -1,6 +1,5 @@
 package oolong.core.network.account
 
-import okio.ByteString.Companion.encodeUtf8
 import oolong.core.network.CommonParams
 import oolong.core.network.TiebaNetwork
 import oolong.core.network.TiebaProfile
@@ -35,8 +34,8 @@ class AccountRemoteDataSource(
     private val commonParams: CommonParams,
     private val device: DeviceIdentity,
 ) {
-    private val formProfile = TiebaProfile.FORM_12_52
-    private val protoProfile = TiebaProfile.PROTO_12_52
+    private val formProfile = TiebaProfile.FORM
+    private val protoProfile = TiebaProfile.PROTO
     private val formService = network.service<AccountFormService>(formProfile)
     private val service = network.service<AccountService>(protoProfile)
 
@@ -70,10 +69,7 @@ class AccountRemoteDataSource(
         return checkNotNull(service.userInfo(ProtobufBody(request, listOf("stoken" to stoken))).data_?.user) { "No user" }
     }
 
-    /**
-     * Registers the installation. The IMEI, Android ID and MAC go under Base64 aliases (`iemi`,
-     * `di_diordna`, `cam`) instead of the plain common parameters.
-     */
+    /** Registers the installation, with the device fields the common parameters carry encoded. */
     suspend fun sync(info: SyncInfo): SyncResponse {
         val business = listOfNotNull(
             info.clientId?.let { "_client_id" to it },
@@ -96,15 +92,11 @@ class AccountRemoteDataSource(
             "_active" to "0",
             "_pic_quality" to "0",
             "package" to "com.baidu.tieba",
-            "versioncode" to "204734720",
+            "versioncode" to "369754368",
             "signmd5" to "225172691",
             "md5" to "F86F4C238491AB3BEBFA33AC42C1582B",
-            "iemi" to device.imei.base64(),
-            "di_diordna" to device.androidId.base64(),
-            "cam" to "02:00:00:00:00:00".base64(),
         )
-        val omit = setOf("mac", "_phone_imei", "android_id")
-        return formService.sync(signedFormBody(form(business, omit), withSig = false))
+        return formService.sync(signedFormBody(form(business), withSig = false))
     }
 
     /** The common parameters with [business] in place of any of the same name, and without [omit]. */
@@ -112,6 +104,4 @@ class AccountRemoteDataSource(
         val names = business.mapTo(HashSet()) { it.first } + omit
         return commonParams.form(formProfile).filter { it.first !in names } + business
     }
-
-    private fun String.base64() = encodeUtf8().base64()
 }

@@ -11,11 +11,11 @@ import "Media.proto";
 import "VideoInfo.proto";
 
 message TopicListRequestData {
+  optional string call_from = 2;
   CommonRequest common = 1;
-  string call_from = 2;
-  string list_type = 3;
-  string need_tab_list = 4;
-  int64 fid = 5;
+  optional int64 fid = 5;
+  optional string list_type = 3;
+  optional string need_tab_list = 4;
 }
 
 message TopicListRequest {

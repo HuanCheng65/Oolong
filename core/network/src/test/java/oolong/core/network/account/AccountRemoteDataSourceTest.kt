@@ -3,8 +3,8 @@ package oolong.core.network.account
 import kotlinx.coroutines.test.runTest
 import mockwebserver3.MockResponse
 import okio.Buffer
-import okio.ByteString.Companion.encodeUtf8
 import oolong.core.network.FakeDevice
+import oolong.core.network.identity.PrivacyEncoding
 import oolong.core.network.protos.User
 import oolong.core.network.protos.getUserInfo.GetUserInfoRequest
 import oolong.core.network.protos.getUserInfo.GetUserInfoResponse
@@ -94,10 +94,10 @@ class AccountRemoteDataSourceTest {
         assertNull(form.value("mac"))
         assertNull(form.value("_phone_imei"))
         assertNull(form.value("android_id"))
-        assertEquals(FakeDevice.imei.encodeUtf8().base64(), form.value("iemi"))
-        assertEquals(FakeDevice.androidId.encodeUtf8().base64(), form.value("di_diordna"))
+        assertEquals(PrivacyEncoding.encode(FakeDevice.imei), form.value("iemi"))
+        assertEquals(PrivacyEncoding.encode(FakeDevice.androidId), form.value("di_diordna"))
         assertEquals("1", form.value("push_system_switch"))
-        assertEquals("204734720", form.value("versioncode"))
+        assertEquals("369754368", form.value("versioncode"))
         assertEquals(1, form.count { it.first == "_client_id" })
         assertEquals("cid", response.client.clientId)
         assertEquals("sid", response.wlConfig.sampleId)

@@ -38,7 +38,7 @@ class UserRemoteDataSourceTest {
     private fun sentData(target: String): ByteString {
         val request = server.takeRequest()
         assertEquals(target, request.target)
-        commonParams.headers(TiebaProfile.PROTO_12_52).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
+        commonParams.headers(TiebaProfile.PROTO).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
         return assertProtobufParts(parts)
     }
@@ -53,7 +53,7 @@ class UserRemoteDataSourceTest {
         assertEquals(777L, sent.friend_uid)
         assertEquals(1, sent.is_guest)
         assertEquals(12345L, sent.uid)
-        assertEquals(commonParams.protobuf(TiebaProfile.PROTO_12_52), sent.common)
+        assertEquals(commonParams.protobuf(TiebaProfile.PROTO), sent.common)
     }
 
     @Test
@@ -170,7 +170,7 @@ class UserRemoteDataSourceTest {
         val request = server.takeRequest()
         assertEquals("/c/u/feed/userAgree", request.target)
         assertEquals("hybrid", request.headers["Subapp-Type"])
-        commonParams.headers(TiebaProfile.WEB_12_52).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
+        commonParams.headers(TiebaProfile.WEB).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
         val form = request.form()
         assertSigned(form, withSig = false)
         assertEquals("2", form.value("tab_id"))

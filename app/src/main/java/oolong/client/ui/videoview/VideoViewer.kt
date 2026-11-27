@@ -320,7 +320,7 @@ internal object VideoCache {
         val app = context.applicationContext
         // The video servers may refuse requests that do not come from the app
         val http = DefaultHttpDataSource.Factory()
-            .setUserAgent(getUserAgent("tieba/${TiebaProfile.PROTO_12_52.version}"))
+            .setUserAgent(getUserAgent("tieba/${TiebaProfile.PROTO.version}"))
         return CacheDataSource.Factory()
             .setCache(cache(app))
             .setUpstreamDataSourceFactory(DefaultDataSource.Factory(app, http))

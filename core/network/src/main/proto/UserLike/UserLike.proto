@@ -12,10 +12,10 @@ import "User.proto";
 
 message UserLikeRequestData {
   CommonRequest common = 1;
-  string pageTag = 2;
-  uint64 lastRequestUnix = 3;
-  int32 followType = 4;
-  int32 loadType = 5;
+  optional int32 followType = 4;
+  optional uint64 lastRequestUnix = 3;
+  optional int32 loadType = 5;
+  optional string pageTag = 2;
 }
 
 message UserLikeRequest {

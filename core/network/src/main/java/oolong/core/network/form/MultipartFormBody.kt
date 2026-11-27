@@ -3,12 +3,13 @@ package oolong.core.network.form
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody
+import okio.Buffer
 import okio.BufferedSink
 import okio.ByteString
 
 /**
  * A multipart form of text [fields] followed by one file part, with no `Content-Length` on the
- * parts and the body sent chunked, so this doesn't use OkHttp's `MultipartBody`.
+ * parts, so this doesn't use OkHttp's `MultipartBody`. The body's own length is sent.
  */
 class MultipartFormBody(
     internal val fields: List<Pair<String, String>>,
@@ -17,9 +18,15 @@ class MultipartFormBody(
 ) : RequestBody() {
     override fun contentType(): MediaType = CONTENT_TYPE
 
-    override fun contentLength(): Long = -1
+    private val bytes: ByteString by lazy { Buffer().also(::write).readByteString() }
+
+    override fun contentLength(): Long = bytes.size.toLong()
 
     override fun writeTo(sink: BufferedSink) {
+        sink.write(bytes)
+    }
+
+    private fun write(sink: BufferedSink) {
         fields.forEach { (name, value) ->
             sink.writePartHeader("form-data; name=\"$name\"")
             sink.writeUtf8(value).writeUtf8(CRLF)

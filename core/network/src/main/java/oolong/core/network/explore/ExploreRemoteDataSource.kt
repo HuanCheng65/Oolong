@@ -30,16 +30,16 @@ class ExploreRemoteDataSource(
     private val commonParams: CommonParams,
     private val device: DeviceIdentity,
 ) {
-    private val protoProfile = TiebaProfile.PROTO_12_52
-    private val formProfile = TiebaProfile.FORM_12_52
+    private val protoProfile = TiebaProfile.PROTO
+    private val formProfile = TiebaProfile.FORM
     private val service = network.service<ExploreService>(protoProfile)
     private val formService = network.service<ExploreFormService>(formProfile)
-    private val webProfile = TiebaProfile.WEB_12_52
+    private val webProfile = TiebaProfile.WEB
     private val dislikedForumService = network.service<DislikedForumService>(webProfile)
     private val hotListService = network.service<HotListService>(webProfile)
 
     // Recommendations come as the newer clients get them, with their newer ways of disliking a thread
-    private val personalizedProfile = TiebaProfile.PROTO_22_10
+    private val personalizedProfile = TiebaProfile.PROTO
     private val personalizedService = network.service<ExploreService>(personalizedProfile)
 
     /** How many times recommendations were asked for, which the server counts as the feed goes on. */

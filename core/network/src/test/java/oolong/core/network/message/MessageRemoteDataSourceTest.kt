@@ -43,7 +43,7 @@ class MessageRemoteDataSourceTest {
         assertNull(form.value("bookmark"))
         assertNull(form.value("tbs"))
         assertEquals("1", form.value("personalized_rec_switch"))
-        assertEquals(server.commonParams.form(TiebaProfile.MESSAGE_FORM_12_52).map { it.first }.sorted() + "sign",
+        assertEquals(server.commonParams.form(TiebaProfile.MESSAGE_FORM).map { it.first }.sorted() + "sign",
             form.withoutStatistics().map { it.first }.filter { it != "sign" }.sorted() + "sign")
         assertEquals("2", response.message?.replyMe)
         assertEquals("1", response.message?.fans)
@@ -104,10 +104,10 @@ class MessageRemoteDataSourceTest {
 
         val request = server.takeRequest()
         assertEquals("/c/u/feed/agreeme?cmd=309593&format=protobuf", request.target)
-        server.commonParams.headers(TiebaProfile.PROTO_12_52).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
+        server.commonParams.headers(TiebaProfile.PROTO).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
         val sent = AgreeMeRequest.ADAPTER.decode(assertProtobufParts(parts)).data_!!
-        assertEquals(server.commonParams.protobuf(TiebaProfile.PROTO_12_52), sent.common)
+        assertEquals(server.commonParams.protobuf(TiebaProfile.PROTO), sent.common)
         assertEquals(94359475L, sent.id)
         assertEquals(20, sent.rn)
         assertEquals(FakeDevice.screenWidth, sent.scr_w)

@@ -5,7 +5,7 @@ package tieba.threadList;
 option java_package = "oolong.core.network.protos.threadList";
 
 message AdParam {
-  int32 load_count = 1;
-  int32 refresh_count = 2;
+  optional int32 load_count = 1;
+  optional int32 refresh_count = 2;
   optional string yoga_lib_version = 3;
 }
