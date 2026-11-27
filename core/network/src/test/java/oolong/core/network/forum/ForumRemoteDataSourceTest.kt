@@ -30,6 +30,7 @@ import oolong.core.network.protos.getForumDetail.GetForumDetailResponseData
 import oolong.core.network.protos.threadList.ThreadListRequest
 import oolong.core.network.protos.threadList.ThreadListResponse
 import oolong.core.network.protos.threadList.ThreadListResponseData
+import oolong.core.network.testing.assertProtobufParts
 import oolong.core.network.testing.multipartParts
 import org.junit.After
 import org.junit.Before
@@ -78,9 +79,8 @@ class ForumRemoteDataSourceTest {
             assertEquals(value, request.headers[name], name)
         }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
-        assertEquals(listOf("stoken", "data"), parts.map { it.first })
         lastHeaders = request.headers
-        return parts[1].second
+        return assertProtobufParts(parts)
     }
 
     private var lastHeaders: okhttp3.Headers? = null
@@ -197,9 +197,7 @@ class ForumRemoteDataSourceTest {
         assertEquals("chunked", request.headers["Transfer-Encoding"])
 
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
-        assertEquals(listOf("stoken", "data"), parts.map { it.first })
-        assertEquals("stoken-value", parts[0].second.utf8())
-        val sent = ForumRuleDetailRequest.ADAPTER.decode(parts[1].second)
+        val sent = ForumRuleDetailRequest.ADAPTER.decode(assertProtobufParts(parts))
         assertEquals(52, sent.data_?.forum_id)
         assertEquals(commonParams.protobuf(TiebaProfile.PROTO_12_52), sent.data_?.common)
     }
@@ -213,8 +211,7 @@ class ForumRemoteDataSourceTest {
         val request = server.takeRequest()
         assertEquals("/c/f/forum/getforumdetail?cmd=303021&format=protobuf", request.target)
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
-        assertEquals(listOf("stoken", "data"), parts.map { it.first })
-        val sent = GetForumDetailRequest.ADAPTER.decode(parts[1].second)
+        val sent = GetForumDetailRequest.ADAPTER.decode(assertProtobufParts(parts))
         assertEquals(52, sent.data_?.forum_id)
         assertEquals(commonParams.protobuf(TiebaProfile.PROTO_12_52), sent.data_?.common)
         assertEquals("测试", info.forum_name)

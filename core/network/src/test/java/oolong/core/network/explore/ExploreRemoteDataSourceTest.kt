@@ -23,6 +23,7 @@ import oolong.core.network.protos.userLike.UserLikeRequest
 import oolong.core.network.protos.userLike.UserLikeResponse
 import oolong.core.network.protos.userLike.UserLikeResponseData
 import oolong.core.network.testing.FormServer
+import oolong.core.network.testing.assertProtobufParts
 import oolong.core.network.testing.assertSigned
 import oolong.core.network.testing.form
 import oolong.core.network.testing.multipartParts
@@ -48,8 +49,7 @@ class ExploreRemoteDataSourceTest {
         assertEquals(target, request.target)
         commonParams.headers(profile).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
-        assertEquals(listOf("stoken", "data"), parts.map { it.first })
-        return parts[1].second
+        return assertProtobufParts(parts)
     }
 
     @Test

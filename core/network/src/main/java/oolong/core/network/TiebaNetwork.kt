@@ -40,11 +40,15 @@ class TiebaNetwork(
 
     private val retrofits = mutableMapOf<TiebaProfile, Retrofit>()
 
+    /** The numbers of recent requests that later requests report, shared by every profile. */
+    private val statistics = RequestStatistics()
+
     @PublishedApi
     @Synchronized
     internal fun retrofit(profile: TiebaProfile): Retrofit = retrofits.getOrPut(profile) {
         val client = baseClient.newBuilder()
             .addInterceptor(ProfileInterceptor(profile, commonParams))
+            .addInterceptor(RequestExtrasInterceptor(profile, commonParams, statistics, commonParams::networkType))
             .apply { networkInterceptors.forEach { addNetworkInterceptor(it) } }
             .build()
         Retrofit.Builder()

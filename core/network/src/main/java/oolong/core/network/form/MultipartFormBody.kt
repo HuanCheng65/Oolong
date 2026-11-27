@@ -11,9 +11,9 @@ import okio.ByteString
  * parts and the body sent chunked, so this doesn't use OkHttp's `MultipartBody`.
  */
 class MultipartFormBody(
-    private val fields: List<Pair<String, String>>,
-    private val fileField: String,
-    private val file: ByteString,
+    internal val fields: List<Pair<String, String>>,
+    internal val fileField: String,
+    internal val file: ByteString,
 ) : RequestBody() {
     override fun contentType(): MediaType = CONTENT_TYPE
 

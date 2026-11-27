@@ -48,3 +48,9 @@ fun assertSigned(form: List<Pair<String, String>>, withSig: Boolean) {
     assertEquals(FormSignature.sign(params), form.value("sign"))
     assertEquals(if (withSig) FormSignature.sig(params) else null, form.value("sig"))
 }
+
+/** The fields without the request statistics every signed request carries. */
+fun List<Pair<String, String>>.withoutStatistics(): List<Pair<String, String>> =
+    filter { (name) -> name !in StatisticsFields }
+
+private val StatisticsFields = setOf("stTime", "stSize", "stTimesNum", "stMode", "stMethod", "stErrorNums")

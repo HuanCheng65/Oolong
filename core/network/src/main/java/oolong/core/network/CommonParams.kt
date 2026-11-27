@@ -35,6 +35,9 @@ class CommonParams(
 
     fun session(): Session? = sessionProvider.currentSession()
 
+    /** The device's network type as requests report it. */
+    fun networkType(): Int = device.networkType
+
     fun userAgent(profile: TiebaProfile): String =
         "${device.webViewUserAgent} tieba/${profile.version}"
 

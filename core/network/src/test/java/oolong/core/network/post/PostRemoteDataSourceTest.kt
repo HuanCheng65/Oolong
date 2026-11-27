@@ -29,6 +29,7 @@ import oolong.core.network.protos.addPost.AddPostRequest
 import oolong.core.network.protos.addPost.AddPostRequestData
 import oolong.core.network.protos.addPost.AddPostResponse
 import oolong.core.network.protos.addPost.AddPostResponseData
+import oolong.core.network.testing.withoutStatistics
 import org.junit.After
 import kotlin.random.Random
 import kotlin.test.Test
@@ -96,7 +97,7 @@ class PostRemoteDataSourceTest {
         val params = fields.filter { it.first != "sign" }
         assertEquals(FormSignature.sign(params), fields.single { it.first == "sign" }.second)
         assertEquals(null, fields.singleOrNull { it.first == "sig" })
-        assertEquals(commonParams.form(TiebaProfile.PROTO_12_52).toSet(), params.toSet())
+        assertEquals(commonParams.form(TiebaProfile.PROTO_12_52).toSet(), params.withoutStatistics().toSet())
 
         val sent = AddPostRequest.ADAPTER.decode(parts.last().second).data_!!
         assertEquals(commonParams.protobuf(TiebaProfile.PROTO_12_52, includeTbs = true), sent.common)

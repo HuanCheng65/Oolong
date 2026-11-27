@@ -20,3 +20,22 @@ fun multipartParts(contentType: String, body: ByteString): List<Pair<String, Byt
     }
     return parts
 }
+
+/**
+ * Asserts the form fields of a protobuf request: the session, the request statistics and any
+ * [extra] fields, sorted and signed, then the message last. Returns the message.
+ */
+fun assertProtobufParts(
+    parts: List<Pair<String, ByteString>>,
+    extra: List<String> = emptyList(),
+    loggedIn: Boolean = true,
+): ByteString {
+    val fields = parts.dropLast(1).map { it.first to it.second.utf8() }
+    assertEquals("data", parts.last().first)
+    val expected = (extra + listOf("sign", "stErrorNums") + (if (loggedIn) listOf("BDUSS", "stoken") else emptyList())).sorted()
+    assertEquals(expected, fields.map { it.first }.filter { it !in setOf("stTime", "stSize", "stTimesNum", "stMode", "stMethod") })
+    assertEquals(fields.map { it.first }.sorted(), fields.map { it.first })
+    val unsigned = fields.filter { it.first != "sign" }
+    assertEquals(oolong.core.network.form.FormSignature.sign(unsigned), fields.single { it.first == "sign" }.second)
+    return parts.last().second
+}

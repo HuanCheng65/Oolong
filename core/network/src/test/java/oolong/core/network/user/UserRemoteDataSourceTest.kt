@@ -13,6 +13,7 @@ import oolong.core.network.protos.userPost.UserPostRequest
 import oolong.core.network.protos.userPost.UserPostResponse
 import oolong.core.network.protos.userPost.UserPostResponseData
 import oolong.core.network.testing.FormServer
+import oolong.core.network.testing.assertProtobufParts
 import oolong.core.network.testing.assertSigned
 import oolong.core.network.testing.form
 import oolong.core.network.testing.multipartParts
@@ -39,8 +40,7 @@ class UserRemoteDataSourceTest {
         assertEquals(target, request.target)
         commonParams.headers(TiebaProfile.PROTO_12_52).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
-        assertEquals(listOf("stoken", "data"), parts.map { it.first })
-        return parts[1].second
+        return assertProtobufParts(parts)
     }
 
     @Test

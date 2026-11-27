@@ -18,10 +18,12 @@ import oolong.core.network.protos.pbPage.PbPageRequestData
 import oolong.core.network.protos.pbPage.PbPageResponse
 import oolong.core.network.protos.pbPage.PbPageResponseData
 import oolong.core.network.testing.FormServer
+import oolong.core.network.testing.assertProtobufParts
 import oolong.core.network.testing.assertSigned
 import oolong.core.network.testing.form
 import oolong.core.network.testing.multipartParts
 import oolong.core.network.testing.value
+import oolong.core.network.testing.withoutStatistics
 import org.junit.After
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -47,9 +49,7 @@ class ThreadRemoteDataSourceTest {
             assertEquals(value, request.headers[name], name)
         }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
-        assertEquals(listOf("stoken", "data"), parts.map { it.first })
-        assertEquals("stoken-value", parts[0].second.utf8())
-        return PbPageRequest.ADAPTER.decode(parts[1].second).data_!!
+        return PbPageRequest.ADAPTER.decode(assertProtobufParts(parts)).data_!!
     }
 
     @Test
@@ -157,7 +157,7 @@ class ThreadRemoteDataSourceTest {
             assertEquals(value, request.headers[name], name)
         }
         val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
-        assertEquals(listOf("data"), parts.map { it.first })
+        val message = assertProtobufParts(parts, loggedIn = false)
         val expected = PbFloorRequestData(
             common = commonParams.protobuf(TiebaProfile.PROTO_22_10),
             forum_id = 52,
@@ -172,7 +172,7 @@ class ThreadRemoteDataSourceTest {
             ori_ugc_type = 0,
             sort = 2,
         )
-        assertEquals(expected, PbFloorRequest.ADAPTER.decode(parts[0].second).data_)
+        assertEquals(expected, PbFloorRequest.ADAPTER.decode(message).data_)
         assertEquals(data, returned)
     }
 
@@ -190,7 +190,7 @@ class ThreadRemoteDataSourceTest {
         assertEquals("stoken-value", form.value("stoken"))
         assertNull(form.value("tbs"))
         val expected = commonParams.form(TiebaProfile.FORM_12_52) + ("data" to form.value("data")!!)
-        assertEquals(expected.sortedBy { it.first }, form.filter { it.first != "sign" })
+        assertEquals(expected.sortedBy { it.first }, form.filter { it.first != "sign" }.withoutStatistics())
     }
 
     @Test
