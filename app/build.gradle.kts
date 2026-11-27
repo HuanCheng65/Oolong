@@ -69,7 +69,7 @@ android {
     }
     defaultConfig {
         applicationId = "oolong.client"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 37
         versionCode = applicationVersionCode
         versionName = applicationVersionName

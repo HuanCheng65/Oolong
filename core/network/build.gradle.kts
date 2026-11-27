@@ -22,7 +22,7 @@ android {
         version = release(37) { minorApiLevel = 1 }
     }
     defaultConfig {
-        minSdk = 24
+        minSdk = 26
     }
     compileOptions {
         targetCompatibility = JavaVersion.VERSION_11

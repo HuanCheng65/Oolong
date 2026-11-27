@@ -27,7 +27,7 @@ android {
     }
     defaultConfig {
         applicationId = "com.huanchengfly.tieba.post"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 37
         // Above every version of the old app (its last was 390102)
         versionCode = 390200
