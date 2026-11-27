@@ -64,6 +64,13 @@
     <string name="title_at_me">Mentions</string>
     <string name="text_message_list_item_reply_my_thread">Replied to your thread: %1$s</string>
     <string name="title_reply_me">Replies</string>
+    <string name="title_likes_me">Likes</string>
+    <plurals name="text_likes_me">
+        <item quantity="one">%1$d like · %2$s</item>
+        <item quantity="other">%1$d likes · %2$s</item>
+    </plurals>
+    <string name="text_liked_one">Liked this · %1$s</string>
+    <string name="text_liked_deleted">This was deleted</string>
     <string name="title_send_to_desktop">Add to home screen</string>
     <string name="toast_send_to_desktop_success">Shortcut requested</string>
     <string name="toast_send_to_desktop_failed">Couldn\'t create shortcut: %1$s</string>

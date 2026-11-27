@@ -28,6 +28,8 @@ import oolong.client.ui.designsystem.TabText
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.main.MainTabs
 import oolong.client.ui.main.OnTabReselected
+import oolong.client.ui.main.notifications.likes.ReceivedLikesListPage
+import oolong.client.ui.main.notifications.likes.ReceivedLikesViewModel
 import oolong.client.ui.main.notifications.list.NotificationsListPage
 import oolong.client.ui.main.notifications.list.NotificationsViewModel
 
@@ -37,14 +39,7 @@ fun NotificationsPage(
     navigator: Navigator = LocalNavigator.current,
     initialTab: Int = 0,
 ) {
-    val pages = listOf<Pair<String, (@Composable (PaddingValues) -> Unit)>>(
-        stringResource(id = R.string.title_reply_me) to @Composable {
-            NotificationsListPage(type = NotificationType.ReplyMe, contentPadding = it)
-        },
-        stringResource(id = R.string.title_at_me) to @Composable {
-            NotificationsListPage(type = NotificationType.AtMe, contentPadding = it)
-        }
-    )
+    val pages = notificationPages()
     val pagerState = rememberPagerState(
         initialPage = initialTab,
     ) { pages.size }
@@ -84,21 +79,18 @@ fun NotificationsPage(
 fun NotificationsTab(
     initialTab: Int = 0,
     viewModel: NotificationsViewModel = hiltViewModel(),
+    likesViewModel: ReceivedLikesViewModel = hiltViewModel(),
 ) {
-    val pages = listOf<Pair<String, (@Composable (PaddingValues) -> Unit)>>(
-        stringResource(id = R.string.title_reply_me) to @Composable {
-            NotificationsListPage(type = NotificationType.ReplyMe, contentPadding = it)
-        },
-        stringResource(id = R.string.title_at_me) to @Composable {
-            NotificationsListPage(type = NotificationType.AtMe, contentPadding = it)
-        }
-    )
+    val pages = notificationPages()
     val pagerState = rememberPagerState(
         initialPage = initialTab,
     ) { pages.size }
     // Tapping the tab again refreshes the list in view
     OnTabReselected(MainTabs.NOTIFICATIONS) {
-        viewModel.refresh(NotificationTypes[pagerState.currentPage])
+        when (val type = NotificationTypes.getOrNull(pagerState.currentPage)) {
+            null -> likesViewModel.refresh()
+            else -> viewModel.refresh(type)
+        }
     }
     GlassScaffold(
         backgroundColor = Color.Transparent,
@@ -122,8 +114,22 @@ fun NotificationsTab(
     }
 }
 
-/** The notification lists, in the order of the tabs. */
+/** The notification lists, in the order of the tabs; the likes come after them. */
 private val NotificationTypes = listOf(NotificationType.ReplyMe, NotificationType.AtMe)
+
+/** The tabs' names and pages: replies, mentions, likes. */
+@Composable
+private fun notificationPages() = listOf<Pair<String, (@Composable (PaddingValues) -> Unit)>>(
+    stringResource(id = R.string.title_reply_me) to @Composable {
+        NotificationsListPage(type = NotificationType.ReplyMe, contentPadding = it)
+    },
+    stringResource(id = R.string.title_at_me) to @Composable {
+        NotificationsListPage(type = NotificationType.AtMe, contentPadding = it)
+    },
+    stringResource(id = R.string.title_likes_me) to @Composable {
+        ReceivedLikesListPage(contentPadding = it)
+    },
+)
 
 /** The pages' names on a tab capsule in the bar's title row: on these pages the tabs are the title. */
 @Composable
