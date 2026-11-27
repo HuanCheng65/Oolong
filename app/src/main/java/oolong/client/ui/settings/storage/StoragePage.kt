@@ -175,10 +175,7 @@ fun StoragePage(
                     }
                 }
             }
-            prefsGroup(header = { GroupHeader(stringResource(R.string.storage_group_data)) }) {
-                prefsItem {
-                    TextPref(title = stringResource(R.string.storage_app), darkenOnDisable = false, trailingContent = { Value(size(now.app)) })
-                }
+            prefsGroup(header = { GroupHeader(stringResource(R.string.storage_group_saved)) }) {
                 prefsItem {
                     TextPref(
                         title = stringResource(R.string.title_offline_threads),
@@ -191,6 +188,11 @@ fun StoragePage(
                         },
                         onClick = { navigator.navigate(OfflineThreadsKey) },
                     )
+                }
+            }
+            prefsGroup(header = { GroupHeader(stringResource(R.string.storage_group_other)) }) {
+                prefsItem {
+                    TextPref(title = stringResource(R.string.storage_app), darkenOnDisable = false, trailingContent = { Value(size(now.app)) })
                 }
                 prefsItem {
                     TextPref(title = stringResource(R.string.storage_records), darkenOnDisable = false, trailingContent = { Value(size(now.records)) })
@@ -369,8 +371,8 @@ private fun Summary(use: StorageUse) {
     val all = listOf(
         R.string.storage_group_cache to (use.cache to accent),
         R.string.storage_group_extensions to (use.extensions to accent.copy(alpha = 0.55f)),
+        R.string.storage_group_saved to (use.saved to accent.copy(alpha = 0.4f)),
         R.string.storage_app to (use.app to accent.copy(alpha = 0.28f)),
-        R.string.title_offline_threads to (use.offline to accent.copy(alpha = 0.4f)),
         R.string.storage_records to (use.records to ExtendedTheme.colors.textSecondary.copy(alpha = 0.3f)),
     )
     val parts = all.filter { it.second.first > 0 }

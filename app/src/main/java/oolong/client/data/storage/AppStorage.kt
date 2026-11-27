@@ -38,11 +38,14 @@ class StorageUse(
 ) {
     val total: Long get() = app + data
 
+    /** What the user chose to keep: saved threads. */
+    val saved: Long get() = offline
+
     /** What clearing the cache removes. */
     val cache: Long get() = images + videos + web + temporary
 
     /** What is kept besides the cache, the models and saved threads: the account, settings, history. */
-    val records: Long get() = (data - cache - extensions - offline).coerceAtLeast(0)
+    val records: Long get() = (data - cache - extensions - saved).coerceAtLeast(0)
 }
 
 /** Measures and clears what the app keeps on the phone. */
