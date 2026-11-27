@@ -41,6 +41,7 @@ import oolong.client.navigation.transition.PageDisplay
 import oolong.client.navigation.transition.PagePeek
 import oolong.client.navigation.transition.PageTransitions
 import oolong.client.navigation.transition.rememberPageScenes
+import oolong.client.ui.captcha.CaptchaPage
 import oolong.client.ui.designsystem.LocalNavigationRailShown
 import oolong.client.ui.designsystem.adaptive.LocalWindowSizeClass
 import oolong.client.ui.designsystem.adaptive.WindowHeightSizeClass
@@ -132,6 +133,7 @@ private fun KeyContent(key: Key) {
         HotTopicListKey -> HotTopicListPage()
         is TopicKey -> TopicPage(key)
         is WebViewKey -> WebViewPage(key.initialUrl)
+        is CaptchaKey -> CaptchaPage(key)
         LoginKey -> LoginPage()
         SettingsKey -> SettingsPage()
         AccountManageKey -> AccountManagePage()
@@ -180,11 +182,11 @@ internal val Key.paneRole: PaneRole?
  * Lists lay themselves out for the width they get; web pages and logging in are sized by the web.
  */
 private val Key.readsAtWidth: Boolean
-    get() = paneRole == PaneRole.Detail && this !is WebViewKey
+    get() = paneRole == PaneRole.Detail && this !is WebViewKey && this !is CaptchaKey
 
 /** Whether [this] is done and left, as logging in or reporting a post, shown as a sheet on wide windows. */
 private val Key.isTask: Boolean
-    get() = this == LoginKey || (this is WebViewKey && task)
+    get() = this == LoginKey || (this is WebViewKey && task) || this is CaptchaKey
 
 private fun Key.metadata(): Map<String, Any> = when (presentation) {
     Presentation.Sheet -> BottomSheetSceneStrategy.bottomSheet()

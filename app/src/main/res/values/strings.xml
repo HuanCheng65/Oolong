@@ -769,6 +769,8 @@
     <string name="reply_notice_dismiss">不再提示</string>
     <string name="reply_official_client">官方客户端</string>
     <string name="reply_copied_for_official">内容已复制，可在官方客户端粘贴</string>
+    <string name="reply_verify">去验证</string>
+    <string name="title_captcha">安全验证</string>
     <string name="reply_error_verification">完成验证后才能发送，内容已保留</string>
     <string name="reply_error_upload">无法上传图片：%1$s</string>
     <string name="reply_error_send">无法发送：%1$s</string>

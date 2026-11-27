@@ -30,6 +30,8 @@ import oolong.client.data.post.ReplyTarget
 import oolong.client.data.settings.SettingKeys
 import oolong.client.data.settings.Settings
 import oolong.client.media.PickMediasContract
+import oolong.client.navigation.CaptchaKey
+import oolong.client.navigation.LocalNavigator
 import oolong.client.ui.editor.EditRequest
 import oolong.client.ui.editor.EditorPlace
 import oolong.client.ui.editor.LocalImageEditor
@@ -59,6 +61,9 @@ class ReplyComposer internal constructor(
 
     /** Opens the editor on the attached picture at an index. */
     internal var editImage: (Int) -> Unit = {}
+
+    /** Opens the captcha a reply waits on. */
+    internal var openCaptcha: (CaptchaKey) -> Unit = {}
 
     /** Picks up to this many pictures to attach. */
     internal var pickImages: (Int) -> Unit = {}
@@ -116,6 +121,7 @@ class ReplyComposer internal constructor(
             }
 
             ReplyComposerEvent.OpenOfficialClient -> openOfficialClient()
+            ReplyComposerEvent.Verify -> viewModel.captcha()?.let(openCaptcha)
             is ReplyComposerEvent.ShowPanel -> {
                 if (event.panel == ReplyPanelType.NONE) editor.showKeyboard() else editor.hideKeyboard()
                 viewModel.switchPanel(event.panel)
@@ -184,6 +190,8 @@ fun rememberReplyComposer(
     val context = LocalContext.current
     val editor = rememberReplyEditorState()
     val composer = remember(chrome, viewModel) { ReplyComposer(chrome, editor, viewModel, context) }
+    val navigator = LocalNavigator.current
+    composer.openCaptcha = { navigator.navigate(it) }
     val imageEditor = LocalImageEditor.current
     composer.editImage = { index ->
         val source = viewModel.state.value.images.getOrNull(index)

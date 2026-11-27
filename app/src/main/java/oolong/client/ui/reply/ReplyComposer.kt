@@ -104,6 +104,9 @@ sealed interface ReplyComposerEvent {
     data object ToggleFullScreen : ReplyComposerEvent
     data object DismissNotice : ReplyComposerEvent
     data object OpenOfficialClient : ReplyComposerEvent
+
+    /** Open the captcha the reply waits on. */
+    data object Verify : ReplyComposerEvent
     data class ShowPanel(val panel: ReplyPanelType) : ReplyComposerEvent
     data object PickImages : ReplyComposerEvent
     data class RemoveImage(val index: Int) : ReplyComposerEvent
@@ -392,8 +395,12 @@ private fun ReplyErrorRow(error: ReplyError, onEvent: (ReplyComposerEvent) -> Un
         icon = if (error is ReplyError.Verification) Symbols.VerifiedUser else Symbols.Warning,
         text = text,
     ) {
-        RowButton(stringResource(id = R.string.reply_official_client)) {
-            onEvent(ReplyComposerEvent.OpenOfficialClient)
+        if (error is ReplyError.Verification && error.canVerify) {
+            RowButton(stringResource(id = R.string.reply_verify)) { onEvent(ReplyComposerEvent.Verify) }
+        } else {
+            RowButton(stringResource(id = R.string.reply_official_client)) {
+                onEvent(ReplyComposerEvent.OpenOfficialClient)
+            }
         }
     }
 }

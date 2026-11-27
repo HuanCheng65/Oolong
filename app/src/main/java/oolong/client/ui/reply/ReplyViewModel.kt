@@ -20,13 +20,18 @@ import kotlinx.coroutines.launch
 import oolong.client.arch.Actions
 import oolong.client.arch.ApplicationScope
 import oolong.client.data.error.getErrorCode
+import oolong.client.data.post.CaptchaAnswer
 import oolong.client.data.post.PostRepository
 import oolong.client.data.post.PostedReply
 import oolong.client.data.post.ReplyTarget
 import oolong.client.database.DraftDao
 import oolong.client.database.DraftEntity
+import oolong.client.navigation.CaptchaKey
+import oolong.client.ui.captcha.CaptchaResults
+import oolong.client.ui.captcha.inApp
 import oolong.core.network.VerificationChallenge
 import oolong.core.network.VerificationRequiredException
+import java.util.UUID
 import javax.inject.Inject
 
 enum class ReplyPanelType {
@@ -38,8 +43,8 @@ enum class ReplyPanelType {
 
 /** Why the last attempt to send did not go through, shown in the composer above the text kept. */
 sealed interface ReplyError {
-    /** The server wants the account verified first. */
-    data class Verification(val challenge: VerificationChallenge) : ReplyError
+    /** The server wants the account verified first; with [canVerify], by a captcha done in the app. */
+    data class Verification(val challenge: VerificationChallenge, val canVerify: Boolean = false) : ReplyError
 
     /** A picture could not be uploaded; [message] may be empty. */
     data class Upload(val message: String) : ReplyError
@@ -80,6 +85,22 @@ class ReplyViewModel @Inject constructor(
     val state: StateFlow<ReplyState> = _state.asStateFlow()
 
     private val _sent = Channel<PostedReply>(Channel.BUFFERED)
+
+    /** The reply waiting on a captcha, sent again once it is passed. */
+    private var waiting: WaitingReply? = null
+
+    init {
+        viewModelScope.launch {
+            CaptchaResults.results.collect { passed ->
+                val reply = waiting?.takeIf { it.request == passed.request } ?: return@collect
+                waiting = null
+                post(reply.target, reply.content, reply.tbs, CaptchaAnswer(passed.vcode, reply.md5, reply.type))
+            }
+        }
+    }
+
+    /** The captcha the reply waits on, to open; null when it waits on none the app can show. */
+    fun captcha(): CaptchaKey? = waiting?.let { CaptchaKey(it.url, it.request) }
 
     /** Each reply that went through, once. */
     val sent: Flow<PostedReply> = _sent.receiveAsFlow()
@@ -147,17 +168,37 @@ class ReplyViewModel @Inject constructor(
             "$withTail\n${pictures.joinToString("\n")}"
         }
 
-        _state.update { it.copy(sending = true) }
+        post(target, content, tbs, captcha = null)
+    }
+
+    /** Sends [content] once, with the [captcha] answered for it if any; what goes wrong lands in [ReplyState.error]. */
+    private suspend fun post(target: ReplyTarget, content: String, tbs: String?, captcha: CaptchaAnswer?) {
+        _state.update { it.copy(sending = true, error = null) }
         try {
-            val reply = repository.reply(target, content, tbs)
+            val reply = repository.reply(target, content, tbs, captcha)
             _state.update { it.copy(sending = false, sent = true) }
             _sent.send(reply)
         } catch (e: CancellationException) {
             throw e
         } catch (e: VerificationRequiredException) {
-            _state.update { it.copy(sending = false, error = ReplyError.Verification(e.challenge)) }
+            val captchaPage = (e.challenge as? VerificationChallenge.Captcha)?.takeIf { it.inApp }
+            waiting = captchaPage?.let {
+                WaitingReply(UUID.randomUUID().toString(), it.picUrl, it.vcodeMd5, it.vcodeType, target, content, tbs)
+            }
+            _state.update { it.copy(sending = false, error = ReplyError.Verification(e.challenge, canVerify = captchaPage != null)) }
         } catch (e: Throwable) {
             _state.update { it.copy(sending = false, error = ReplyError.Send(e.getErrorCode(), e.message.orEmpty())) }
         }
     }
 }
+
+/** A reply sent and answered with a captcha, kept to send again once [request]'s captcha is passed. */
+private class WaitingReply(
+    val request: String,
+    val url: String,
+    val md5: String,
+    val type: String,
+    val target: ReplyTarget,
+    val content: String,
+    val tbs: String?,
+)

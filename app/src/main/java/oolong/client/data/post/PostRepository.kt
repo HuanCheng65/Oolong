@@ -36,6 +36,9 @@ data class PostedReply(
     val expInc: String
 )
 
+/** What the user answered a captcha with, sent along with the same post again. */
+data class CaptchaAnswer(val vcode: String, val md5: String, val type: String)
+
 /** The display name of the account that posts, sent along with each post. */
 fun interface PosterName {
     fun nameShow(): String?
@@ -56,8 +59,11 @@ class PostRepository @Inject constructor(
      *
      * @param tbs a fresher `tbs` than the account's, such as the one the thread page returned
      */
-    suspend fun reply(target: ReplyTarget, content: String, tbs: String?): PostedReply = withContext(io) {
-        val response = remote.addPost(target.toRequest(content), tbs)
+    suspend fun reply(target: ReplyTarget, content: String, tbs: String?, captcha: CaptchaAnswer? = null): PostedReply = withContext(io) {
+        val request = target.toRequest(content).let {
+            if (captcha == null) it else it.copy(vcode = captcha.vcode, vcode_md5 = captcha.md5, vcode_type = captcha.type)
+        }
+        val response = remote.addPost(request, tbs)
         val reply = PostedReply(
             threadId = response.tid.toLongOrNull() ?: target.threadId,
             postId = checkNotNull(response.pid.toLongOrNull()) { "No post id" },

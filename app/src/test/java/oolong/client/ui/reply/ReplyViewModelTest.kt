@@ -6,10 +6,13 @@ import io.mockk.mockk
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import oolong.client.data.post.CaptchaAnswer
 import oolong.client.data.post.PostRepository
 import oolong.client.data.post.PostedReply
 import oolong.client.data.post.ReplyTarget
 import oolong.client.testing.MainDispatcherRule
+import oolong.client.ui.captcha.CaptchaPassed
+import oolong.client.ui.captcha.CaptchaResults
 import oolong.core.network.VerificationChallenge
 import oolong.core.network.VerificationRequiredException
 import org.junit.Rule
@@ -85,5 +88,37 @@ class ReplyViewModelTest {
         assertEquals(ReplyError.Verification(challenge), viewModel.state.value.error)
         assertEquals(false, viewModel.state.value.sent)
         assertEquals(false, viewModel.state.value.busy)
+    }
+
+    @Test
+    fun `a captcha the app can show is passed and the same reply sent again with its answer`() = runTest {
+        val challenge = VerificationChallenge.Captcha("md5", "6", "https://seccaptcha.baidu.com/page", null)
+        coEvery { repository.reply(target, "文字", null, null) } throws VerificationRequiredException(6, "", challenge)
+        coEvery { repository.reply(target, "文字", null, CaptchaAnswer("{}", "md5", "6")) } returns PostedReply(9, 100, "")
+        val viewModel = ReplyViewModel(repository, mockk(relaxed = true), backgroundScope)
+
+        viewModel.send(target, "文字", tbs = null)
+        runCurrent()
+        assertEquals(true, (viewModel.state.value.error as ReplyError.Verification).canVerify)
+        val key = viewModel.captcha()!!
+        assertEquals("https://seccaptcha.baidu.com/page", key.url)
+
+        CaptchaResults.report(CaptchaPassed(key.request, "{}"))
+        runCurrent()
+
+        assertEquals(PostedReply(9, 100, ""), viewModel.sent.first())
+    }
+
+    @Test
+    fun `a captcha of another kind still points to the official client`() = runTest {
+        coEvery { repository.reply(target, "文字", null, null) } throws
+            VerificationRequiredException(5, "", VerificationChallenge.Captcha("md5", "4", "https://x", null))
+        val viewModel = ReplyViewModel(repository, mockk(relaxed = true), backgroundScope)
+
+        viewModel.send(target, "文字", tbs = null)
+        runCurrent()
+
+        assertEquals(false, (viewModel.state.value.error as ReplyError.Verification).canVerify)
+        assertEquals(null, viewModel.captcha())
     }
 }

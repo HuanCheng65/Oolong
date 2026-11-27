@@ -76,4 +76,13 @@ class PostRepositoryTest {
 
         assertEquals("0", sent.captured.post_from)
     }
+
+    @Test
+    fun `a reply sent again with a captcha carries its answer`() = runTest {
+        repository.reply(ReplyTarget(52, "测试", 9), "内容", tbs = null, captcha = CaptchaAnswer("{\"pass\":true}", "md5", "6"))
+
+        assertEquals("{\"pass\":true}", sent.captured.vcode)
+        assertEquals("md5", sent.captured.vcode_md5)
+        assertEquals("6", sent.captured.vcode_type)
+    }
 }

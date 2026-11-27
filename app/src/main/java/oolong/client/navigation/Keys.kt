@@ -125,6 +125,13 @@ data class TopicKey(val id: Long, val name: String) : Key
 @Serializable
 data class WebViewKey(val initialUrl: String, val task: Boolean = false) : Key
 
+/**
+ * The server's captcha at [url], asked for by a post waiting to be sent again; [request] names
+ * that post, so the pass reaches the one that asked.
+ */
+@Serializable
+data class CaptchaKey(val url: String, val request: String) : Key
+
 @Serializable
 data object LoginKey : Key
 

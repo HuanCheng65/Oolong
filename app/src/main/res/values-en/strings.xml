@@ -780,6 +780,8 @@
     <string name="reply_notice_dismiss">Don\'t show again</string>
     <string name="reply_official_client">Official app</string>
     <string name="reply_copied_for_official">Copied. You can paste it in the official app.</string>
+    <string name="reply_verify">Verify</string>
+    <string name="title_captcha">Verification</string>
     <string name="reply_error_verification">Complete verification to send. Your text has been kept.</string>
     <string name="reply_error_upload">Couldn\'t upload image: %1$s</string>
     <string name="reply_error_send">Couldn\'t send: %1$s</string>
