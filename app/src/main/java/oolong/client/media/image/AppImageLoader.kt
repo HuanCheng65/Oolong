@@ -10,6 +10,7 @@ import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.crossfade
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
+import oolong.client.data.offline.OfflineFiles
 
 /**
  * The app's image loader: downloads through OkHttp, reporting progress to [ImageDownloadProgress],
@@ -37,6 +38,13 @@ fun newAppImageLoader(context: Context): ImageLoader {
         .crossfade(120)
         .components {
             add(OkHttpNetworkFetcherFactory(callFactory = { client }))
+            // A picture saved with a thread is read from its file, whatever address asks for it
+            add(
+                Interceptor { chain ->
+                    val saved = (chain.request.data as? String)?.let { OfflineFiles.picture(context, it) }
+                    if (saved == null) chain.proceed() else chain.withRequest(chain.request.newBuilder().data(saved).build()).proceed()
+                },
+            )
             add(
                 Interceptor { chain ->
                     val key = (chain.request.data as? String)?.let(::diskCacheKey)

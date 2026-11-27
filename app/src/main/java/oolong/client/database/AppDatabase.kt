@@ -1,5 +1,6 @@
 package oolong.client.database
 
+import androidx.room.AutoMigration
 import androidx.room.Database
 import androidx.room.RoomDatabase
 
@@ -12,8 +13,10 @@ import androidx.room.RoomDatabase
         TopForumEntity::class,
         SearchHistoryEntity::class,
         ForumSearchHistoryEntity::class,
+        OfflineThreadEntity::class,
     ],
-    version = 6,
+    version = 7,
+    autoMigrations = [AutoMigration(from = 6, to = 7)],
 )
 abstract class AppDatabase : RoomDatabase() {
     abstract fun accountDao(): AccountDao
@@ -22,6 +25,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun blockDao(): BlockDao
     abstract fun topForumDao(): TopForumDao
     abstract fun searchHistoryDao(): SearchHistoryDao
+    abstract fun offlineThreadDao(): OfflineThreadDao
 
     companion object {
         const val NAME = "app.db"

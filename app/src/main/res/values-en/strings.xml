@@ -58,6 +58,25 @@
     <string name="title_default">Oolong</string>
     <string name="title_my_collect">Saved</string>
     <string name="title_my_likes">Likes</string>
+    <string name="title_offline_threads">Offline threads</string>
+    <string name="offline_empty">No offline threads</string>
+    <string name="offline_save">Save offline</string>
+    <string name="offline_saving">Saving offline</string>
+    <string name="offline_saved">Saved offline</string>
+    <string name="offline_save_all">Save all floors</string>
+    <string name="offline_save_author">Save the OP\'s floors only</string>
+    <string name="offline_update">Update offline copy</string>
+    <string name="offline_delete">Delete offline copy</string>
+    <string name="offline_unavailable">Not available offline</string>
+    <string name="offline_channel">Saving offline</string>
+    <string name="offline_state_saving_pages">Saving page %1$d of %2$d</string>
+    <string name="offline_state_failed">Not finished</string>
+    <string name="offline_state_gone">Removed from the forum</string>
+    <string name="offline_state_missing">%1$d pictures not saved</string>
+    <plurals name="offline_floors">
+        <item quantity="one">%1$d floor</item>
+        <item quantity="other">%1$d floors</item>
+    </plurals>
     <string name="likes_tab_threads">Threads</string>
     <string name="likes_tab_replies">Replies</string>
     <string name="likes_reply_meta">%1$s · %2$s</string>

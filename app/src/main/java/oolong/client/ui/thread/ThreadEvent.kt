@@ -58,3 +58,14 @@ data class ThreadPreferences(
     val hideReply: Boolean = false,
     val hideBlocked: Boolean = false,
 )
+
+/** Whether [this] changes something on the server, which a thread read from its saved copy can't. */
+val ThreadEvent.needsServer: Boolean
+    get() = when (this) {
+        ThreadEvent.AgreeThread, is ThreadEvent.AgreePost, is ThreadEvent.Vote, is ThreadEvent.Reply,
+        is ThreadEvent.StoreAt, ThreadEvent.StoreAtLastRead, ThreadEvent.RemoveStore,
+        is ThreadEvent.DeletePost, ThreadEvent.DeleteThread, is ThreadEvent.Report, ThreadEvent.ReportThread,
+        -> true
+
+        else -> false
+    }

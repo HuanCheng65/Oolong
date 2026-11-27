@@ -63,6 +63,7 @@ import oolong.client.ui.main.NavigationItem
 import oolong.client.ui.main.NavigationRail
 import oolong.client.ui.main.notifications.NotificationsPage
 import oolong.client.ui.main.rememberMainTabItems
+import oolong.client.ui.offline.OfflineThreadsPage
 import oolong.client.ui.photoview.PhotoViewerHost
 import oolong.client.ui.reader.ReaderPage
 import oolong.client.ui.search.SearchPage
@@ -127,6 +128,7 @@ private fun KeyContent(key: Key) {
         HistoryKey -> HistoryPage()
         ThreadStoreKey -> ThreadStorePage()
         LikesKey -> LikesPage()
+        OfflineThreadsKey -> OfflineThreadsPage()
         HotTopicListKey -> HotTopicListPage()
         is TopicKey -> TopicPage(key)
         is WebViewKey -> WebViewPage(key.initialUrl)
@@ -164,7 +166,7 @@ private fun KeyContent(key: Key) {
 /** Where [this] goes when two panes fit; null for pages that show over others. */
 internal val Key.paneRole: PaneRole?
     get() = when (this) {
-        MainKey, is ForumKey, is SearchKey, HistoryKey, ThreadStoreKey, LikesKey, HotTopicListKey, is TopicKey,
+        MainKey, is ForumKey, is SearchKey, HistoryKey, ThreadStoreKey, LikesKey, OfflineThreadsKey, HotTopicListKey, is TopicKey,
         is ForumSearchPostKey, SettingsKey, is NotificationsKey -> PaneRole.List
 
         // The reader takes the whole window, laying out its own contents beside the text when wide

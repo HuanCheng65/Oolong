@@ -55,6 +55,7 @@ import oolong.client.media.automask.AutoMaskDownload
 import oolong.client.media.automask.AutoMaskFiles
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.Navigator
+import oolong.client.navigation.OfflineThreadsKey
 import oolong.client.ui.designsystem.BackNavigationIcon
 import oolong.client.ui.designsystem.ConfirmDialog
 import oolong.client.ui.designsystem.DialogState
@@ -66,6 +67,7 @@ import oolong.client.ui.designsystem.rememberDialogState
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.editor.rememberAutoMaskFiles
 import oolong.client.ui.settings.components.prefs.GroupHeader
+import oolong.client.ui.settings.components.prefs.PrefsChevron
 import oolong.client.ui.settings.components.prefs.PrefsScreen
 import oolong.client.ui.settings.components.prefs.widgets.TextPref
 import oolong.core.designsystem.theme.Motion
@@ -176,6 +178,19 @@ fun StoragePage(
             prefsGroup(header = { GroupHeader(stringResource(R.string.storage_group_data)) }) {
                 prefsItem {
                     TextPref(title = stringResource(R.string.storage_app), darkenOnDisable = false, trailingContent = { Value(size(now.app)) })
+                }
+                prefsItem {
+                    TextPref(
+                        title = stringResource(R.string.title_offline_threads),
+                        darkenOnDisable = false,
+                        trailingContent = {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Value(size(now.offline))
+                                PrefsChevron()
+                            }
+                        },
+                        onClick = { navigator.navigate(OfflineThreadsKey) },
+                    )
                 }
                 prefsItem {
                     TextPref(title = stringResource(R.string.storage_records), darkenOnDisable = false, trailingContent = { Value(size(now.records)) })
@@ -355,6 +370,7 @@ private fun Summary(use: StorageUse) {
         R.string.storage_group_cache to (use.cache to accent),
         R.string.storage_group_extensions to (use.extensions to accent.copy(alpha = 0.55f)),
         R.string.storage_app to (use.app to accent.copy(alpha = 0.28f)),
+        R.string.title_offline_threads to (use.offline to accent.copy(alpha = 0.4f)),
         R.string.storage_records to (use.records to ExtendedTheme.colors.textSecondary.copy(alpha = 0.3f)),
     )
     val parts = all.filter { it.second.first > 0 }

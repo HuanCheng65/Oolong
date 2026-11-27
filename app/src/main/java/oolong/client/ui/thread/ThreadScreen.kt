@@ -29,9 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import oolong.client.R
+import oolong.client.data.offline.OfflineThreadInfo
 import oolong.client.data.thread.ThreadSort
 import oolong.client.model.Post
 import oolong.client.ui.designsystem.ConfirmDialog
@@ -41,6 +43,9 @@ import oolong.client.ui.designsystem.PromptDialog
 import oolong.client.ui.designsystem.rememberDialogState
 import oolong.client.ui.designsystem.rememberPageScrollState
 import oolong.client.ui.designsystem.rememberScrollProgress
+import oolong.client.ui.offline.offlineLabel
+import oolong.client.ui.offline.offlineMenuItems
+import oolong.client.ui.offline.rememberOfflineEntry
 import oolong.client.ui.reply.ChromeSurface
 import oolong.client.ui.reply.Content
 import oolong.client.ui.reply.Panel
@@ -71,6 +76,8 @@ fun ThreadScreen(
     var deleting by remember { mutableStateOf<Post?>(null) }
     val newestFirst = state.query.sort == ThreadSort.NewestFirst
     val viewer = state.viewer.user
+    val context = LocalContext.current
+    val offlineEntry by rememberOfflineEntry(state.query.threadId)
 
     val handleEvent: (ThreadEvent) -> Unit = { event ->
         when (event) {
@@ -148,7 +155,7 @@ fun ThreadScreen(
                     val draft = reply?.editor?.text.orEmpty()
                     ReplyChrome(
                         state = chrome,
-                        replyCapsule = if (viewer != null && !preferences.hideReply) {
+                        replyCapsule = if (viewer != null && !preferences.hideReply && !state.query.offline) {
                             { ReplyCapsuleContent(viewer.portrait, draft) }
                         } else null,
                         actions = { ThreadActions(thread.agree, handleEvent) },
@@ -168,6 +175,16 @@ fun ThreadScreen(
                             ThreadMenuFooter(thread.agree, handleEvent, onClose = chrome::close) {
                                 ThreadMenuActions(
                                     canDelete = viewer != null && thread.author.id == viewer.id,
+                                    offlineLabel = offlineLabel(context, offlineEntry),
+                                    offlineItems = {
+                                        offlineMenuItems(
+                                            context = context,
+                                            info = OfflineThreadInfo(thread.id, thread.title, thread.forum.id, thread.forum.name, thread.author.displayName),
+                                            entry = offlineEntry,
+                                            authorFirst = state.query.seeLz,
+                                            onDone = chrome::close,
+                                        )
+                                    },
                                     onEvent = onEvent,
                                     onDelete = {
                                         deleting = null

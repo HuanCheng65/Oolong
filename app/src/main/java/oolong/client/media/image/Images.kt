@@ -12,6 +12,7 @@ import coil3.request.allowHardware
 import coil3.toBitmap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import oolong.client.data.offline.OfflineFiles
 
 /**
  * Loads [data] as a bitmap whose pixels can be read, as for picking colours from it, or null
@@ -33,6 +34,7 @@ suspend fun Context.loadDrawable(data: Any?, configure: ImageRequest.Builder.() 
  * was shown already, downloaded into the cache otherwise. Null when it cannot be downloaded.
  */
 suspend fun Context.downloadImage(url: String): ByteArray? = withContext(Dispatchers.IO) {
+    OfflineFiles.picture(this@downloadImage, url)?.let { return@withContext it.readBytes() }
     val loader = imageLoader
     val diskCache = loader.diskCache ?: return@withContext null
     // Under the key the loader stored it by

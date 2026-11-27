@@ -10,6 +10,7 @@ import android.webkit.WebView
 import coil3.imageLoader
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import oolong.client.data.offline.OfflineFiles
 import oolong.client.data.update.UpdateRepository
 import oolong.client.media.ImageCacheUtil
 import oolong.client.ui.videoview.VideoCache
@@ -32,14 +33,16 @@ class StorageUse(
     val temporary: Long,
     /** The models and their runtime, downloaded: part of [data]. */
     val extensions: Long,
+    /** Threads saved to read offline: part of [data], not of the cache. */
+    val offline: Long = 0,
 ) {
     val total: Long get() = app + data
 
     /** What clearing the cache removes. */
     val cache: Long get() = images + videos + web + temporary
 
-    /** What is kept besides the cache and the models: the account, settings, history. */
-    val records: Long get() = (data - cache - extensions).coerceAtLeast(0)
+    /** What is kept besides the cache, the models and saved threads: the account, settings, history. */
+    val records: Long get() = (data - cache - extensions - offline).coerceAtLeast(0)
 }
 
 /** Measures and clears what the app keeps on the phone. */
@@ -62,6 +65,7 @@ object AppStorage {
             web = webFiles(File(context.cacheDir, WebDir)),
             temporary = temporaryFiles(context).sumOf(::sizeOf),
             extensions = extensions,
+            offline = sizeOf(OfflineFiles.root(context)),
         )
     }
 

@@ -53,6 +53,7 @@ import oolong.client.ui.reply.openInOfficialClient
 import oolong.client.ui.reply.rememberReplyChromeState
 import oolong.client.ui.reply.rememberReplyComposer
 import oolong.client.util.TiebaUtil
+import oolong.client.util.toastShort
 
 /**
  * The thread page: connects [ThreadScreen] to its view model, navigation and the things only a
@@ -147,7 +148,10 @@ fun ThreadRoute(
 
     val onEvent: (ThreadEvent) -> Unit = { event ->
         val thread = state.thread
-        when (event) {
+        // A saved copy is only read: what would change something on the server waits for the thread online
+        if (state.query.offline && event.needsServer) {
+            context.toastShort(R.string.offline_unavailable)
+        } else when (event) {
             ThreadEvent.Back -> navigator.navigateUp()
             ThreadEvent.Refresh -> viewModel.refresh()
             ThreadEvent.Retry -> viewModel.retry()
@@ -167,7 +171,7 @@ fun ThreadRoute(
             }
 
             ThreadEvent.OpenReader -> navigator.navigate(
-                ReaderKey(state.query.threadId, thread?.forum?.id ?: state.query.forumId, floor = viewModel.readingFloor())
+                ReaderKey(state.query.threadId, thread?.forum?.id ?: state.query.forumId, floor = viewModel.readingFloor(), offline = state.query.offline)
             )
             is ThreadEvent.JumpToPage -> viewModel.jumpToPage(event.page)
             ThreadEvent.OpenMenu -> Unit

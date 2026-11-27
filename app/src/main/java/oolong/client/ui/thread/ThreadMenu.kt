@@ -29,8 +29,10 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import oolong.client.R
+import oolong.client.ui.designsystem.ContextMenuItem
 import oolong.client.ui.designsystem.Refocus
 import oolong.client.ui.designsystem.ToggleIcon
+import oolong.client.ui.designsystem.clickMenu
 import oolong.client.ui.designsystem.theme.ExtendedTheme
 import oolong.client.ui.designsystem.theme.Symbols
 import oolong.core.designsystem.theme.Motion
@@ -196,7 +198,16 @@ private fun RowScope.MenuTile(
 
 /** The menu's lower row beside the like and the close button: reporting the thread, or deleting one's own. */
 @Composable
-internal fun RowScope.ThreadMenuActions(canDelete: Boolean, onEvent: (ThreadEvent) -> Unit, onDelete: () -> Unit, onClose: () -> Unit) {
+internal fun RowScope.ThreadMenuActions(
+    canDelete: Boolean,
+    offlineLabel: String,
+    offlineItems: () -> List<ContextMenuItem>,
+    onEvent: (ThreadEvent) -> Unit,
+    onDelete: () -> Unit,
+    onClose: () -> Unit,
+) {
+    // Which floors to save, or once saved updating or deleting it, in a menu out of the button
+    FooterText(text = offlineLabel, modifier = Modifier.clickMenu(items = offlineItems, indication = PressFeedback.overlay(TileShape)))
     FooterButton(stringResource(id = R.string.title_report)) {
         onClose()
         onEvent(ThreadEvent.ReportThread)
@@ -207,6 +218,16 @@ internal fun RowScope.ThreadMenuActions(canDelete: Boolean, onEvent: (ThreadEven
             onDelete()
         }
     }
+}
+
+@Composable
+private fun FooterText(text: String, modifier: Modifier) {
+    Text(
+        text = text,
+        style = TextStyles.label,
+        color = ExtendedTheme.colors.textSecondary,
+        modifier = modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+    )
 }
 
 @Composable

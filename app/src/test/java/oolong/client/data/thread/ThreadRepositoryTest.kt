@@ -7,6 +7,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import oolong.client.arch.query.QueryClient
+import oolong.client.data.offline.OfflineThreads
 import oolong.client.model.BawuType
 import oolong.client.model.PostContent
 import oolong.core.network.TiebaUnknownException
@@ -343,5 +344,31 @@ class ThreadRepositoryTest {
         respond(data(listOf(post(2, 2))).copy(thread = null))
 
         assertFailsWith<TiebaUnknownException> { repository.page(ThreadQuery(9_000), ThreadCursor.Number(0)) }
+    }
+
+    @Test
+    fun `a thread opened offline reads its saved copy and not the server`() = runTest {
+        val offline = mockk<OfflineThreads>()
+        val saved = data(listOf(post(1, 1, lz), post(2, 2)))
+        coEvery { offline.page(any(), any()) } returns saved
+        val repository = ThreadRepository(remote, postRemote, { _, _ -> }, Dispatchers.Unconfined, QueryClient(CoroutineScope(Dispatchers.Unconfined)), offline = offline)
+
+        val page = repository.page(ThreadQuery(threadId = 9_000, offline = true), ThreadCursor.Number(0))
+
+        assertEquals(listOf(2L), page.posts.items.map { it.id })
+        coVerify(exactly = 0) { remote.page(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) }
+    }
+
+    @Test
+    fun `the saved copy stands in when the server can't be reached, not when it refuses`() = runTest {
+        val offline = mockk<OfflineThreads>()
+        coEvery { offline.page(any(), any()) } returns data(listOf(post(1, 1, lz), post(2, 2)))
+        val repository = ThreadRepository(remote, postRemote, { _, _ -> }, Dispatchers.Unconfined, QueryClient(CoroutineScope(Dispatchers.Unconfined)), offline = offline)
+        coEvery { remote.page(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } throws java.net.UnknownHostException()
+
+        assertEquals(listOf(2L), repository.page(ThreadQuery(threadId = 9_000), ThreadCursor.Number(0)).posts.items.map { it.id })
+
+        coEvery { remote.page(any(), any(), any(), any(), any(), any(), any(), any(), any(), any(), any()) } throws TiebaUnknownException
+        assertFailsWith<TiebaUnknownException> { repository.page(ThreadQuery(threadId = 9_000), ThreadCursor.Number(0)) }
     }
 }

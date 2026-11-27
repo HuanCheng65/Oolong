@@ -59,7 +59,7 @@ class ReaderViewModel @AssistedInject constructor(
     client: QueryClient,
     private val positions: ReaderPositions,
 ) : ViewModel() {
-    private val query = ThreadQuery(threadId = args.threadId, seeLz = true, forumId = args.forumId)
+    private val query = ThreadQuery(threadId = args.threadId, seeLz = true, forumId = args.forumId, offline = args.offline)
 
     // The thread page with only the author's posts keeps the same list in the app's cache
     private val pager = repository.posts.pager(viewModelScope, query, ThreadCursor.first())

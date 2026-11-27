@@ -102,11 +102,13 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import oolong.client.R
 import oolong.client.arch.LoadStatus
+import oolong.client.data.offline.OfflineThreadInfo
 import oolong.client.model.PhotoViewData
 import oolong.client.model.PostContent
 import oolong.client.navigation.MaxReadingWidth
 import oolong.client.ui.components.PostBody
 import oolong.client.ui.designsystem.BackNavigationIcon
+import oolong.client.ui.designsystem.ContextMenuItem
 import oolong.client.ui.designsystem.GlassScaffold
 import oolong.client.ui.designsystem.GlassTopBar
 import oolong.client.ui.designsystem.Reveal
@@ -115,6 +117,7 @@ import oolong.client.ui.designsystem.SegmentedControl
 import oolong.client.ui.designsystem.WavyLoader
 import oolong.client.ui.designsystem.adaptive.LocalWindowSizeClass
 import oolong.client.ui.designsystem.adaptive.WindowWidthSizeClass
+import oolong.client.ui.designsystem.clickMenu
 import oolong.client.ui.designsystem.floatingGlass
 import oolong.client.ui.designsystem.pageShortcuts
 import oolong.client.ui.designsystem.theme.ExtendedColors
@@ -123,6 +126,9 @@ import oolong.client.ui.designsystem.theme.LocalExtendedColors
 import oolong.client.ui.designsystem.theme.Symbols
 import oolong.client.ui.designsystem.theme.ThemeUtil
 import oolong.client.ui.designsystem.theme.scrim
+import oolong.client.ui.offline.offlineLabel
+import oolong.client.ui.offline.offlineMenuItems
+import oolong.client.ui.offline.rememberOfflineEntry
 import oolong.core.designsystem.theme.Corners
 import oolong.core.designsystem.theme.Dimens
 import oolong.core.designsystem.theme.Motion
@@ -339,6 +345,8 @@ private fun ReaderContent(
     val pageMargin = if (LocalWindowSizeClass.current.widthSizeClass == WindowWidthSizeClass.Compact) Dimens.PageGutter else Dimens.PageGutterWide
     val thread = state.thread
     val title = thread?.title ?: state.preview?.title.orEmpty()
+    val context = LocalContext.current
+    val offlineEntry by rememberOfflineEntry(thread?.id ?: state.preview?.id ?: 0L)
     GlassScaffold(
         modifier = modifier,
         backgroundColor = colors.background,
@@ -375,6 +383,17 @@ private fun ReaderContent(
                     ReaderBottomBar(
                         onContents = if (contentsOpen) null else ({ sheet = ReaderSheet.Contents }),
                         onText = { sheet = ReaderSheet.Text },
+                        offlineLabel = offlineLabel(context, offlineEntry),
+                        offlineItems = thread?.let {
+                            {
+                                offlineMenuItems(
+                                    context = context,
+                                    info = OfflineThreadInfo(it.id, it.title, it.forum.id, it.forum.name, it.author.displayName),
+                                    entry = offlineEntry,
+                                    authorFirst = true,
+                                )
+                            }
+                        },
                     )
                 }
                 when (sheet) {
@@ -694,7 +713,12 @@ private fun ReaderEnd(loading: LoadStatus, hasMore: Boolean, empty: Boolean, onR
 
 /** The tools, in a capsule like the navigation bar's: icons with short labels. */
 @Composable
-private fun ReaderBottomBar(onContents: (() -> Unit)?, onText: () -> Unit) {
+private fun ReaderBottomBar(
+    onContents: (() -> Unit)?,
+    onText: () -> Unit,
+    offlineLabel: String,
+    offlineItems: (() -> List<ContextMenuItem>)?,
+) {
     Box(
         contentAlignment = Alignment.Center,
         modifier = Modifier
@@ -709,12 +733,21 @@ private fun ReaderBottomBar(onContents: (() -> Unit)?, onText: () -> Unit) {
         ) {
             if (onContents != null) BarTool(Symbols.Toc, stringResource(R.string.reader_contents), onContents)
             BarTool(Symbols.TextFields, stringResource(R.string.reader_text), onText)
+            if (offlineItems != null) {
+                // Saving offers which floors in a menu out of the tool; once saved, updating or deleting
+                BarTool(Symbols.Download, offlineLabel, modifier = Modifier.clickMenu(items = offlineItems, indication = null))
+            }
         }
     }
 }
 
 @Composable
 private fun BarTool(icon: ImageVector, label: String, onClick: () -> Unit) {
+    BarTool(icon, label, Modifier.clickable(interactionSource = null, indication = null, onClick = onClick))
+}
+
+@Composable
+private fun BarTool(icon: ImageVector, label: String, modifier: Modifier) {
     val colors = ExtendedTheme.colors
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -723,7 +756,7 @@ private fun BarTool(icon: ImageVector, label: String, onClick: () -> Unit) {
             .widthIn(min = 72.dp)
             .heightIn(min = 52.dp)
             // The glass answers the press
-            .clickable(interactionSource = null, indication = null, onClick = onClick)
+            .then(modifier)
             .padding(horizontal = Spacing.sm),
     ) {
         Icon(imageVector = icon, contentDescription = null, tint = colors.text)

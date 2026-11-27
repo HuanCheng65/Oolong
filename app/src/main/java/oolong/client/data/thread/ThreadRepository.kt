@@ -8,6 +8,7 @@ import kotlinx.coroutines.withContext
 import oolong.client.arch.IoDispatcher
 import oolong.client.arch.Page
 import oolong.client.arch.query.QueryClient
+import oolong.client.data.offline.OfflineThreads
 import oolong.client.model.Agree
 import oolong.client.model.BawuType
 import oolong.client.model.ForumSummary
@@ -16,6 +17,7 @@ import oolong.client.model.SubPost
 import oolong.client.model.ThreadDetail
 import oolong.client.model.User
 import oolong.client.model.Viewer
+import oolong.core.network.TiebaException
 import oolong.core.network.TiebaUnknownException
 import oolong.core.network.post.PostRemoteDataSource
 import oolong.core.network.protos.PbContent
@@ -23,6 +25,7 @@ import oolong.core.network.protos.VideoInfo
 import oolong.core.network.protos.pbFloor.PbFloorResponseData
 import oolong.core.network.protos.pbPage.PbPageResponseData
 import oolong.core.network.thread.ThreadRemoteDataSource
+import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.time.Duration.Companion.minutes
@@ -46,6 +49,8 @@ data class ThreadQuery(
     val forumId: Long? = null,
     /** Opened from the thread store, which the server is told about. */
     val fromStore: Boolean = false,
+    /** Read from the copy saved to read offline, not from the server. */
+    val offline: Boolean = false,
 )
 
 /** Where a page of a thread starts. */
@@ -160,6 +165,7 @@ class ThreadRepository @Inject constructor(
     @IoDispatcher private val io: CoroutineDispatcher,
     client: QueryClient,
     private val subPostSort: SubPostSortStore? = null,
+    private val offline: OfflineThreads? = null,
 ) {
     /**
      * The posts of threads as the thread page shows them, kept a little: a thread peeked at and
@@ -192,7 +198,21 @@ class ThreadRepository @Inject constructor(
         return ThreadLoad(page, page.posts)
     }
 
-    private suspend fun fetch(query: ThreadQuery, cursor: ThreadCursor): PbPageResponseData = withContext(io) {
+    /**
+     * The page from the saved copy when [ThreadQuery.offline]; otherwise from the server, or from
+     * the saved copy when the server can't be reached and the thread was saved.
+     */
+    private suspend fun fetch(query: ThreadQuery, cursor: ThreadCursor): PbPageResponseData {
+        if (query.offline) return offline?.page(query, cursor) ?: throw TiebaUnknownException
+        return try {
+            fetchRemote(query, cursor)
+        } catch (e: IOException) {
+            if (e is TiebaException) throw e
+            offline?.page(query, cursor) ?: throw e
+        }
+    }
+
+    private suspend fun fetchRemote(query: ThreadQuery, cursor: ThreadCursor): PbPageResponseData = withContext(io) {
         remote.page(
             threadId = query.threadId,
             page = when (cursor) {

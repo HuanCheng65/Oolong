@@ -68,6 +68,7 @@ import oolong.client.navigation.HistoryKey
 import oolong.client.navigation.LikesKey
 import oolong.client.navigation.LocalNavigator
 import oolong.client.navigation.LoginKey
+import oolong.client.navigation.OfflineThreadsKey
 import oolong.client.navigation.PrivacySettingsKey
 import oolong.client.navigation.SettingsKey
 import oolong.client.navigation.ThreadStoreKey
@@ -567,6 +568,12 @@ fun UserScreen(
                         onClick = { navigator.navigate(LikesKey) },
                     )
                 }
+                ListMenuItem(
+                    iconColor = ExtendedTheme.colors.text,
+                    icon = ImageVector.vectorResource(id = R.drawable.ic_me_offline),
+                    text = stringResource(id = R.string.title_offline_threads),
+                    onClick = { navigator.navigate(OfflineThreadsKey) },
+                )
                 ListMenuItem(
                     iconColor = ExtendedTheme.colors.text,
                     icon = ImageVector.vectorResource(id = R.drawable.ic_me_theme),

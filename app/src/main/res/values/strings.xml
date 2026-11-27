@@ -57,6 +57,24 @@
     <string name="title_default">Oolong</string>
     <string name="title_my_collect">我的收藏</string>
     <string name="title_my_likes">我的点赞</string>
+    <string name="title_offline_threads">离线帖子</string>
+    <string name="offline_empty">没有离线帖子</string>
+    <string name="offline_save">离线保存</string>
+    <string name="offline_saving">正在离线保存</string>
+    <string name="offline_saved">已离线保存</string>
+    <string name="offline_save_all">保存全部楼层</string>
+    <string name="offline_save_author">只保存楼主的楼层</string>
+    <string name="offline_update">更新离线版本</string>
+    <string name="offline_delete">删除离线版本</string>
+    <string name="offline_unavailable">离线浏览时不可用</string>
+    <string name="offline_channel">离线保存</string>
+    <string name="offline_state_saving_pages">正在保存第 %1$d/%2$d 页</string>
+    <string name="offline_state_failed">保存未完成</string>
+    <string name="offline_state_gone">原帖已删除</string>
+    <string name="offline_state_missing">%1$d 张图片未保存</string>
+    <plurals name="offline_floors">
+        <item quantity="other">%1$d 层</item>
+    </plurals>
     <string name="likes_tab_threads">帖子</string>
     <string name="likes_tab_replies">回复</string>
     <string name="likes_reply_meta">%1$s · %2$s</string>

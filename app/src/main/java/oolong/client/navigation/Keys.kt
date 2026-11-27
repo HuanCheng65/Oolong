@@ -21,6 +21,8 @@ data class ThreadKey(
     val from: String = "",
     val extra: ThreadPageExtra? = null,
     val scrollToReply: Boolean = false,
+    /** Read from the copy saved to read offline. */
+    val offline: Boolean = false,
 ) : Key
 
 /** 沉浸阅读 of a thread: its author's floors as one text. */
@@ -30,6 +32,8 @@ data class ReaderKey(
     val forumId: Long? = null,
     /** The floor to open at: the author's floor at or before it. 0 opens at the start. */
     val floor: Int = 0,
+    /** Read from the copy saved to read offline. */
+    val offline: Boolean = false,
 ) : Key
 
 @Serializable
@@ -102,6 +106,10 @@ data object ThreadStoreKey : Key
 /** The threads and replies the user liked. */
 @Serializable
 data object LikesKey : Key
+
+/** The threads saved to read offline. */
+@Serializable
+data object OfflineThreadsKey : Key
 
 @Serializable
 data object HotTopicListKey : Key

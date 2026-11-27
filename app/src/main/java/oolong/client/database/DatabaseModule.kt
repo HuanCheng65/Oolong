@@ -44,4 +44,7 @@ object DatabaseModule {
 
     @Provides
     fun provideSearchHistoryDao(database: AppDatabase) = database.searchHistoryDao()
+
+    @Provides
+    fun provideOfflineThreadDao(database: AppDatabase) = database.offlineThreadDao()
 }

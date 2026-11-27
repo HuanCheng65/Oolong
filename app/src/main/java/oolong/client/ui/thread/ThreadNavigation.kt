@@ -25,4 +25,5 @@ fun ThreadKey.query() = ThreadQuery(
     seeLz = seeLz,
     forumId = forumId,
     fromStore = from == ThreadPageFrom.FROM_STORE,
+    offline = offline,
 )
