@@ -23,6 +23,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import oolong.client.R
+import oolong.client.data.emoticon.EmoticonManager
 import oolong.client.database.OfflineThreadDao
 import oolong.client.database.OfflineThreadEntity
 import oolong.client.media.image.downloadImage
@@ -90,6 +91,8 @@ class OfflineSaveWorker(context: Context, params: WorkerParameters) : CoroutineW
             }
             val pictures = data.pictureUrls(StringUtil::getAvatarUrl)
             missing += savePictures(threadId, pictures)
+            // Emoticons are kept apart from the cache, where clearing it would take them from the thread
+            data.emoticonIds().forEach { EmoticonManager.keep(context, it) }
             val total = data.page?.total_page?.coerceAtLeast(page) ?: page
             entry = entry.copy(
                 title = data.thread?.title?.ifEmpty { null } ?: entry.title,

@@ -82,6 +82,14 @@ internal fun PbPageResponseData.pictureUrls(avatarUrl: (String) -> String): List
     return (pictures + avatars).distinct()
 }
 
+/** The ids of the emoticons [this] page's posts and their replies show. */
+internal fun PbPageResponseData.emoticonIds(): Set<String> =
+    (post_list + listOfNotNull(first_floor_post)).flatMap { post ->
+        post.content + post.sub_post_list?.sub_post_list.orEmpty().flatMap { it.content }
+    }.filter { it.type == EmoticonType && it.text.isNotBlank() }.mapTo(LinkedHashSet()) { it.text }
+
+private const val EmoticonType = 2
+
 /** The copy of a picture the thread shows; a video's cover. */
 private fun PbContent.pictureUrl(): String? = when (type) {
     3 -> listOf(bigCdnSrc, bigSrc, cdnSrc, src).firstOrNull { it.isNotBlank() }

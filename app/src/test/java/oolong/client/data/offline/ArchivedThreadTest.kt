@@ -100,4 +100,23 @@ class ArchivedThreadTest {
 
         assertEquals(listOf("big", "cover", "reply", "avatar/p1"), page.pictureUrls { "avatar/$it" })
     }
+
+    @Test
+    fun `lists the emoticons posts and their replies show, each once`() {
+        val page = PbPageResponseData(
+            post_list = listOf(
+                Post(
+                    id = 1,
+                    content = listOf(
+                        PbContent(type = 2, text = "image_emoticon25", c = "滑稽"),
+                        PbContent(type = 0, text = "words"),
+                        PbContent(type = 2, text = "image_emoticon25", c = "滑稽"),
+                    ),
+                    sub_post_list = SubPost(sub_post_list = listOf(SubPostList(content = listOf(PbContent(type = 2, text = "image_emoticon130", c = "喝彩"))))),
+                ),
+            ),
+        )
+
+        assertEquals(setOf("image_emoticon25", "image_emoticon130"), page.emoticonIds())
+    }
 }

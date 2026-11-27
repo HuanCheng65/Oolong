@@ -202,9 +202,36 @@ object EmoticonManager {
         }
     }
 
+    /**
+     * Where downloaded emoticons are kept: with the app's files, not its cache, so clearing the
+     * cache does not take them from threads saved to read offline.
+     */
+    private fun getEmoticonDir(): File = File(getContext().filesDir, "emoticon").apply { mkdirs() }
+
+    /** A downloaded emoticon's file: the kept one, or one downloaded into the cache before they were kept. */
     private fun getEmoticonFile(id: String): File {
-        return File(getEmoticonCacheDir(), "$id.png")
+        val kept = File(getEmoticonDir(), "$id.png")
+        if (kept.exists()) return kept
+        return File(getEmoticonCacheDir(), "$id.png").takeIf { it.exists() } ?: kept
     }
+
+    /**
+     * Makes sure emoticon [id] can be shown without the network: bundled, or downloaded and kept.
+     * Returns false when it could not be downloaded.
+     */
+    suspend fun keep(context: Context, id: String): Boolean = withContext(Dispatchers.IO) {
+        val realId = EmoticonUtil.normalizeEmoticonId(id)
+        if (getEmoticonResId(context, realId) != 0) return@withContext true
+        val kept = File(getEmoticonDir(), "$realId.png")
+        if (kept.exists()) return@withContext true
+        val cached = File(getEmoticonCacheDir(), "$realId.png")
+        if (cached.exists()) return@withContext cached.copyTo(kept, overwrite = true).exists()
+        val bitmap = context.loadBitmap(emoticonUrl(realId)) ?: return@withContext false
+        ImageUtil.bitmapToFile(bitmap, kept, Bitmap.CompressFormat.PNG)
+        kept.exists()
+    }
+
+    private fun emoticonUrl(id: String) = "http://static.tieba.baidu.com/tb/editor/images/client/$id.png"
 
     fun getAllEmoticon(): List<Emoticon> {
         return emoticonIds.map { id ->
@@ -281,7 +308,7 @@ object EmoticonManager {
             val resId = getEmoticonResId(context, it)
             val emoticonFile = getEmoticonFile(it)
             if (resId == 0 && !emoticonFile.exists()) {
-                val bitmap = context.loadBitmap("http://static.tieba.baidu.com/tb/editor/images/client/$it.png")
+                val bitmap = context.loadBitmap(emoticonUrl(it))
                 if (bitmap != null) {
                     ImageUtil.bitmapToFile(bitmap, emoticonFile, Bitmap.CompressFormat.PNG)
                 }
