@@ -6,6 +6,7 @@ option java_package = "oolong.core.network.protos";
 
 message Media {
   int32 type = 1;
+  string smallPic = 2;
   string bigPic = 3;
   string srcPic = 8;
   uint32 width = 10;

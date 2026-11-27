@@ -7,6 +7,7 @@ import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonTransformingSerializer
 import okhttp3.RequestBody
+import oolong.core.network.protos.agreeMe.AgreeMeResponse
 import retrofit2.http.Body
 import retrofit2.http.POST
 
@@ -19,6 +20,11 @@ interface MessageService {
 
     @POST("c/u/feed/atme")
     suspend fun atMe(@Body body: RequestBody): FeedResponse
+}
+
+interface MessageProtoService {
+    @POST("c/u/feed/agreeme?cmd=309593&format=protobuf")
+    suspend fun agreeMe(@Body body: RequestBody): AgreeMeResponse
 }
 
 /** A page of replies to the user, or of posts that mention them. */

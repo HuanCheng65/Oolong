@@ -1,11 +1,18 @@
 package oolong.core.network.message
 
 import kotlinx.coroutines.test.runTest
+import mockwebserver3.MockResponse
+import okio.Buffer
 import oolong.core.network.FakeDevice
 import oolong.core.network.TiebaProfile
+import oolong.core.network.protos.agreeMe.AgreeItem
+import oolong.core.network.protos.agreeMe.AgreeMeRequest
+import oolong.core.network.protos.agreeMe.AgreeMeResponse
+import oolong.core.network.protos.agreeMe.AgreeMeResponseData
 import oolong.core.network.testing.FormServer
 import oolong.core.network.testing.assertSigned
 import oolong.core.network.testing.form
+import oolong.core.network.testing.multipartParts
 import oolong.core.network.testing.value
 import org.junit.After
 import kotlin.test.Test
@@ -80,5 +87,30 @@ class MessageRemoteDataSourceTest {
 
         assertEquals("/c/u/feed/atme", server.takeRequest().target)
         assertEquals(emptyList(), response.atList)
+    }
+
+    @Test
+    fun `asks for a page of likes after the last one as the protobuf stack`() = runTest {
+        val item = AgreeItem(id = 41, type = 2, time = 1_700_000_000)
+        server.server.enqueue(
+            MockResponse.Builder()
+                .body(Buffer().write(AgreeMeResponse(data_ = AgreeMeResponseData(has_more = 1, agree_list = listOf(item))).encode()))
+                .build()
+        )
+
+        val response = dataSource.agreeMe(after = 94359475)
+
+        val request = server.takeRequest()
+        assertEquals("/c/u/feed/agreeme?cmd=309593&format=protobuf", request.target)
+        server.commonParams.headers(TiebaProfile.PROTO_12_52).forEach { (name, value) -> assertEquals(value, request.headers[name], name) }
+        val parts = multipartParts(request.headers["Content-Type"]!!, request.body!!)
+        assertEquals(listOf("stoken", "data"), parts.map { it.first })
+        val sent = AgreeMeRequest.ADAPTER.decode(parts[1].second).data_!!
+        assertEquals(server.commonParams.protobuf(TiebaProfile.PROTO_12_52), sent.common)
+        assertEquals(94359475L, sent.id)
+        assertEquals(20, sent.rn)
+        assertEquals(FakeDevice.screenWidth, sent.scr_w)
+        assertEquals(listOf(item), response.agree_list)
+        assertEquals(1, response.has_more)
     }
 }
