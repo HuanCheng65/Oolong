@@ -1,0 +1,16 @@
+{
+  "zh": {
+    "修复": [
+      "首次打开时，点按「登录」或「暂不登录」没有反应",
+      "看图时滑动图片，有时退出看图或进入提取文字",
+      "吧的帖子列表中出现空白帖子，日期显示为 1970 年"
+    ]
+  },
+  "en": {
+    "Fixed": [
+      "Tapping Sign in or Not now did nothing on first launch",
+      "Swiping a picture in the viewer sometimes closed it or opened Extract text",
+      "Forums showed a blank thread dated 1970"
+    ]
+  }
+}
