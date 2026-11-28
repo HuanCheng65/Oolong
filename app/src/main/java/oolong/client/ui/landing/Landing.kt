@@ -206,15 +206,13 @@ private fun Landing(stage: Stage, onStage: (Stage) -> Unit) {
         modifier = Modifier
             .fillMaxSize()
             .graphicsLayer { alpha = 1f - state.leave.value }
-            // Nothing reaches the page under it; a finger draws the light a little towards it
+            // Taking touches at all keeps them from the page under it; a finger draws the light a
+            // little towards it. It only watches: a finger's movement taken here would cancel the
+            // buttons' taps, which give way to any movement something else takes
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {
-                        val event = awaitPointerEvent()
-                        event.changes.forEach {
-                            state.aurora.touch(it.position)
-                            it.consume()
-                        }
+                        awaitPointerEvent().changes.forEach { state.aurora.touch(it.position) }
                     }
                 }
             },
