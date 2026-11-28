@@ -1,0 +1,37 @@
+{
+  "zh": {
+    "须知": [
+      "系统要求\n需要 Android 8.0 或更高版本"
+    ],
+    "新增": [
+      "赞我的\n「消息」新增「赞」，看谁赞了你",
+      "离线保存\n保存帖子，没有网络也能看"
+    ],
+    "改进": [
+      "帖子菜单\n按常用程度重新排列",
+      "消息\n顶部标签改为更短的「回复」「提到」「赞」",
+      "存储空间\n重新分组，哪些可以清除一目了然"
+    ],
+    "修复": [
+      "部分系统上，启动图标四边被裁掉",
+      "楼中楼弹窗顶到窗口边缘时，圆角处露出背后的页面"
+    ]
+  },
+  "en": {
+    "Note": [
+      "System requirement\nAndroid 8.0 or later is required"
+    ],
+    "New": [
+      "Likes\nMessages has a Likes tab showing who liked your posts",
+      "Offline reading\nSave a thread to read it without a connection"
+    ],
+    "Improved": [
+      "Thread menu\nReordered by how often each action is used",
+      "Storage\nRegrouped, so it is clear what can be cleared"
+    ],
+    "Fixed": [
+      "On some systems, the splash icon was cut off on all four sides",
+      "When the replies sheet reached the top of the window, the page behind showed at its corners"
+    ]
+  }
+}
