@@ -4,6 +4,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -18,11 +20,16 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.persistentListOf
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import oolong.client.R
 import oolong.client.arch.Actions
 import oolong.client.arch.MessageController
+import oolong.client.data.thread.ThreadCursor
 import oolong.client.data.thread.ThreadRepository
 import oolong.client.model.DislikeOption
+import oolong.client.model.Post
 import oolong.client.model.ThreadSummary
 import oolong.client.model.knownFirstFloor
 import oolong.client.model.threadId
@@ -55,6 +62,14 @@ class ThreadPeekViewModel @Inject constructor(
     private val actions = Actions(viewModelScope)
 
     fun prefetch(thread: ThreadSummary) = repository.prefetch(thread.key().query())
+
+    /**
+     * The first floor of [thread] once the start of its page has loaded, as [prefetch] starts it,
+     * held while [scope] lives: lists that show only an abstract of it don't have it whole.
+     */
+    fun firstFloor(thread: ThreadSummary, scope: CoroutineScope): Flow<Post?> =
+        repository.posts.pager(scope, thread.key().query(), ThreadCursor.first()).loads
+            .map { (it.latest ?: it.refreshed)?.response?.page?.firstPost }
 
     fun store(thread: ThreadSummary) = actions.launch("store-${thread.id}") {
         // A recommended reply is stored at itself
@@ -156,7 +171,7 @@ fun rememberThreadPeeker(): ThreadPeeker? {
                         navigator.navigateToThread(thread)
                     },
                 ) {
-                    ThreadPeek(thread = thread)
+                    ThreadPeek(thread = thread, loadFirstFloor = { scope -> viewModel.firstFloor(thread, scope) })
                 },
             )
         }
@@ -164,16 +179,26 @@ fun rememberThreadPeeker(): ThreadPeeker? {
 }
 
 /**
- * A thread's first floor in full, as the thread page shows it, from what the list knows of it:
- * lists carry the whole first floor, only their abstract is cut short. A recommended reply shows
- * itself under the thread's title.
+ * A thread's first floor in full, as the thread page shows it, from what the list knows of it.
+ * Most lists carry the whole first floor; one that has only the abstract and the pictures shows
+ * those until [loadFirstFloor] brings the floor whole. A recommended reply shows itself under the
+ * thread's title.
  */
 @Composable
-fun ThreadPeek(thread: ThreadSummary, modifier: Modifier = Modifier) {
-    val post = remember(thread) {
+fun ThreadPeek(
+    thread: ThreadSummary,
+    modifier: Modifier = Modifier,
+    loadFirstFloor: ((CoroutineScope) -> Flow<Post?>)? = null,
+) {
+    val known = remember(thread) {
         val floor = thread.knownFirstFloor()
         thread.reply?.let { floor.copy(author = it.author, time = it.time) } ?: floor
     }
+    val loaded by produceState<Post?>(null, thread) {
+        if (thread.firstPostShort && thread.reply == null) loadFirstFloor?.invoke(this)?.collect { value = it }
+    }
+    // The loaded floor's content, under what the card already showed of its author and time
+    val post = loaded?.let { known.copy(content = it.content) } ?: known
     FirstPostContent(
         post = post,
         title = post.title,
