@@ -81,7 +81,10 @@
     <string name="title_at_me">提到我的</string>
     <string name="text_message_list_item_reply_my_thread">回复我的主题：%1$s</string>
     <string name="title_reply_me">回复我的</string>
-    <string name="title_likes_me">赞我的</string>
+    <!-- The tabs of Messages -->
+    <string name="messages_tab_replies">回复</string>
+    <string name="messages_tab_mentions">提到</string>
+    <string name="messages_tab_likes">赞</string>
     <plurals name="text_likes_me">
         <item quantity="other">等 %1$d 人赞了你 · %2$s</item>
     </plurals>

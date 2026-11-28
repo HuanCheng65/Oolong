@@ -120,13 +120,13 @@ private val NotificationTypes = listOf(NotificationType.ReplyMe, NotificationTyp
 /** The tabs' names and pages: replies, mentions, likes. */
 @Composable
 private fun notificationPages() = listOf<Pair<String, (@Composable (PaddingValues) -> Unit)>>(
-    stringResource(id = R.string.title_reply_me) to @Composable {
+    stringResource(id = R.string.messages_tab_replies) to @Composable {
         NotificationsListPage(type = NotificationType.ReplyMe, contentPadding = it)
     },
-    stringResource(id = R.string.title_at_me) to @Composable {
+    stringResource(id = R.string.messages_tab_mentions) to @Composable {
         NotificationsListPage(type = NotificationType.AtMe, contentPadding = it)
     },
-    stringResource(id = R.string.title_likes_me) to @Composable {
+    stringResource(id = R.string.messages_tab_likes) to @Composable {
         ReceivedLikesListPage(contentPadding = it)
     },
 )

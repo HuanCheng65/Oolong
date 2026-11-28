@@ -83,7 +83,10 @@
     <string name="title_at_me">Mentions</string>
     <string name="text_message_list_item_reply_my_thread">Replied to your thread: %1$s</string>
     <string name="title_reply_me">Replies</string>
-    <string name="title_likes_me">Likes</string>
+    <!-- The tabs of Messages -->
+    <string name="messages_tab_replies">Replies</string>
+    <string name="messages_tab_mentions">Mentions</string>
+    <string name="messages_tab_likes">Likes</string>
     <plurals name="text_likes_me">
         <item quantity="one">%1$d like · %2$s</item>
         <item quantity="other">%1$d likes · %2$s</item>
