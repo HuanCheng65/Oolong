@@ -1,0 +1,18 @@
+{
+  "zh": {
+    "改进": [
+      "屏蔽\n新增「不看官方活动帖」，默认开启"
+    ],
+    "修复": [
+      "吧里的帖子列表显示「暂无内容」"
+    ]
+  },
+  "en": {
+    "Improved": [
+      "Blocking\nNew option to hide official event threads, on by default"
+    ],
+    "Fixed": [
+      "Forums showed no threads"
+    ]
+  }
+}
