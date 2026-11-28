@@ -767,6 +767,7 @@
     <string name="block_reason_keyword">keyword “%1$s”</string>
     <string name="block_reason_regex">regex “%1$s”</string>
     <string name="settings_block_video">Hide video threads</string>
+    <string name="settings_block_activity">Hide official event threads</string>
     <string name="btn_full_screen">Full screen</string>
     <string name="btn_play">Play</string>
     <string name="title_sub_posts">Comments on #%d</string>

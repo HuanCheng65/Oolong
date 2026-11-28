@@ -77,6 +77,7 @@ object BlockSettings : SettingsPage<BlockState>(R.string.title_block_settings, B
     override fun SettingsScope<BlockState>.content() {
         group(R.string.settings_block_common) {
             switch(SettingKeys.BlockVideo, R.string.settings_block_video)
+            switch(SettingKeys.BlockActivity, R.string.settings_block_activity)
             switch(SettingKeys.BlockLowLevel, R.string.settings_block_low_level)
             // Found by the switch above, which it belongs to
             custom(

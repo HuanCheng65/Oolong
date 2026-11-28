@@ -757,6 +757,7 @@
     <string name="block_reason_keyword">关键词「%1$s」</string>
     <string name="block_reason_regex">正则「%1$s」</string>
     <string name="settings_block_video">不看视频帖</string>
+    <string name="settings_block_activity">不看官方活动帖</string>
     <string name="btn_full_screen">全屏</string>
     <string name="btn_play">播放</string>
     <string name="title_sub_posts">%d 楼的回复</string>

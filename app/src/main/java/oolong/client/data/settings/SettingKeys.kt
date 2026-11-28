@@ -35,6 +35,7 @@ object SettingKeys {
     val AutoSignTime = Setting.string("auto_sign_time", "09:00")
 
     val BlockVideo = Setting.boolean("blockVideo", false)
+    val BlockActivity = Setting.boolean("blockActivity", true)
 
     /** Whether a Tieba link copied elsewhere is offered when the app comes to the front. */
     val ClipboardLinks = Setting.boolean("clipboard_links", true)

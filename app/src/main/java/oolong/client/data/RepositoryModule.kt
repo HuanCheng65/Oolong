@@ -26,6 +26,7 @@ import oolong.client.data.explore.ConcernFeedStore
 import oolong.client.data.explore.FeedAutoRefresh
 import oolong.client.data.explore.FeedSnapshots
 import oolong.client.data.explore.FileFeedSnapshots
+import oolong.client.data.forum.ActivityThreadFilter
 import oolong.client.data.forum.DataStoreForumSortStore
 import oolong.client.data.forum.DatabaseForumHistory
 import oolong.client.data.forum.ForumHistory
@@ -76,6 +77,10 @@ abstract class RepositoryModule {
         @Provides
         fun provideVideoThreadFilter(settings: Settings): VideoThreadFilter =
             VideoThreadFilter { settings[SettingKeys.BlockVideo] }
+
+        @Provides
+        fun provideActivityThreadFilter(settings: Settings): ActivityThreadFilter =
+            ActivityThreadFilter { settings[SettingKeys.BlockActivity] }
 
         @Provides
         fun provideSubPostSortStore(settings: Settings): SubPostSortStore = object : SubPostSortStore {

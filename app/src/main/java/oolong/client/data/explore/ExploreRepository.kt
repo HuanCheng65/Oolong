@@ -5,7 +5,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import oolong.client.arch.IoDispatcher
 import oolong.client.arch.Page
+import oolong.client.data.forum.ActivityThreadFilter
 import oolong.client.data.forum.VideoThreadFilter
+import oolong.client.data.thread.ActivityThreadType
 import oolong.client.data.thread.EmoticonRegistry
 import oolong.client.data.thread.rankReason
 import oolong.client.data.thread.toThreadSummary
@@ -52,6 +54,7 @@ class ExploreRepository @Inject constructor(
     private val snapshots: FeedSnapshots,
     private val autoRefresh: FeedAutoRefresh,
     private val recent: RecentResponses = RecentResponses.None,
+    private val activityFilter: ActivityThreadFilter = ActivityThreadFilter { false },
 ) {
     /**
      * A page of recommended threads, without adverts, live streams and, if the user hides them, videos.
@@ -220,12 +223,15 @@ class ExploreRepository @Inject constructor(
     /**
      * Drops live streams, videos if hidden, and adverts: those from outside any forum, which carry
      * no forum; promoted threads and goods, which the server marks with thread types of their own;
-     * and threads that carry a game's card to download it from, posted as plain threads.
+     * and threads that carry a game's card to download it from, posted as plain threads. Tieba's
+     * own events go too when the user hides them.
      */
     private fun filter(threads: List<ThreadInfo>): List<ThreadInfo> {
         val hideVideos = videoFilter.hidesVideos()
+        val hideActivities = activityFilter.hidesActivities()
         return threads.filter {
-            it.ala_info == null && it.forumInfo != null && it.thread_type !in PromotedThreadTypes && it.game_card.isEmpty() && !(hideVideos && it.videoInfo != null)
+            it.ala_info == null && it.forumInfo != null && it.thread_type !in PromotedThreadTypes && it.game_card.isEmpty() &&
+                !(hideVideos && it.videoInfo != null) && !(hideActivities && it.thread_type == ActivityThreadType)
         }
     }
 }
