@@ -161,6 +161,8 @@ fun SubPostsScreen(
                 topBar = {
                     TitleCentredToolbar(
                         title = { Text(text = title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.h6) },
+                        // The sheet stops below the status bar
+                        insets = false,
                         navigationIcon = {
                             IconButton(onClick = { onEvent(SubPostsEvent.Back) }) {
                                 Icon(imageVector = Symbols.Close, contentDescription = stringResource(id = R.string.btn_close))

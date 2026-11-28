@@ -3,8 +3,19 @@ package oolong.client.navigation
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.captionBar
+import androidx.compose.foundation.layout.displayCutout
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.union
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
@@ -83,24 +94,33 @@ private class BottomSheetScene<T : Any>(
             state.hide()
             hidden.complete(Unit)
         }
-        ModalBottomSheetLayout(
-            sheetContent = {
-                // The handle says the sheet can be dragged down to close
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(top = 8.dp)
-                        .size(width = 36.dp, height = 5.dp)
-                        .background(ExtendedTheme.colors.text.copy(alpha = 0.18f), SmoothCornerShape.Capsule)
-                )
-                entry.Content()
-            },
-            sheetState = state,
-            sheetShape = SmoothCornerShape(Radius.xl, bottom = false),
-            sheetBackgroundColor = ExtendedTheme.colors.sheet,
-            scrimColor = ExtendedTheme.colors.scrim,
-            content = {},
-        )
+        // The sheet stops short of the top, below the status bar, so the page under it shows above
+        // its corners rather than in slivers beside them at the window's own corners
+        val topGap = WindowInsets.statusBars.union(WindowInsets.captionBar).union(WindowInsets.displayCutout)
+            .only(WindowInsetsSides.Top).asPaddingValues().calculateTopPadding() + SheetTopGap
+        BoxWithConstraints {
+            val sheetHeight = maxHeight - topGap
+            ModalBottomSheetLayout(
+                sheetContent = {
+                    Column(modifier = Modifier.heightIn(max = sheetHeight)) {
+                        // The handle says the sheet can be dragged down to close
+                        Box(
+                            modifier = Modifier
+                                .align(Alignment.CenterHorizontally)
+                                .padding(top = 8.dp)
+                                .size(width = 36.dp, height = 5.dp)
+                                .background(ExtendedTheme.colors.text.copy(alpha = 0.18f), SmoothCornerShape.Capsule)
+                        )
+                        entry.Content()
+                    }
+                },
+                sheetState = state,
+                sheetShape = SmoothCornerShape(Radius.xl, bottom = false),
+                sheetBackgroundColor = ExtendedTheme.colors.sheet,
+                scrimColor = ExtendedTheme.colors.scrim,
+                content = {},
+            )
+        }
     }
 
     override suspend fun onRemove() {
@@ -110,5 +130,6 @@ private class BottomSheetScene<T : Any>(
 
     private companion object {
         const val HIDE_TIMEOUT_MILLIS = 1_000L
+        val SheetTopGap = 8.dp
     }
 }
