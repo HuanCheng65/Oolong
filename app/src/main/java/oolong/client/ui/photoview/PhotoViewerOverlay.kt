@@ -498,7 +498,29 @@ private fun Photo(
     val progress by rememberImageDownloadProgress(picture.originUrl)
     // Made once: the placeholder only matters until the picture is in
     val request = remember(picture.originUrl) { request(context, picture.originUrl, placeholder) }
-    BoxWithConstraints(modifier = Modifier.fillMaxSize().then(handles), contentAlignment = Alignment.Center) {
+    // The picture's own taps and long presses go by time alone, so a drag nothing takes, as one
+    // up or across a picture that can't move that way, would end as a tap or hold as a long press
+    var moved by remember { mutableStateOf(false) }
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    moved = false
+                    val slop = viewConfiguration.touchSlop
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.changes.count { it.pressed } > 1) moved = true
+                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                        if ((change.position - down.position).getDistance() > slop) moved = true
+                        if (!change.pressed) break
+                    }
+                }
+            }
+            .then(handles),
+        contentAlignment = Alignment.Center,
+    ) {
         // A long picture is read down a column no wider than text is, as on a phone, rather than
         // across a wide window; its size is known from the post, or once it is in
         val loaded = zoomState.zoomable.contentSize
@@ -519,8 +541,8 @@ private fun Photo(
                 Modifier.fillMaxSize()
             }.mouseZoom(zoomState.zoomable),
             zoomState = zoomState,
-            onTap = { onTap(it) },
-            onLongPress = { onLongPress(it) },
+            onTap = { if (!moved) onTap(it) },
+            onLongPress = { if (!moved) onLongPress(it) },
             onState = { state ->
                 loading = state is AsyncImagePainter.State.Loading
                 if (state is AsyncImagePainter.State.Success) {
