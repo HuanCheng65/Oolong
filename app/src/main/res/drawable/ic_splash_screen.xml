@@ -4,7 +4,12 @@
     android:height="288dp"
     android:viewportWidth="150"
     android:viewportHeight="150">
+    <!-- Smaller than the circle the system keeps, as some systems cut the icon to a smaller shape -->
     <group
+        android:pivotX="50"
+        android:pivotY="50"
+        android:scaleX="0.84"
+        android:scaleY="0.84"
         android:translateX="25"
         android:translateY="25">
         <path
