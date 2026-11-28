@@ -2,11 +2,13 @@ package oolong.client.data.forum
 
 import kotlinx.collections.immutable.toImmutableList
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import oolong.client.arch.IoDispatcher
 import oolong.client.arch.Page
 import oolong.client.data.thread.EmoticonRegistry
 import oolong.client.data.thread.toPostContent
+import oolong.client.data.thread.toThreadSummaries
 import oolong.client.data.thread.toThreadSummary
 import oolong.client.diagnostics.RecentResponses
 import oolong.client.model.ForumDetail
@@ -19,7 +21,9 @@ import oolong.client.model.ForumTab
 import oolong.client.model.GoodClass
 import oolong.client.model.ThreadSummary
 import oolong.client.model.plainText
+import oolong.core.network.forum.FirstGet
 import oolong.core.network.forum.ForumRemoteDataSource
+import oolong.core.network.forum.FrsTab
 import oolong.core.network.forum.LikeRemoteDataSource
 import oolong.core.network.protos.ThreadInfo
 import oolong.core.network.protos.User
@@ -88,8 +92,8 @@ class ForumRepository @Inject constructor(
     }
 
     /**
-     * A page of [tab]'s threads from [cursor]. [forumId] may be 0 until frs/page has returned it,
-     * which only a [ForumCursor.FrsPage] load needs.
+     * A page of [tab]'s threads from [cursor], as the forum page asks for them. [forumId] may be 0
+     * until frs/page has returned it, which only a [ForumCursor.FrsPage] load needs.
      *
      * @param goodClassId the class of good threads to list, 0 for all of them
      */
@@ -101,26 +105,40 @@ class ForumRepository @Inject constructor(
         sortType: Int = ForumSort.REPLY_TIME,
         goodClassId: Int = 0,
     ): ForumThreadsPage = withContext(io) {
-        val sortType = tab.sortType(sortType)
+        val frsTab = tab.frsTab()
+        val sort = if (tab == ForumTab.Latest) sortType else -1
         when (cursor) {
             is ForumCursor.FrsPage -> {
-                val data = remote.page(
-                    forumName = forumName,
-                    page = cursor.page,
-                    loadType = if (cursor.page == 1) 1 else 2,
-                    sortType = sortType,
-                    good = tab == ForumTab.Good,
-                    goodClassId = goodClassId,
-                )
+                fun load(firstGet: FirstGet) = async {
+                    remote.page(forumName, forumId, frsTab, cursor.page, if (cursor.page == 1) 1 else 2, sort, goodClassId, firstGet)
+                }
+                // The first page comes twice at once, as the forum page asks for it: quickly with
+                // the pinned threads, and in full, which leaves them out
+                val (quick, data) = if (cursor.page == 1) {
+                    val quick = load(FirstGet.Less)
+                    val full = load(FirstGet.Normal)
+                    runCatching { quick.await() }.getOrNull() to full.await()
+                } else {
+                    null to load(FirstGet.None).await()
+                }
+                quick?.let { recent.keep(RecentResponses.ForumPage, it.encode()) }
                 recent.keep(RecentResponses.ForumPage, data.encode())
+                val pinned = quick?.page_data?.feed_list.orEmpty().filter { it.layout == TopThreadsLayout }
+                val threads = (pinned + data.page_data?.feed_list.orEmpty()).toThreadSummaries(emoticons)
+                    .ifEmpty { data.thread_list.toSummaries(data.user_list) }
+                    .let(::filter)
+                    .distinctBy { it.id }
+                val shown = threads.mapTo(HashSet()) { it.id }
+                val ids = data.thread_id_list.filter { it !in shown }
                 val pageHasMore = data.page?.has_more == 1
                 val next = when {
-                    data.thread_id_list.isNotEmpty() -> ForumCursor.FrsThreads(cursor.page, data.thread_id_list, pageHasMore)
+                    // Hot threads go by page alone
+                    tab != ForumTab.Hot && ids.isNotEmpty() -> ForumCursor.FrsThreads(cursor.page, ids, pageHasMore)
                     pageHasMore -> ForumCursor.FrsPage(cursor.page + 1)
                     else -> null
                 }
                 ForumThreadsPage(
-                    threads = Page(filter(data.thread_list, data.user_list), next),
+                    threads = Page(threads, next),
                     forum = data.toForumDetail(),
                     tbs = data.anti?.tbs?.takeIf { it.isNotEmpty() },
                 )
@@ -129,26 +147,31 @@ class ForumRepository @Inject constructor(
             is ForumCursor.FrsThreads -> {
                 val batch = cursor.ids.take(THREAD_BATCH)
                 val rest = cursor.ids.drop(THREAD_BATCH)
-                val data = remote.threadList(forumId, forumName, cursor.page, sortType, batch)
+                val data = remote.threadList(forumId, forumName, cursor.page, sortType = sort, threadIds = batch, good = tab == ForumTab.Good)
                 recent.keep(RecentResponses.ForumThreads, data.encode())
+                val threads = data.page_data?.feed_list.orEmpty().toThreadSummaries(emoticons)
+                    .ifEmpty { data.thread_list.toSummaries(data.user_list) }
+                    .let(::filter)
                 val next = when {
-                    data.thread_list.isEmpty() -> null
+                    threads.isEmpty() && data.thread_list.isEmpty() -> null
                     rest.isNotEmpty() -> cursor.copy(ids = rest)
                     cursor.pageHasMore -> ForumCursor.FrsPage(cursor.page + 1)
                     else -> null
                 }
-                ForumThreadsPage(Page(filter(data.thread_list, data.user_list), next))
+                ForumThreadsPage(Page(threads, next))
             }
 
             is ForumCursor.Custom -> {
                 val custom = tab as ForumTab.Custom
-                val data = remote.generalTabList(forumId, custom.id, custom.name, custom.type, cursor.page, cursor.lastThreadId)
+                val data = remote.generalTabList(forumId, forumName, custom.id, custom.name, custom.type, cursor.page, cursor.lastThreadId)
                 recent.keep(RecentResponses.ForumTab, data.encode())
-                val threads = data.general_list
+                val threads = data.page_data?.feed_list.orEmpty().toThreadSummaries(emoticons)
+                    .ifEmpty { data.general_list.toSummaries(data.user_list) }
+                    .let(::filter)
                 val next = if (data.has_more == 1 && threads.isNotEmpty()) {
                     ForumCursor.Custom(cursor.page + 1, threads.last().id)
                 } else null
-                ForumThreadsPage(Page(filter(threads, data.user_list), next))
+                ForumThreadsPage(Page(threads, next))
             }
         }
     }
@@ -199,15 +222,15 @@ class ForumRepository @Inject constructor(
     }
 
     /**
-     * Takes the authors from [users], since a thread's own author holds little more than the id,
-     * and drops live streams and, if the user hides them, videos.
+     * Threads as lists of the old kind give them: their authors taken from [users], since a
+     * thread's own author holds little more than the id, and live streams left out.
      */
-    private fun filter(threads: List<ThreadInfo>, users: List<User>): List<ThreadSummary> {
-        val hideVideos = videoFilter.hidesVideos()
-        return threads
-            .filter { it.ala_info == null && !(hideVideos && it.videoInfo != null) }
-            .map { thread -> thread.copy(author = users.find { it.id == thread.authorId } ?: thread.author).toThreadSummary(emoticons) }
-    }
+    private fun List<ThreadInfo>.toSummaries(users: List<User>): List<ThreadSummary> = filter { it.ala_info == null }
+        .map { thread -> thread.copy(author = users.find { it.id == thread.authorId } ?: thread.author).toThreadSummary(emoticons) }
+
+    /** Leaves out threads with videos when the user hides them. */
+    private fun filter(threads: List<ThreadSummary>): List<ThreadSummary> =
+        if (videoFilter.hidesVideos()) threads.filter { it.video == null } else threads
 
     private companion object {
         /** How many of the ids frs/page lists one frs/threadlist request loads. */
@@ -215,12 +238,20 @@ class ForumRepository @Inject constructor(
     }
 }
 
-/** Hot threads come in the order the server picks; only the latest threads take the user's order. */
-private fun ForumTab.sortType(latestSortType: Int): Int? = when (this) {
-    ForumTab.Good -> ForumSort.REPLY_TIME
-    ForumTab.Hot -> null
-    else -> latestSortType
+/** The forum page's own tab for [this], by the ids and types it lists its tabs under. */
+private fun ForumTab.frsTab(): FrsTab? = when (this) {
+    ForumTab.Good -> FrsTab(GoodTabId, FrsTab.GoodType, "精华")
+    ForumTab.Latest -> FrsTab(LatestTabId, LatestTabType, "最新")
+    ForumTab.Hot -> FrsTab(HotTabId, HotTabType, "热门")
+    is ForumTab.Custom -> FrsTab(id, type, name, general = true)
 }
+
+private const val GoodTabId = 301
+private const val LatestTabId = 503
+private const val LatestTabType = 14
+private const val HotTabId = 1
+private const val HotTabType = 13
+private const val TopThreadsLayout = "frs_top_thread_card"
 
 private fun FrsPageResponseData.toForumDetail(): ForumDetail? {
     val forum = forum ?: return null

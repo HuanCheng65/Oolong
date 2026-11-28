@@ -15,4 +15,20 @@ message FrsTabInfo {
   string tabCode = 8;
   uint32 tabVersion = 9;
   int32 isDefault = 10;
+  /** The orders the tab can be sorted in, as the forum page's own tabs offer them. */
+  repeated SortButton sort_menu = 19;
+  /** The tab's own sub-tabs, as the good threads' classes. */
+  repeated TabMenu sub_tab_list = 20;
+}
+
+message SortButton {
+  string text = 1;
+  /** The sort_type to ask the tab for. */
+  int32 source_id = 2;
+  int32 is_selected = 4;
+}
+
+message TabMenu {
+  int32 class_id = 1;
+  string class_name = 2;
 }

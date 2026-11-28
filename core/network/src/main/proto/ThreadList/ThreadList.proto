@@ -10,6 +10,7 @@ import "AppPosInfo.proto";
 import "User.proto";
 import "Error.proto";
 import "ThreadList/AdParam.proto";
+import "Feed/FeedLayout.proto";
 
 message ThreadListRequestData {
   optional string ad_context_list = 19;
@@ -31,6 +32,10 @@ message ThreadListRequestData {
   optional uint32 st_type = 4;
   optional string thread_ids = 1;
   optional int64 user_id = 9;
+  optional int32 request_times = 26;
+  optional string frs_common_info = 27;
+  optional int32 is_newfrs = 28;
+  optional int32 is_goodtab = 29;
 }
 
 message ThreadListRequest {
@@ -40,6 +45,8 @@ message ThreadListRequest {
 message ThreadListResponseData {
   repeated ThreadInfo thread_list = 1;
   repeated User user_list = 2;
+  /** The threads laid out as the new forum page shows them, in place of [thread_list]. */
+  tieba.feed.FeedPage page_data = 9;
 }
 
 message ThreadListResponse {

@@ -17,6 +17,7 @@ import oolong.client.model.GoodClass
 import oolong.client.model.PostContent
 import oolong.client.model.TextSpan
 import oolong.core.network.forum.ForumRemoteDataSource
+import oolong.core.network.forum.FrsTab
 import oolong.core.network.forum.LikeForumResponse
 import oolong.core.network.forum.LikeRemoteDataSource
 import oolong.core.network.protos.AlaLiveInfo
@@ -91,7 +92,7 @@ class ForumRepositoryTest {
 
     @Test
     fun `the first page of a forum comes with the forum and its tabs`() = runTest {
-        coEvery { remote.page("吧名", 1, 1, 0, false, 0) } returns frsPage(
+        coEvery { remote.page("吧名", 0, any(), 1, 1, 0, 0, any()) } returns frsPage(
             forum = ForumInfo(
                 id = FORUM_ID, name = "吧名", avatar = "a", member_num = 10, is_like = 1, user_level = 7,
                 level_name = "七级", cur_score = 30, levelup_score = 100, has_frs_star = 1,
@@ -130,11 +131,11 @@ class ForumRepositoryTest {
     @Test
     fun `the threads listed by id are loaded in batches before the next page`() = runTest {
         val ids = (100L until 140L).toList()
-        coEvery { remote.page("吧名", 1, 1, 1, false, 0) } returns frsPage(ids = ids)
-        coEvery { remote.threadList(FORUM_ID, "吧名", 1, 1, any()) } answers {
+        coEvery { remote.page("吧名", FORUM_ID, any(), 1, 1, 1, 0, any()) } returns frsPage(ids = ids)
+        coEvery { remote.threadList(FORUM_ID, "吧名", 1, 1, any(), false) } answers {
             ThreadListResponseData(thread_list = arg<List<Long>>(4).map { thread(it) })
         }
-        coEvery { remote.page("吧名", 2, 2, 1, false, 0) } returns frsPage(threads = listOf(thread(200)), hasMore = false)
+        coEvery { remote.page("吧名", FORUM_ID, any(), 2, 2, 1, 0, any()) } returns frsPage(threads = listOf(thread(200)), hasMore = false)
 
         var cursor: ForumCursor? = ForumCursor.FrsPage(1)
         val loaded = mutableListOf<Long>()
@@ -145,27 +146,27 @@ class ForumRepositoryTest {
         }
 
         assertEquals(listOf(1L) + ids + 200L, loaded)
-        coVerify { remote.threadList(FORUM_ID, "吧名", 1, 1, ids.take(30)) }
-        coVerify { remote.threadList(FORUM_ID, "吧名", 1, 1, ids.drop(30)) }
+        coVerify { remote.threadList(FORUM_ID, "吧名", 1, 1, ids.take(30), false) }
+        coVerify { remote.threadList(FORUM_ID, "吧名", 1, 1, ids.drop(30), false) }
     }
 
     @Test
-    fun `hot threads come in the server's order and good threads by reply time`() = runTest {
-        coEvery { remote.page(any(), any(), any(), any(), any(), any()) } returns frsPage(hasMore = false)
+    fun `hot and good threads are asked for by their own tabs, in the server's order`() = runTest {
+        coEvery { remote.page(any(), any(), any(), any(), any(), any(), any(), any()) } returns frsPage(hasMore = false)
 
         repository.threads("吧名", 0, ForumTab.Hot, ForumCursor.FrsPage(1), sortType = ForumSort.POST_TIME)
         repository.threads("吧名", 0, ForumTab.Good, ForumCursor.FrsPage(1), goodClassId = 3)
 
-        coVerify { remote.page("吧名", 1, 1, null, false, 0) }
-        coVerify { remote.page("吧名", 1, 1, 0, true, 3) }
+        coVerify { remote.page("吧名", 0, FrsTab(1, 13, "热门"), 1, 1, -1, 0, any()) }
+        coVerify { remote.page("吧名", 0, FrsTab(301, FrsTab.GoodType, "精华"), 1, 1, -1, 3, any()) }
     }
 
     @Test
     fun `a moderators' tab pages after its last thread`() = runTest {
         val tab = ForumTab.Custom(99, "吧友互助", 15)
-        coEvery { remote.generalTabList(FORUM_ID, 99, "吧友互助", 15, 1, 0) } returns
+        coEvery { remote.generalTabList(FORUM_ID, "吧名", 99, "吧友互助", 15, 1, 0) } returns
             GeneralTabListResponseData(general_list = listOf(thread(5), thread(6)), has_more = 1)
-        coEvery { remote.generalTabList(FORUM_ID, 99, "吧友互助", 15, 2, 6) } returns
+        coEvery { remote.generalTabList(FORUM_ID, "吧名", 99, "吧友互助", 15, 2, 6) } returns
             GeneralTabListResponseData(general_list = listOf(thread(7)), has_more = 0)
 
         val first = repository.threads("吧名", FORUM_ID, tab, ForumCursor.first(tab)).threads
@@ -178,7 +179,7 @@ class ForumRepositoryTest {
     @Test
     fun `live streams and hidden videos are dropped and authors filled in`() = runTest {
         hidesVideos = true
-        coEvery { remote.page(any(), any(), any(), any(), any(), any()) } returns frsPage(
+        coEvery { remote.page(any(), any(), any(), any(), any(), any(), any(), any()) } returns frsPage(
             threads = listOf(thread(1, authorId = 20), thread(2, live = true), thread(3, video = true)),
             users = listOf(User(id = 20, name = "作者")),
             hasMore = false,

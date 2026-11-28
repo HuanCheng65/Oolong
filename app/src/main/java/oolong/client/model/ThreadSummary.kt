@@ -24,8 +24,10 @@ data class ThreadSummary(
     /** What the list shows of the thread, cut short by the server. */
     val abstract: String,
     val firstPostId: Long,
-    /** The whole first floor. */
+    /** The whole first floor, or what the list showed of it when [firstPostShort]. */
     val firstPost: ImmutableList<PostContent> = persistentListOf(),
+    /** Whether the list gave only the abstract and the pictures of the first floor, not all of it. */
+    val firstPostShort: Boolean = false,
     val images: ImmutableList<ThreadImage> = persistentListOf(),
     val video: ThreadVideo? = null,
     /** The thread this one shares, if it shares one. */

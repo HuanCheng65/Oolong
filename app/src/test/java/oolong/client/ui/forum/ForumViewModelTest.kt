@@ -24,7 +24,9 @@ import oolong.client.testing.MainDispatcherRule
 import oolong.client.testing.queryClient
 import oolong.client.testing.threadActions
 import oolong.core.network.agree.AgreeRemoteDataSource
+import oolong.core.network.forum.FirstGet
 import oolong.core.network.forum.ForumRemoteDataSource
+import oolong.core.network.forum.FrsTab
 import oolong.core.network.forum.LikeForumResponse
 import oolong.core.network.forum.LikeRemoteDataSource
 import oolong.core.network.identity.Session
@@ -79,8 +81,10 @@ class ForumViewModelTest {
             nav_tab_info = NavTabInfo(tab = listOf(custom)),
         )
 
+    /** Answers frs/page with [pages] in turn; the quick half of a first page gets nothing of its own. */
     private fun respond(vararg pages: FrsPageResponseData) {
-        coEvery { remote.page(any(), any(), any(), any(), any(), any()) } returnsMany pages.toList()
+        coEvery { remote.page(any(), any(), any(), any(), any(), any(), any(), any()) } returnsMany pages.toList()
+        coEvery { remote.page(any(), any(), any(), any(), any(), any(), any(), FirstGet.Less) } returns FrsPageResponseData()
     }
 
     private fun TestScope.createViewModel(
@@ -127,13 +131,13 @@ class ForumViewModelTest {
         )
         assertTrue(state.loggedIn)
         assertEquals(listOf("吧名"), saved.map { it.name })
-        coVerify { remote.page("吧名", 1, 1, 1, false, 0) }
+        coVerify { remote.page("吧名", any(), FrsTab(503, 14, "最新"), 1, 1, 1, 0, any()) }
     }
 
     @Test
     fun `a tab loads the first time it is shown`() = runTest {
         respond(frsPage(), frsPage(threads = listOf(thread(2))))
-        coEvery { remote.generalTabList(FORUM_ID, 99, "吧友互助", 15, 1, 0) } returns
+        coEvery { remote.generalTabList(FORUM_ID, "吧名", 99, "吧友互助", 15, 1, 0) } returns
             GeneralTabListResponseData(general_list = listOf(thread(3)))
         val viewModel = createViewModel()
         runCurrent()
@@ -146,7 +150,7 @@ class ForumViewModelTest {
         val state = viewModel.state.value
         assertEquals(listOf(2L), state.list(ForumTab.Hot).items.map { it.thread.id })
         assertEquals(listOf(3L), state.list(ForumTab.Custom(99, "吧友互助", 15)).items.map { it.thread.id })
-        coVerify { remote.page("吧名", 1, 1, null, false, 0) }
+        coVerify { remote.page("吧名", any(), FrsTab(1, 13, "热门"), 1, 1, -1, 0, any()) }
         assertEquals(listOf("吧名"), saved.map { it.name })
     }
 
@@ -161,7 +165,7 @@ class ForumViewModelTest {
 
         assertEquals(listOf(5L), viewModel.state.value.list(ForumTab.Latest).items.map { it.thread.id })
         assertEquals(ForumSort.POST_TIME, sorts["吧名"])
-        coVerify { remote.page("吧名", 1, 1, 1, false, 0) }
+        coVerify { remote.page("吧名", any(), FrsTab(503, 14, "最新"), 1, 1, 1, 0, any()) }
     }
 
     @Test
@@ -176,8 +180,8 @@ class ForumViewModelTest {
         runCurrent()
 
         assertEquals(3, viewModel.state.value.goodClassId)
-        coVerify { remote.page("吧名", 1, 1, 0, true, 0) }
-        coVerify { remote.page("吧名", 1, 1, 0, true, 3) }
+        coVerify { remote.page("吧名", any(), FrsTab(301, FrsTab.GoodType, "精华"), 1, 1, -1, 0, any()) }
+        coVerify { remote.page("吧名", any(), FrsTab(301, FrsTab.GoodType, "精华"), 1, 1, -1, 3, any()) }
     }
 
     @Test

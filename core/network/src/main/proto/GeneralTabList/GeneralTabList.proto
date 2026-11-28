@@ -5,6 +5,7 @@ package tieba.generalTabList;
 option java_package = "oolong.core.network.protos.generalTabList";
 
 import "CommonRequest.proto";
+import "Feed/FeedLayout.proto";
 import "ThreadInfo.proto";
 import "User.proto";
 import "Error.proto";
@@ -33,6 +34,8 @@ message GeneralTabListRequestData {
   optional int32 tab_id = 2;
   optional string tab_name = 11;
   optional int32 tab_type = 14;
+  optional string forum_name = 29;
+  optional int32 partition_type = 30;
 }
 
 message GeneralTabListRequest {
@@ -45,6 +48,8 @@ message GeneralTabListResponseData {
   repeated User user_list = 3;
   int32 new_thread_num = 6;
   int32 sort_type = 7;
+  /** The threads laid out as the new forum page shows them, in place of [general_list]. */
+  tieba.feed.FeedPage page_data = 14;
 }
 
 message GeneralTabListResponse {

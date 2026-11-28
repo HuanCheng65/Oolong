@@ -33,7 +33,7 @@ class LinkPreviewRepositoryTest {
 
     @Test
     fun `previews a forum`() = runTest {
-        coEvery { forumRemote.page("测试", 1, 1, null) } returns FrsPageResponseData(forum = ForumInfo(slogan = "标语", avatar = "a"))
+        coEvery { forumRemote.page("测试", 0, null, 1, 1, -1) } returns FrsPageResponseData(forum = ForumInfo(slogan = "标语", avatar = "a"))
 
         assertEquals(ForumLinkPreview("标语", "a"), repository.forum("测试"))
     }

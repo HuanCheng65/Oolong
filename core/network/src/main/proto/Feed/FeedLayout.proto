@@ -1,0 +1,167 @@
+syntax = "proto3";
+
+package tieba.feed;
+
+option java_package = "oolong.core.network.protos.feed";
+
+import "Agree.proto";
+
+// Lists laid out by the server: each entry names its layout and carries components to show.
+// Only what a thread list needs is declared here; the rest is skipped when read.
+
+/** frs/page's list. */
+message PageData {
+  repeated LayoutFactory feed_list = 2;
+}
+
+/** generalTabList's and frs/threadlist's list, the same under another number. */
+message FeedPage {
+  repeated LayoutFactory feed_list = 1;
+}
+
+message LayoutFactory {
+  /** "feed" for a thread; other layouts are cards of other kinds. */
+  string layout = 1;
+  FeedLayout feed = 2;
+  /** The forum's pinned threads, under "frs_top_thread_card". */
+  FrsTopThreadCardLayout frs_top_thread_card = 5;
+}
+
+message FrsTopThreadCardLayout {
+  repeated ComponentFactory components = 1;
+}
+
+message FeedKV {
+  string key = 1;
+  string value = 2;
+}
+
+message FeedLayout {
+  repeated ComponentFactory components = 1;
+  string schema = 2;
+  /** The thread's own facts as text: thread_id, user_id, create_time, title, thread_type and the like. */
+  repeated FeedKV business_info = 5;
+  repeated FeedKV log_param = 7;
+}
+
+message ComponentFactory {
+  /** Which of the fields below is set: "feed_head", "feed_title", "feed_abstract", "feed_pic", "feed_video", "feed_social". */
+  string component = 1;
+  ContentComponent feed_title = 3;
+  ContentComponent feed_abstract = 4;
+  FeedHeadComponent feed_head = 5;
+  FeedPicComponent feed_pic = 7;
+  FeedSocialComponent feed_social = 8;
+  FeedVideoComponent feed_video = 9;
+  /** A pinned thread, under "frs_top_thread". */
+  FrsTopThreadComponent frs_top_thread = 24;
+}
+
+message FrsTopThreadComponent {
+  repeated FeedContentResource title = 1;
+  FeedPicAbstract pic_abstract = 2;
+  FeedAuthorSocial author_social = 3;
+  repeated FeedKV business_info = 4;
+}
+
+message FeedPicAbstract {
+  repeated PicInfo pics = 1;
+  repeated FeedContentResource abstract = 3;
+}
+
+message FeedAuthorSocial {
+  FeedHeadImg image_data = 1;
+  repeated FeedHeadSymbol main_data = 2;
+  tieba.Agree agree = 3;
+  int32 comment_num = 4;
+  int32 share_num = 5;
+  uint64 tid = 6;
+  uint64 fid = 7;
+}
+
+/** A line of text, pieces after pieces. */
+message ContentComponent {
+  repeated FeedContentResource data = 1;
+}
+
+message FeedContentResource {
+  /** 1 text, 3 emoticon, 6 a tag such as 精华. */
+  int32 type = 1;
+  FeedContentText text_info = 8;
+  FeedContentEmoji emoji_info = 10;
+}
+
+message FeedContentText {
+  string text = 1;
+}
+
+message FeedContentEmoji {
+  string name = 1;
+  /** The emoticon as written in posts, `#(name)`. */
+  string c = 2;
+}
+
+message FeedHeadComponent {
+  FeedHeadImg image_data = 1;
+  repeated FeedHeadSymbol main_data = 2;
+  repeated FeedHeadSymbol extra_data = 3;
+}
+
+message FeedHeadImg {
+  string img_url = 1;
+}
+
+message FeedHeadSymbol {
+  uint32 type = 2;
+  FeedHeadText text = 3;
+  /** What the symbol stands for, under the key "name_show", "user_growth_level", "forum_level" and so on. */
+  repeated FeedKV business_info = 8;
+}
+
+message FeedHeadText {
+  string text = 1;
+  /** 3 for a time, in seconds since the epoch. */
+  int32 type = 7;
+}
+
+message FeedPicComponent {
+  repeated PicInfo pics = 1;
+}
+
+message PicInfo {
+  string small_pic_url = 1;
+  string big_pic_url = 2;
+  string origin_pic_url = 3;
+  uint32 width = 4;
+  uint32 height = 5;
+  uint32 is_long_pic = 6;
+}
+
+message FeedSocialComponent {
+  tieba.Agree agree = 1;
+  int32 comment_num = 2;
+  int32 share_num = 3;
+  uint64 tid = 4;
+  uint64 fid = 5;
+  int64 first_post_id = 10;
+}
+
+message FeedVideoComponent {
+  VideoField video_info = 1;
+}
+
+message VideoField {
+  string url = 1;
+  uint32 duration = 2;
+  uint32 width = 3;
+  uint32 height = 4;
+  uint32 play_count = 5;
+  ThumbnailInfo thumbnail = 6;
+  string md5 = 8;
+}
+
+message ThumbnailInfo {
+  string url = 1;
+  uint32 width = 2;
+  uint32 height = 3;
+}

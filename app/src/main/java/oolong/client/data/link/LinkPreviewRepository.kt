@@ -38,7 +38,7 @@ class LinkPreviewRepository @Inject constructor(
     }
 
     suspend fun forum(forumName: String): ForumLinkPreview = withContext(io) {
-        val forum = checkNotNull(forumRemote.page(forumName, page = 1, loadType = 1, sortType = null).forum) { "No forum" }
+        val forum = checkNotNull(forumRemote.page(forumName, forumId = 0, tab = null, page = 1, loadType = 1, sortType = -1).forum) { "No forum" }
         ForumLinkPreview(slogan = forum.slogan, avatar = forum.avatar)
     }
 }
