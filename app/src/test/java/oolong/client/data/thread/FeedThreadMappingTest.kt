@@ -110,6 +110,38 @@ class FeedThreadMappingTest {
     }
 
     @Test
+    fun `a card without the facts' title and counts takes them from its components`() {
+        val feed = thread.feed!!
+        val card = thread.copy(
+            feed = feed.copy(
+                components = feed.components.filter { it.component != "feed_social" } +
+                    ComponentFactory(component = "feed_author_social", feed_author_social = FeedAuthorSocial(agree = Agree(agreeNum = 54), comment_num = 88)),
+                business_info = feed.business_info.filter { it.key != "title" && it.key != "create_time" },
+            ),
+        )
+
+        val summary = listOf(card).toThreadSummaries(emoticons).single()
+
+        assertEquals("标题", summary.title)
+        assertEquals(200L, summary.createTime)
+        assertEquals(88, summary.replyCount)
+        assertEquals(54L, summary.agree.count)
+    }
+
+    @Test
+    fun `a card with nothing but its author is left out`() {
+        val feed = thread.feed!!
+        val card = thread.copy(
+            feed = feed.copy(
+                components = feed.components.filter { it.component == "feed_head" },
+                business_info = listOf(kv("thread_id", "43")),
+            ),
+        )
+
+        assertEquals(emptyList<Any>(), listOf(card).toThreadSummaries(emoticons))
+    }
+
+    @Test
     fun `pinned threads come first, and cards of other kinds are left out`() {
         val pinned = LayoutFactory(
             layout = "frs_top_thread_card",

@@ -52,11 +52,16 @@ private fun List<ComponentFactory>.toThreadSummary(info: List<FeedKV>, emoticons
     val id = facts["thread_id"]?.toLongOrNull() ?: return null
     val head = firstNotNullOfOrNull { it.feed_head }
     val social = firstNotNullOfOrNull { it.feed_social }
+    val authorSocial = firstNotNullOfOrNull { it.feed_author_social }
     val title = firstNotNullOfOrNull { it.feed_title }?.data_.orEmpty()
     val abstract = firstNotNullOfOrNull { it.feed_abstract }?.data_.orEmpty()
     val pictures = firstNotNullOfOrNull { it.feed_pic }?.pics.orEmpty()
     val video = firstNotNullOfOrNull { it.feed_video }?.video_info
+    val titleText = facts["title"]?.takeIf { it.isNotBlank() } ?: title.filter { it.type != TagType }.text(emoticons)
+    // A card with nothing to show but its author, as some forums' headline cards come, is left out
+    if (titleText.isBlank() && abstract.isEmpty() && pictures.isEmpty() && video == null) return null
     val firstPostId = social?.first_post_id ?: 0
+    val lastReplyTime = head?.extra_data?.firstOrNull { it.text?.type == TimeTextType }?.text?.text?.toLongOrNull() ?: 0
     val author = User(
         id = facts["user_id"]?.toLongOrNull() ?: 0,
         name = "",
@@ -67,20 +72,20 @@ private fun List<ComponentFactory>.toThreadSummary(info: List<FeedKV>, emoticons
     return ThreadSummary(
         id = id,
         forum = facts.forum(),
-        title = facts["title"].orEmpty(),
+        title = titleText,
         author = author,
-        createTime = facts["create_time"]?.toLongOrNull() ?: 0,
+        createTime = facts["create_time"]?.toLongOrNull() ?: lastReplyTime,
         // The time the card shows, which is when the thread last had a reply
-        lastReplyTime = head?.extra_data?.firstOrNull { it.text?.type == TimeTextType }?.text?.text?.toLongOrNull() ?: 0,
+        lastReplyTime = lastReplyTime,
         abstract = abstract.text(emoticons),
         firstPostId = firstPostId,
         firstPost = abstract.toPostContent(emoticons, pictures, firstPostId),
         firstPostShort = true,
         images = pictures.map { it.toThreadImage(firstPostId) }.toImmutableList(),
         video = video?.toThreadVideo(),
-        replyCount = social?.comment_num ?: 0,
-        shareCount = (social?.share_num ?: 0).toLong(),
-        agree = Agree(count = social?.agree?.agreeNum ?: 0, agreed = social?.agree?.hasAgree == 1),
+        replyCount = social?.comment_num ?: authorSocial?.comment_num ?: 0,
+        shareCount = (social?.share_num ?: authorSocial?.share_num ?: 0).toLong(),
+        agree = (social?.agree ?: authorSocial?.agree).let { Agree(count = it?.agreeNum ?: 0, agreed = it?.hasAgree == 1) },
         isGood = title.any { it.type == TagType && it.text_info?.text == GoodTag },
         isActivity = facts["thread_type"]?.toIntOrNull() == ActivityThreadType,
         isTop = false,

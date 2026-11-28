@@ -55,6 +55,8 @@ message ComponentFactory {
   FeedVideoComponent feed_video = 9;
   /** A pinned thread, under "frs_top_thread". */
   FrsTopThreadComponent frs_top_thread = 24;
+  /** The counts, on cards that give them here instead of under "feed_social". */
+  FeedAuthorSocial feed_author_social = 25;
 }
 
 message FrsTopThreadComponent {

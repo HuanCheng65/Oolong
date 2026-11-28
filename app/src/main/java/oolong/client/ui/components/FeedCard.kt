@@ -153,7 +153,8 @@ fun UserHeader(
     val name = remember(nameProvider) { nameProvider() }
     val nameShow = remember(nameShowProvider) { nameShowProvider() }
     val portrait = remember(portraitProvider) { portraitProvider() }
-    val time = remember(timeProvider) { timeProvider?.invoke() }
+    // No time at all is left out rather than shown as the epoch
+    val time = remember(timeProvider) { timeProvider?.invoke()?.takeIf { it > 0 } }
     // The avatar flies into the profile it opens, which fades in around it
     val hero = rememberPageHero()
     val avatar = StringUtil.getAvatarUrl(portrait)
