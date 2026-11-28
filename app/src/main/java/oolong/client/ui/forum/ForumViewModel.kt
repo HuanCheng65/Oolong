@@ -241,6 +241,8 @@ class ForumViewModel @AssistedInject constructor(
                 cursor = cursor,
                 sortType = selection.sortType,
                 goodClassId = selection.goodClassId,
+                // Until a page has told what the forum is, the page is still opening
+                opening = forum.value == null,
             )
             page.forum?.let { loaded ->
                 val current = forum.value

@@ -35,6 +35,15 @@ interface DeviceIdentity {
     /** Current connection as a [NetworkType] code. */
     val networkType: Int
 
+    /**
+     * The SIM's operator as the official client codes it: 1 China Mobile, 2 China Unicom, 3 China
+     * Telecom, 0 for any other or none.
+     */
+    val carrier: Int get() = 0
+
+    /** The system time zone's id, as `Asia/Shanghai`. */
+    val timeZone: String get() = java.util.TimeZone.getDefault().id
+
     /** Performance score in `0..1`. */
     val deviceScore: Float
 

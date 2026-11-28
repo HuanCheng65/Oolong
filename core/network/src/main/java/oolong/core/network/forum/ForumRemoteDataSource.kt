@@ -22,6 +22,7 @@ import oolong.core.network.protos.threadList.ThreadListRequest
 import oolong.core.network.protos.threadList.ThreadListRequestData
 import oolong.core.network.protos.threadList.ThreadListResponseData
 import java.net.URLEncoder
+import java.util.concurrent.atomic.AtomicInteger
 import oolong.core.network.protos.threadList.AdParam as ThreadListAdParam
 
 /** A forum's page: its details, tabs and threads, and its rules. */
@@ -32,6 +33,11 @@ class ForumRemoteDataSource(
 ) {
     private val profile = TiebaProfile.PROTO
     private val service = network.service<ForumService>(profile)
+
+    // How many of each the app has asked for since it started, as the forum page counts them
+    private val pageRequests = AtomicInteger()
+    private val threadListRequests = AtomicInteger()
+    private val generalTabRequests = AtomicInteger()
 
     suspend fun forumRuleDetail(forumId: Long): ForumRuleDetailResponseData {
         val request = ForumRuleDetailRequest(
@@ -63,7 +69,8 @@ class ForumRemoteDataSource(
      *
      * The forum name goes percent-encoded, both in the request and in a `forum_name` header.
      *
-     * @param forumId the forum's id, 0 until a page has told it
+     * @param forumId the forum's id; 0, with no [tab], for the forum page opening on the tab the
+     *   forum picks
      * @param tab the tab to load, or null for the one the forum opens on
      * @param page page number, from 1
      * @param loadType 1 for the first page or a refresh, 2 for the next page
@@ -71,6 +78,8 @@ class ForumRemoteDataSource(
      * @param goodClassId the class of good threads to load, 0 for all of them
      * @param firstGet for a first page loaded twice at once, as the forum page opens: which of the
      *   two this is, the quick one with the pinned threads or the full one
+     * @param commonInfo what the forum's last page gave to send back, `frs_common_info`
+     * @param shownThreads how many threads the list shows above this page, for loading more
      */
     suspend fun page(
         forumName: String,
@@ -81,53 +90,73 @@ class ForumRemoteDataSource(
         sortType: Int,
         goodClassId: Int = 0,
         firstGet: FirstGet = FirstGet.None,
+        commonInfo: String = "",
+        shownThreads: Int = 0,
     ): FrsPageResponseData {
         val encodedName = URLEncoder.encode(forumName, "UTF-8")
+        val more = loadType != 1
         val request = FrsPageRequest(
             FrsPageRequestData(
-                kw = encodedName,
-                rn = 90,
-                rn_need = 30,
-                is_good = if (tab?.type == FrsTab.GoodType) 1 else 0,
+                ad_bear_context = "",
+                ad_bear_sid = FrsAds.bearSid(device.networkType),
+                ad_bear_sid_price = 0.0,
+                ad_context_list = "",
+                ad_ext_params = FrsAds.extParams(preThreads = if (more) shownThreads else 0, requestType = if (more) 1 else 0),
+                ad_external_info = "",
+                // The quick half of a first page asks for no adverts; every other page as if none were seen
+                ad_param = if (firstGet == FirstGet.Less) AdParam(load_count = 0, refresh_count = 0, yoga_lib_version = "")
+                else AdParam(load_count = 0, refresh_count = 1, yoga_lib_version = ""),
+                app_pos = commonParams.appPos(),
+                app_transmit_data = FrsAds.transmitData(device),
+                call_from = FrsEntry.CallFrom,
+                category_id = 0,
+                chatroom_new_msg = "",
                 cid = goodClassId,
-                with_group = 1,
-                scr_w = device.screenWidth,
-                scr_h = device.screenHeight,
-                scr_dip = device.screenDensity.toDouble(),
-                q_type = 2,
-                pn = page,
-                st_type = "",
+                common = commonParams.protobuf(profile),
                 ctime = 0,
                 data_size = 0,
-                net_error = 0,
-                st_param = 0,
-                common = commonParams.protobuf(profile),
-                lastids = "",
-                category_id = 0,
-                yuelaou_locate = "",
-                sort_type = sortType,
-                last_click_tid = 0,
-                load_type = loadType,
-                app_pos = commonParams.appPos(),
-                ad_param = AdParam(load_count = if (loadType == 1) 0 else page - 1, refresh_count = if (loadType == 1) 1 else 0, yoga_lib_version = ""),
-                obj_locate = "2",
-                obj_source = "-2",
-                is_selection = 0,
-                call_from = 206,
-                hot_thread_id = 0,
-                is_default_navtab = if (tab == null) 1 else 0,
-                ad_context_list = "",
-                up_schema = "",
                 default_sort_type = 0,
-                request_times = 0,
-                is_newfrs = 1,
                 first_get_less_data = if (firstGet == FirstGet.Less) 1 else 0,
                 first_get_normal_data = if (firstGet == FirstGet.Normal) 1 else 0,
-                forum_id = forumId,
-                tab_id = tab?.id ?: 0,
-                tab_type = tab?.type ?: 0,
-                tab_name = tab?.name.orEmpty(),
+                forum_id = if (tab == null) 0 else forumId,
+                frs_common_info = if (tab == null) "" else commonInfo,
+                frs_tab_type_default = "",
+                has_ad_bear = 0,
+                hot_thread_id = 0,
+                is_default_navtab = 1,
                 is_general_tab = if (tab?.general == true) 1 else 0,
+                is_good = if (tab?.type == FrsTab.GoodType) 1 else 0,
+                is_newfrs = 1,
+                is_selection = 0,
+                is_video_doublerow = if (tab?.type == FrsTab.VideoType) 1 else 0,
+                kw = encodedName,
+                last_click_tid = 0,
+                lastids = "",
+                load_type = loadType,
+                log_param = FrsEntry.LogParam,
+                net_error = 0,
+                obj_locate = "2",
+                obj_source = "-2",
+                partition_type = 0,
+                pn = page,
+                push_tid = 0,
+                q_type = 2,
+                request_times = pageRequests.incrementAndGet(),
+                rn = 90,
+                rn_need = 30,
+                scr_dip = device.screenDensity.toDouble(),
+                scr_h = device.screenHeight,
+                scr_w = device.screenWidth,
+                sort_type = sortType,
+                st_param = 0,
+                st_type = FrsEntry.StType,
+                tab_id = tab?.id ?: 0,
+                tab_name = tab?.name.orEmpty(),
+                tab_type = tab?.type ?: 0,
+                top_card_id = "",
+                up_schema = "",
+                with_group = 1,
+                yuelaou_locate = "",
             )
         )
         return checkNotNull(service.page(ProtobufBody(request, commonParams.stokenField()), encodedName).data_)
@@ -141,38 +170,51 @@ class ForumRemoteDataSource(
         sortType: Int?,
         threadIds: List<Long>,
         good: Boolean = false,
+        commonInfo: String = "",
+        shownThreads: Int = 0,
     ): ThreadListResponseData {
         val request = ThreadListRequest(
             ThreadListRequestData(
-                ad_param = ThreadListAdParam(load_count = 3, refresh_count = 0),
+                ad_bear_context = "",
+                ad_bear_sid = FrsAds.bearSid(device.networkType),
+                ad_bear_sid_price = 0.0,
+                ad_context_list = "",
+                ad_ext_params = FrsAds.threadListExtParams(shownThreads),
+                ad_external_info = "",
+                ad_param = ThreadListAdParam(load_count = 0, refresh_count = 0),
                 app_pos = commonParams.appPos(),
+                app_transmit_data = FrsAds.transmitData(device),
                 common = commonParams.protobuf(profile),
+                forum_id = forumId,
+                forum_name = forumName,
+                frs_common_info = commonInfo,
+                has_ad_bear = 0,
+                is_goodtab = if (good) 1 else 0,
+                is_newfrs = 1,
+                last_click_tid = 0,
+                log_param = FrsEntry.LogParam,
+                need_abstract = 0,
+                pn = page,
+                q_type = 2,
+                request_times = threadListRequests.incrementAndGet(),
                 scr_dip = device.screenDensity.toDouble(),
                 scr_h = device.screenHeight,
                 scr_w = device.screenWidth,
-                forum_id = forumId,
-                forum_name = forumName,
-                pn = page,
-                q_type = 2,
-                user_id = commonParams.session()?.uid?.toLongOrNull(),
-                thread_ids = threadIds.joinToString(","),
                 sort_type = sortType,
-                need_abstract = 0,
                 st_type = 0,
-                last_click_tid = 0,
-                request_times = 0,
-                is_newfrs = 1,
-                is_goodtab = if (good) 1 else 0,
+                thread_ids = threadIds.joinToString(","),
+                user_id = commonParams.session()?.uid?.toLongOrNull() ?: 0,
             )
         )
         return checkNotNull(service.threadList(ProtobufBody(request, commonParams.stokenField())).data_)
     }
 
     /**
-     * One page of a tab the forum's moderators set up.
+     * One page of a tab the forum's moderators set up, or of its videos.
      *
      * @param page page number, from 1
-     * @param lastThreadId the last thread of the previous page, 0 for the first
+     * @param commonInfo what the forum's last page gave to send back, `frs_common_info`
+     * @param shownThreads how many threads the list shows above this page
      */
     suspend fun generalTabList(
         forumId: Long,
@@ -181,35 +223,41 @@ class ForumRemoteDataSource(
         tabName: String,
         tabType: Int,
         page: Int,
-        lastThreadId: Long,
+        commonInfo: String = "",
+        shownThreads: Int = 0,
     ): GeneralTabListResponseData {
         val request = GeneralTabListRequest(
             GeneralTabListRequestData(
-                common = commonParams.protobuf(profile),
-                tab_id = tabId,
-                forum_id = forumId,
-                pn = page,
-                rn = 30,
-                scr_w = device.screenWidth,
-                scr_h = device.screenHeight,
-                scr_dip = device.screenDensity.toInt(),
-                last_thread_id = lastThreadId,
-                is_default_navtab = 0,
-                tab_name = tabName,
-                is_general_tab = 1,
-                sort_type = -1,
-                tab_type = tabType,
-                ad_ext_params = "",
                 ad_bear_context = "",
-                has_ad_bear = 0,
-                ad_bear_sid = "",
+                ad_bear_sid = FrsAds.bearSid(device.networkType),
                 ad_bear_sid_price = 0.0,
-                request_times = 0,
-                frs_common_info = "",
-                is_newfrs = 1,
-                is_video_doublerow = 0,
+                ad_ext_params = FrsAds.generalTabExtParams(forumName, preThreads = shownThreads, requestType = if (page > 1) 1 else 0),
+                ad_external_info = "",
+                common = commonParams.protobuf(profile),
+                forum_id = forumId,
                 forum_name = forumName,
+                frs_common_info = commonInfo,
+                frs_tab_type_default = "",
+                has_ad_bear = 0,
+                is_default_navtab = 0,
+                is_general_tab = 1,
+                is_newfrs = 1,
+                is_video_doublerow = if (tabType == FrsTab.VideoType) 1 else 0,
+                // The forum page never sets it: pages go by number alone
+                last_thread_id = 0,
+                log_param = FrsEntry.LogParam,
                 partition_type = 0,
+                pn = page,
+                request_times = generalTabRequests.incrementAndGet(),
+                rn = 30,
+                scr_dip = device.screenDensity.toInt(),
+                scr_h = device.screenHeight,
+                scr_w = device.screenWidth,
+                sort_type = -1,
+                tab_id = tabId,
+                tab_name = tabName,
+                tab_type = tabType,
+                top_card_id = "",
             )
         )
         return checkNotNull(service.generalTabList(ProtobufBody(request, commonParams.stokenField())).data_)
@@ -224,6 +272,9 @@ data class FrsTab(val id: Int, val type: Int, val name: String, val general: Boo
     companion object {
         /** The good threads' tab's type. */
         const val GoodType = 12
+
+        /** The videos' tab's type, which lists them two to a row. */
+        const val VideoType = 100
     }
 }
 

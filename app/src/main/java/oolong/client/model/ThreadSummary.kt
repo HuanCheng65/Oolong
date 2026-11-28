@@ -37,6 +37,8 @@ data class ThreadSummary(
     val agree: Agree = Agree(0, agreed = false),
     /** Marked good by the forum's moderators. */
     val isGood: Boolean = false,
+    /** An event Tieba itself runs, put among the forum's own threads. */
+    val isActivity: Boolean = false,
     /** Pinned to the top of its forum; null where that isn't told, as on the thread page. */
     val isTop: Boolean? = null,
     /** The forum's section the thread is filed under, shown before the title; empty for none. */

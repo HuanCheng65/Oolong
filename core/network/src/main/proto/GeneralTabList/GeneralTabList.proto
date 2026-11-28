@@ -11,19 +11,25 @@ import "User.proto";
 import "Error.proto";
 
 message GeneralTabListRequestData {
+  // In name order, as the 22.10 client writes its request messages
   optional string ad_bear_context = 16;
   optional string ad_bear_sid = 18;
   optional double ad_bear_sid_price = 19;
   optional string ad_ext_params = 15;
+  optional string ad_external_info = 35;
   CommonRequest common = 1;
   optional int64 forum_id = 3;
+  optional string forum_name = 29;
   optional string frs_common_info = 21;
+  optional string frs_tab_type_default = 28;
   optional int32 has_ad_bear = 17;
   optional int32 is_default_navtab = 10;
   optional int32 is_general_tab = 12;
   optional int32 is_newfrs = 22;
   optional int32 is_video_doublerow = 23;
   optional int64 last_thread_id = 9;
+  optional string log_param = 26;
+  optional int32 partition_type = 30;
   optional int32 pn = 4;
   optional int32 request_times = 20;
   optional int32 rn = 5;
@@ -34,8 +40,7 @@ message GeneralTabListRequestData {
   optional int32 tab_id = 2;
   optional string tab_name = 11;
   optional int32 tab_type = 14;
-  optional string forum_name = 29;
-  optional int32 partition_type = 30;
+  optional string top_card_id = 25;
 }
 
 message GeneralTabListRequest {

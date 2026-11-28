@@ -3,6 +3,10 @@ syntax = "proto3";
 option java_package = "oolong.core.network.protos";
 
 message AppTransmitData {
+  // In name order, as the 22.10 client writes its request messages
+  optional int32 carrier = 6; // 1 China Mobile, 2 China Unicom, 3 China Telecom, 0 any other or none
+  optional string ismi = 4;
+  optional string local_tz_name = 15;
   optional string wise_sample_id = 1;
   optional string yy_hdid = 2;
   optional string yy_version = 3;

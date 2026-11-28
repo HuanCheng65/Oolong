@@ -15,6 +15,7 @@ import oolong.core.network.protos.feed.ComponentFactory
 import oolong.core.network.protos.feed.FeedContentResource
 import oolong.core.network.protos.feed.FeedHeadSymbol
 import oolong.core.network.protos.feed.FeedKV
+import oolong.core.network.protos.feed.FeedLayout
 import oolong.core.network.protos.feed.LayoutFactory
 import oolong.core.network.protos.feed.PicInfo
 import oolong.core.network.protos.feed.VideoField
@@ -25,10 +26,21 @@ import oolong.core.network.protos.feed.VideoField
  */
 fun List<LayoutFactory>.toThreadSummaries(emoticons: EmoticonRegistry): List<ThreadSummary> = flatMap { entry ->
     when (entry.layout) {
-        FeedLayoutName -> listOfNotNull(entry.feed?.let { feed -> feed.components.toThreadSummary(feed.business_info, emoticons) })
+        FeedLayoutName -> listOfNotNull(entry.feed?.takeUnless { it.isAdvert() }?.let { feed -> feed.components.toThreadSummary(feed.business_info, emoticons) })
         TopThreadsLayoutName -> entry.frs_top_thread_card?.components.orEmpty().mapNotNull { it.toTopThreadSummary(emoticons) }
         else -> emptyList()
     }
+}
+
+/**
+ * Whether a card laid out as a thread is an advert: by its card's kind, as the advert networks'
+ * own (`afd`, `bear`) and brands' (`brandLotteryAd` and the like), or by a thread type kept for
+ * promotions.
+ */
+private fun FeedLayout.isAdvert(): Boolean {
+    val cardType = log_param.firstOrNull { it.key == "card_type" }?.value_.orEmpty()
+    val threadType = business_info.firstOrNull { it.key == "thread_type" }?.value_?.toIntOrNull()
+    return cardType in AdvertCards || cardType.endsWith("Ad") || threadType in PromotedThreadTypes
 }
 
 /** Whether the list has the forum's pinned threads, which only some of its answers carry. */
@@ -70,6 +82,7 @@ private fun List<ComponentFactory>.toThreadSummary(info: List<FeedKV>, emoticons
         shareCount = (social?.share_num ?: 0).toLong(),
         agree = Agree(count = social?.agree?.agreeNum ?: 0, agreed = social?.agree?.hasAgree == 1),
         isGood = title.any { it.type == TagType && it.text_info?.text == GoodTag },
+        isActivity = facts["thread_type"]?.toIntOrNull() == ActivityThreadType,
         isTop = false,
         tabName = title.firstOrNull { it.type == TagType && it.text_info?.text != GoodTag }?.text_info?.text.orEmpty(),
     )
@@ -190,6 +203,10 @@ private fun VideoField.toThreadVideo() = ThreadVideo(
 )
 
 private const val FeedLayoutName = "feed"
+private val AdvertCards = setOf("afd", "bear")
+
+/** Promotions: a brand's event (76), goods offered in a thread (79), a game to book (80). */
+private val PromotedThreadTypes = setOf(76, 79, 80)
 private const val TopThreadsLayoutName = "frs_top_thread_card"
 private const val IconType = "icon_type"
 private const val NameShow = "name_show"

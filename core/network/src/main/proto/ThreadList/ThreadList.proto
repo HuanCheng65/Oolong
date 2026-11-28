@@ -7,24 +7,38 @@ option java_package = "oolong.core.network.protos.threadList";
 import "CommonRequest.proto";
 import "ThreadInfo.proto";
 import "AppPosInfo.proto";
+import "AppTransmitData.proto";
 import "User.proto";
 import "Error.proto";
 import "ThreadList/AdParam.proto";
 import "Feed/FeedLayout.proto";
 
 message ThreadListRequestData {
+  // In name order, as the 22.10 client writes its request messages
+  optional string ad_bear_context = 22;
+  optional string ad_bear_sid = 24;
+  optional double ad_bear_sid_price = 25;
   optional string ad_context_list = 19;
+  optional string ad_ext_params = 20;
+  optional string ad_external_info = 36;
   AdParam ad_param = 18;
   AppPosInfo app_pos = 17;
+  AppTransmitData app_transmit_data = 21;
   CommonRequest common = 8;
   optional string da_idfa = 10;
   optional uint64 forum_id = 2;
   optional string forum_name = 14;
+  optional string frs_common_info = 27;
+  optional int32 has_ad_bear = 23;
+  optional int32 is_goodtab = 29;
+  optional int32 is_newfrs = 28;
   optional uint64 last_click_tid = 15;
+  optional string log_param = 30;
   optional uint32 need_abstract = 3;
   optional string platform = 11;
   optional int32 pn = 13;
   optional uint32 q_type = 7;
+  optional int32 request_times = 26;
   optional double scr_dip = 12;
   optional uint32 scr_h = 6;
   optional uint32 scr_w = 5;
@@ -32,10 +46,6 @@ message ThreadListRequestData {
   optional uint32 st_type = 4;
   optional string thread_ids = 1;
   optional int64 user_id = 9;
-  optional int32 request_times = 26;
-  optional string frs_common_info = 27;
-  optional int32 is_newfrs = 28;
-  optional int32 is_goodtab = 29;
 }
 
 message ThreadListRequest {

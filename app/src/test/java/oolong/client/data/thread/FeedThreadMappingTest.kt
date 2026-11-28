@@ -140,4 +140,23 @@ class FeedThreadMappingTest {
 
         assertEquals(emptyList<Any>(), listOf(card).toThreadSummaries(emoticons))
     }
+
+    @Test
+    fun `adverts laid out as threads are left out`() {
+        val feed = thread.feed!!
+        val brand = thread.copy(feed = feed.copy(log_param = listOf(kv("card_type", "brandLotteryAd"))))
+        val network = thread.copy(feed = feed.copy(log_param = listOf(kv("card_type", "afd"))))
+        val promoted = thread.copy(feed = feed.copy(business_info = feed.business_info + kv("thread_type", "76")))
+
+        assertEquals(emptyList<Any>(), listOf(brand, network, promoted).toThreadSummaries(emoticons))
+    }
+
+    @Test
+    fun `Tieba's own events are marked as such`() {
+        val feed = thread.feed!!
+        val event = thread.copy(feed = feed.copy(business_info = feed.business_info + kv("thread_type", "41")))
+
+        assertTrue(listOf(event).toThreadSummaries(emoticons).single().isActivity)
+        assertEquals(false, listOf(thread).toThreadSummaries(emoticons).single().isActivity)
+    }
 }

@@ -52,6 +52,7 @@ private fun ThreadInfo.toOwnThreadSummary(emoticons: EmoticonRegistry) = ThreadS
     shareCount = shareNum,
     agree = Agree(count = agreeNum.toLong(), agreed = agree?.hasAgree == 1),
     isGood = isGood == 1,
+    isActivity = thread_type == ActivityThreadType,
     isTop = isTop == 1,
     tabName = tabName,
     hotNum = hotNum.toLong(),
@@ -103,6 +104,9 @@ private fun List<PbContent>.replyText(emoticons: EmoticonRegistry): String {
 }
 
 private const val MentionType = 4
+
+/** The thread type of events Tieba itself runs. */
+internal const val ActivityThreadType = 41
 
 /**
  * The abstract as one line of text: text pieces with runs of spaces collapsed, emoticons as their

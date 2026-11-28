@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import android.telephony.TelephonyManager
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.EntryPoint
@@ -59,6 +60,7 @@ private class AppDeviceIdentity(private val context: Context) : DeviceIdentity {
     override val screenHeight: Int get() = getScreenHeight()
     override val screenDensity: Float get() = getScreenDensity()
     override val networkType: Int get() = currentNetworkType(context)
+    override val carrier: Int get() = carrierOf((context.getSystemService(Context.TELEPHONY_SERVICE) as? TelephonyManager)?.simOperator.orEmpty())
     override val deviceScore: Float by lazy { DeviceUtils.getNormalizedDeviceScore() }
     override val webViewUserAgent: String get() = getUserAgent()
 }
@@ -256,3 +258,17 @@ internal val legacyAccountRemoteDataSource: AccountRemoteDataSource
 
 internal val legacyThreadRemoteDataSource: ThreadRemoteDataSource
     get() = legacyEntryPoint.threadRemoteDataSource()
+
+/**
+ * The official client's code for the operator of [simOperator], its MCC and MNC: 1 China Mobile,
+ * 2 China Unicom, 3 China Telecom, 0 otherwise.
+ */
+internal fun carrierOf(simOperator: String): Int {
+    if (!simOperator.startsWith("460") || simOperator.length < 5) return 0
+    return when (simOperator.substring(3)) {
+        "00", "02", "04", "07", "08" -> 1
+        "01", "06", "09" -> 2
+        "03", "05", "11" -> 3
+        else -> 0
+    }
+}
