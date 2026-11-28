@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -42,9 +43,11 @@ import oolong.core.designsystem.theme.TextStyles
 import oolong.core.designsystem.theme.pressScale
 
 /**
- * The thread menu, as it opens out of the actions capsule: one grid of tiles, how to read the
- * thread on the first row and what to do with it on the second. Its bottom row, with the like
- * and the close button, belongs to the capsule and is not part of it.
+ * The thread menu, as it opens out of the actions capsule, weighted by use: large tiles for what
+ * is used most while reading, small buttons below them for the rest, each in the column of its
+ * kind (how to read on the left, keeping and passing on the thread on the right). The rarest
+ * actions are words in its bottom row, which with the like and the close button belongs to the
+ * capsule and is not part of it.
  *
  * Tiles that switch something leave the menu open, so the change is seen; the rest close it
  * through [onClose].
@@ -56,6 +59,9 @@ internal fun ColumnScope.ThreadMenu(
     newestFirst: Boolean,
     currentPage: Int,
     totalPage: Int,
+    offlineLabel: String,
+    offlineSaved: Boolean,
+    offlineItems: () -> List<ContextMenuItem>,
     onEvent: (ThreadEvent) -> Unit,
     onJumpToPage: () -> Unit,
     onClose: () -> Unit,
@@ -65,8 +71,8 @@ internal fun ColumnScope.ThreadMenu(
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            // The same icons as the switches in the top bar: the box filled, its letters cut out of
-            // it, when only the author's posts show; the order turned over for newest first
+            // The same icon as the switch in the top bar: the box filled, its letters cut out of
+            // it, when only the author's posts show
             val colors = ExtendedTheme.colors
             val cut = if (colors.background.alpha < 1f) colors.sheet else colors.background
             MenuTile(
@@ -81,20 +87,6 @@ internal fun ColumnScope.ThreadMenu(
                     Icon(LzIcon.Letters, contentDescription = null, tint = letters)
                 }
             }
-            MenuTile(
-                text = stringResource(id = R.string.title_sort),
-                checked = newestFirst,
-                role = Role.Switch,
-                onClick = { onEvent(ThreadEvent.ToggleSort) },
-            ) { tint -> SortIcon(flipped = newestFirst, tint = tint) }
-            MenuTile(
-                text = stringResource(id = R.string.title_pure_read),
-                icon = Symbols.ChromeReaderMode,
-                onClick = {
-                    onClose()
-                    onEvent(ThreadEvent.OpenReader)
-                },
-            )
             // Pages run the other way when the newest come first, where there is nothing to jump to
             MenuTile(
                 text = stringResource(id = R.string.title_jump_page),
@@ -106,8 +98,6 @@ internal fun ColumnScope.ThreadMenu(
                     onJumpToPage()
                 },
             )
-        }
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             MenuTile(
                 text = stringResource(id = if (stored) R.string.title_collected else R.string.title_collect),
                 checked = stored,
@@ -118,14 +108,37 @@ internal fun ColumnScope.ThreadMenu(
                 onClose()
                 onEvent(ThreadEvent.Share)
             }
-            MenuTile(stringResource(id = R.string.title_copy_link), Symbols.Link) {
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            // The order turned over for newest first, as the switch in the top bar
+            MenuButton(
+                text = stringResource(id = R.string.title_sort),
+                checked = newestFirst,
+                role = Role.Switch,
+                onClick = { onEvent(ThreadEvent.ToggleSort) },
+            ) { tint -> SortIcon(flipped = newestFirst, tint = tint) }
+            MenuButton(stringResource(id = R.string.title_copy_link), Symbols.Link) {
                 onClose()
                 onEvent(ThreadEvent.CopyLink)
             }
-            MenuTile(stringResource(id = R.string.reply_official_client), Symbols.OpenInNew) {
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            MenuButton(stringResource(id = R.string.title_pure_read), Symbols.ChromeReaderMode) {
                 onClose()
-                onEvent(ThreadEvent.OpenInOfficialClient)
+                onEvent(ThreadEvent.OpenReader)
             }
+            // Which floors to save, or once saved updating or deleting it, in a menu out of the button
+            val interactionSource = remember { MutableInteractionSource() }
+            MenuButton(
+                text = offlineLabel,
+                checked = offlineSaved,
+                interactionSource = interactionSource,
+                clickModifier = Modifier.clickMenu(
+                    items = offlineItems,
+                    indication = PressFeedback.overlay(TileShape),
+                    interactionSource = interactionSource,
+                ),
+            ) { tint -> Icon(imageVector = Symbols.Download, contentDescription = null, tint = tint) }
         }
     }
 }
@@ -196,38 +209,108 @@ private fun RowScope.MenuTile(
     }
 }
 
-/** The menu's lower row beside the like and the close button: reporting the thread, or deleting one's own. */
+/** One of the menu's smaller buttons, its icon beside its name, for what is used less than the tiles. */
+@Composable
+private fun RowScope.MenuButton(
+    text: String,
+    icon: ImageVector,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    MenuButton(
+        text = text,
+        interactionSource = interactionSource,
+        clickModifier = Modifier.clickable(
+            interactionSource = interactionSource,
+            indication = PressFeedback.overlay(TileShape),
+            role = Role.Button,
+            onClick = onClick,
+        ),
+    ) { tint -> Icon(imageVector = icon, contentDescription = null, tint = tint) }
+}
+
+/** [MenuButton] that switches something, filled while it is on. */
+@Composable
+private fun RowScope.MenuButton(
+    text: String,
+    checked: Boolean,
+    role: Role,
+    onClick: () -> Unit,
+    icon: @Composable (tint: Color) -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    MenuButton(
+        text = text,
+        checked = checked,
+        interactionSource = interactionSource,
+        clickModifier = Modifier.clickable(
+            interactionSource = interactionSource,
+            indication = PressFeedback.overlay(TileShape),
+            role = role,
+            onClick = onClick,
+        ),
+        icon = icon,
+    )
+}
+
+@Composable
+private fun RowScope.MenuButton(
+    text: String,
+    interactionSource: MutableInteractionSource,
+    clickModifier: Modifier,
+    checked: Boolean = false,
+    icon: @Composable (tint: Color) -> Unit,
+) {
+    val colors = ExtendedTheme.colors
+    val rest = colors.text.copy(alpha = if (colors.isNightMode) TileTintNight else TileTint)
+    val background by animateColorAsState(if (checked) colors.emphasis.copy(alpha = TileCheckedTint) else rest, Motion.snap(), label = "buttonBackground")
+    val content by animateColorAsState(if (checked) colors.emphasis else colors.text, Motion.snap(), label = "buttonContent")
+    Row(
+        modifier = Modifier
+            .weight(1f)
+            .height(ButtonHeight)
+            .pressScale(interactionSource)
+            .background(background, TileShape)
+            .then(clickModifier)
+            .padding(horizontal = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        // Smaller than a tile's, as the button is
+        Box(modifier = Modifier.size(ButtonIconSize), contentAlignment = Alignment.Center) { icon(content) }
+        Refocus(targetState = text) {
+            Text(text = it, style = TextStyles.footnote, color = content, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+}
+
+/**
+ * The words in the menu's bottom row beside the like and the close button, for what is seldom
+ * used: opening the thread in the official client, and reporting it, or deleting one's own.
+ */
 @Composable
 internal fun RowScope.ThreadMenuActions(
     canDelete: Boolean,
-    offlineLabel: String,
-    offlineItems: () -> List<ContextMenuItem>,
     onEvent: (ThreadEvent) -> Unit,
     onDelete: () -> Unit,
     onClose: () -> Unit,
 ) {
-    // Which floors to save, or once saved updating or deleting it, in a menu out of the button
-    FooterText(text = offlineLabel, modifier = Modifier.clickMenu(items = offlineItems, indication = PressFeedback.overlay(TileShape)))
-    FooterButton(stringResource(id = R.string.title_report)) {
+    FooterButton(stringResource(id = R.string.reply_official_client)) {
         onClose()
-        onEvent(ThreadEvent.ReportThread)
+        onEvent(ThreadEvent.OpenInOfficialClient)
     }
+    // Reporting one's own thread means nothing
     if (canDelete) {
         FooterButton(stringResource(id = R.string.title_delete), danger = true) {
             onClose()
             onDelete()
         }
+    } else {
+        FooterButton(stringResource(id = R.string.title_report)) {
+            onClose()
+            onEvent(ThreadEvent.ReportThread)
+        }
     }
-}
-
-@Composable
-private fun FooterText(text: String, modifier: Modifier) {
-    Text(
-        text = text,
-        style = TextStyles.label,
-        color = ExtendedTheme.colors.textSecondary,
-        modifier = modifier.padding(horizontal = 10.dp, vertical = 8.dp),
-    )
 }
 
 @Composable
@@ -246,6 +329,8 @@ private fun FooterButton(text: String, danger: Boolean = false, onClick: () -> U
 }
 
 private val TileHeight = 72.dp
+private val ButtonHeight = 40.dp
+private val ButtonIconSize = 20.dp
 
 /** Concentric with the menu's corners, 12dp inside them. */
 private val TileShape = SmoothCornerShape(14.dp)

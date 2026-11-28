@@ -167,6 +167,17 @@ fun ThreadScreen(
                                 currentPage = state.currentPage,
                                 totalPage = state.totalPage,
                                 onEvent = onEvent,
+                                offlineLabel = offlineLabel(context, offlineEntry),
+                                offlineSaved = offlineEntry != null,
+                                offlineItems = {
+                                    offlineMenuItems(
+                                        context = context,
+                                        info = OfflineThreadInfo(thread.id, thread.title, thread.forum.id, thread.forum.name, thread.author.displayName),
+                                        entry = offlineEntry,
+                                        authorFirst = state.query.seeLz,
+                                        onDone = chrome::close,
+                                    )
+                                },
                                 onJumpToPage = jumpDialog::show,
                                 onClose = chrome::close,
                             )
@@ -175,16 +186,6 @@ fun ThreadScreen(
                             ThreadMenuFooter(thread.agree, handleEvent, onClose = chrome::close) {
                                 ThreadMenuActions(
                                     canDelete = viewer != null && thread.author.id == viewer.id,
-                                    offlineLabel = offlineLabel(context, offlineEntry),
-                                    offlineItems = {
-                                        offlineMenuItems(
-                                            context = context,
-                                            info = OfflineThreadInfo(thread.id, thread.title, thread.forum.id, thread.forum.name, thread.author.displayName),
-                                            entry = offlineEntry,
-                                            authorFirst = state.query.seeLz,
-                                            onDone = chrome::close,
-                                        )
-                                    },
                                     onEvent = onEvent,
                                     onDelete = {
                                         deleting = null

@@ -82,18 +82,22 @@ fun Modifier.menuAnchor(state: MenuTriggerState): Modifier = onGloballyPositione
 @Composable
 fun rememberMenuTriggerState() = remember { MenuTriggerState() }
 
-/** Opens a menu of [items] growing out of this when tapped, such as a setting with a few choices. */
+/**
+ * Opens a menu of [items] growing out of this when tapped, such as a setting with a few choices.
+ * Presses go to [interactionSource] when given, for a press effect drawn elsewhere.
+ */
 @Composable
 fun Modifier.clickMenu(
     items: () -> List<ContextMenuItem>,
     enabled: Boolean = true,
     indication: Indication? = LocalIndication.current,
     state: MenuTriggerState = rememberMenuTriggerState(),
+    interactionSource: MutableInteractionSource? = null,
 ): Modifier {
     val menus = LocalContextMenus.current ?: return this
     state.menus = menus
     var bounds by remember { mutableStateOf(Rect.Zero) }
-    val interaction = remember { MutableInteractionSource() }
+    val interaction = interactionSource ?: remember { MutableInteractionSource() }
     return onGloballyPositioned { bounds = it.boundsInWindow() }
         .clickable(interactionSource = interaction, indication = indication, enabled = enabled) {
             val list = items()
